@@ -1,5 +1,9 @@
 # Shiren the Wanderer 2 (N64) — decompilation
 
+[![Code progress](https://decomp.dev/mschienbein/shiren2-decomp.svg?mode=shield&measure=code&label=Code)](https://decomp.dev/mschienbein/shiren2-decomp)
+[![Functions](https://decomp.dev/mschienbein/shiren2-decomp.svg?mode=shield&measure=functions&label=Functions)](https://decomp.dev/mschienbein/shiren2-decomp)
+[![progress](https://github.com/mschienbein/shiren2-decomp/actions/workflows/progress.yml/badge.svg)](https://github.com/mschienbein/shiren2-decomp/actions/workflows/progress.yml)
+
 A work-in-progress **matching decompilation** of *Fushigi no Dungeon: Fūrai no Shiren 2 — Oni Shūrai!
 Shiren-jō!* (不思議のダンジョン 風来のシレン2 鬼襲来！シレン城！), Nintendo 64, Japan
 (`NUS-NSIJ-JPN`, revision 0).
@@ -11,6 +15,7 @@ the original.
 
 Accepted checkpoint **omp-b4m**: **3,387 functions** and **389,140 bytes** of matching C,
 36.34% of the provisional mapped CPU catalogue.
+Live progress, history and a per-function map: [decomp.dev/mschienbein/shiren2-decomp](https://decomp.dev/mschienbein/shiren2-decomp).
 
 | Image | Matched functions | Matched code bytes | Code % |
 | --- | ---: | ---: | ---: |
