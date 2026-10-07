@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "platform": "macOS",
+  "binutils": {
+    "version": "2.37",
+    "url": "https://ftp.gnu.org/gnu/binutils/binutils-2.37.tar.xz",
+    "sha256": "820d9724f020a3e69cb337893a0b63c2db161dadcb0e06fc11dc29eb1e84a32c",
+    "target": "mips64-elf",
+    "configure_extra": ["--with-system-zlib"],
+    "cflags": "-O2 -std=gnu11"
+  },
+  "gcc_candidate": {
+    "version": "2.7.2",
+    "release": "v0.1",
+    "url": "https://github.com/decompals/mips-gcc-2.7.2/releases/download/v0.1/gcc-2.7.2-mac.tar.gz",
+    "sha256": "5923ea59b97d39d65d684a3ef2f25cd1cbcaf2fd0b5cf6a7f1a4804500a770e0",
+    "host_architecture": "x86_64",
+    "install_directory": ".cache/gcc-kmc",
+    "binaries_sha256": {
+      "gcc": "f27e8c46a49be1e4ece8dec1eee6201fab635bbc11f6fa8239f7de14a5b9cbe8",
+      "cc1": "62f356812dfe86988b2fea22c477bd05cbdf5ba3dbcf805ceee79174e51f1ec8",
+      "cpp": "722fb8a342ae90bc0ddc2e99283be872b57efff74732f241af2c5b1faa3d138b"
+    },
+    "validation": "Runs on this arm64 Mac using existing Intel compatibility; one leaf function matches, broader compiler calibration pending"
+  },
+  "gcc_pm281": {
+    "version": "2.8.1",
+    "release": "pmret/gcc-papermario release tag master (rolling tag; asset 2,375,560 bytes, built 2023-03 from source commit a6afc2afbcaf6682930141d526afdc95801fc2fd, target mips-nintendo-nu64)",
+    "url": "https://github.com/pmret/gcc-papermario/releases/download/master/mac.tar.gz",
+    "sha256": "772efc8272a992401f9a9a3faef58ef2f4b6028e792afa0015d894de96fe584e",
+    "host_architecture": "x86_64",
+    "install_directory": ".cache/gcc-pm281",
+    "binaries_sha256": {
+      "gcc": "5ff7e7ed4862a18c68522ccd1014c0c4bdfaef13d4d20a13c1c4e1e8f0a4c6da",
+      "cc1": "674a9e395b76031c24187ee27aa9bb279ab1032127920beedc670ab8e56beeaf",
+      "cpp": "58f3c1bf2badff3138de996a77a62faaa8ff0356a219ec7c62829f213bacde0f"
+    },
+    "driver_selection": "Non-default compiler: object commands pass -B<install_directory>/ so the 2.8.1 driver runs its own cpp/cc1; COMPILER_PATH alone would select the 2.7.2 cc1",
+    "validation": "GAME image (main_14400) toolchain research: best measured reproduction with gas 2.9.1 CPU3000; per-TU assignment only"
+  },
+  "binutils_gnu291": {
+    "version": "2.9.1",
+    "url": "https://ftp.gnu.org/gnu/binutils/binutils-2.9.1.tar.gz",
+    "mirrors": ["https://mirrors.kernel.org/gnu/binutils/binutils-2.9.1.tar.gz"],
+    "sha256": "58d01daa576d8779e064922171276795f00ff1388b1b0f87aa1a00eb0da6c6bb",
+    "target": "mips-mips-elf",
+    "install_directory": ".cache/binutils-gnu-2.9.1",
+    "host_patches": [
+      {"path": "config.sub", "original_sha256": "d38fe4793443a10f1dde1c70fd39c71801843274a3e6f63e12dc719eeadaa5f5", "modified_sha256": "bce4ce758112a2ed87956295709cdac516e96f19efba5daeaae4efa7de8fd80c"},
+      {"path": "libiberty/strerror.c", "original_sha256": "8ab7e03a1dd10cb49f589ffe83887980a508e1c425702372da798cecb892cf81", "modified_sha256": "efb3fb1eb043fcf9016b050387980a13688cbc6dd4fb423687ba2c24e453c809"}
+    ],
+    "configure_extra": ["--disable-gprof", "--disable-gdb", "--disable-shared", "--disable-nls"],
+    "cflags": "-O2 -std=gnu89 -fcommon -fno-builtin -Wno-implicit-function-declaration -Wno-int-conversion -Wno-incompatible-pointer-types -Wno-return-type",
+    "make_target": "all-gas",
+    "assembler_sha256": "00d952c14b1ddbed5bdab1ed5b507e17dd446a96e096269f506c4f3f52cd8f22",
+    "host_architecture": "arm64",
+    "validation": "Host-only patches (config.sub aarch64/darwin, Darwin const sys_nerr); no MIPS/opcode/BFD change. Built with relative srcdir so the binary embeds no checkout path; assembler_sha256 is specific to the recorded host clang"
+  },
+  "binutils_kmc": {
+    "version": "2.6",
+    "release": "v0.3",
+    "url": "https://github.com/decompals/mips-binutils-2.6/releases/download/v0.3/binutils-2.6-mac.tar.gz",
+    "sha256": "ab21ad5908fb7776a4b0c596cc82f216876e3b5d108c7c7c1f33543b3f3fce4c",
+    "assembler_sha256": "c506dac9fd341f53ff61be050c224e99dfd03bd5bfdbd1192a42b3083bb63a03",
+    "install_directory": ".cache/binutils-kmc-2.6",
+    "host_architecture": "x86_64",
+    "validation": "Runs on this Mac; AI buffer training routine has exact instructions, text padding and static data; broader and floating-point calibration pending"
+  },
+  "make": {
+    "version_observed": "4.4.1",
+    "installation": "brew install make",
+    "executable": "gmake"
+  }
+}

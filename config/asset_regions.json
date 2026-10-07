@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "kind": "shiren2-four-reviewed-yay0-sidecars",
+  "target_sha256": "4073a9f6516ef5d15cdd8b259a952a7d07633a2815f2a738fb5d98415d30a458",
+  "target_size": 33554432,
+  "triage_handoff_sha256": "fcfe35cd7b1c742a24c8352df5fc863b294a0bed755a2ea1054a6b092d2a1f53",
+  "triage_manifest_sha256": "66dd508d112ce56cd224f523e744389c27883d5a9a042360536149eb611c603d",
+  "limits": {
+    "max_input": 1048576,
+    "max_output": 4194304,
+    "max_tokens": 1048576
+  },
+  "regions": [
+    {
+      "id": "rom-00240c20",
+      "rom_start": 2362400,
+      "rom_end": 2366304,
+      "window_sha256": "279a048964e86242cd468c9be96874f170d76f71ab27e20d862b88199db1fb8f",
+      "consumed_rom_end": 2366295,
+      "consumed_sha256": "c25f6cb23bc35f4e8802bb2692f52d7c4aff4cd99ac30ea6993fdcb7302a6c90",
+      "gap_sha256": "3e7077fd2f66d689e0cee6a7cf5b37bf2dca7c979af356d0a31cbc5c85605c7d",
+      "decoded_size": 77312,
+      "decoded_sha256": "440eb7e208d4b28517e7385cb49759790ea49ee0d07a361b60875459692ec075",
+      "expected_cursors": {
+        "mask_end": 312,
+        "link_end": 1890,
+        "literal_end": 3895
+      }
+    },
+    {
+      "id": "rom-00241b60",
+      "rom_start": 2366304,
+      "rom_end": 2370080,
+      "window_sha256": "c4709a69f48bf71dec0fc4c3c9c5f2f028c200732e7a5902846abcd6546c84d4",
+      "consumed_rom_end": 2370066,
+      "consumed_sha256": "5767c4ada6ffc5d08da3f36fd66039152f33ac956779622c6cdad6b3c6450cee",
+      "gap_sha256": "e7ecebbc590bc88b3761fa6cd03d749f87463dabb67021a5c6768c25ec68b3f2",
+      "decoded_size": 77312,
+      "decoded_sha256": "61275f40663294be37927a29861f2b2f1f2cfc892d21e736876f1d13038463bd",
+      "expected_cursors": {
+        "mask_end": 308,
+        "link_end": 1856,
+        "literal_end": 3762
+      }
+    },
+    {
+      "id": "rom-00242a20",
+      "rom_start": 2370080,
+      "rom_end": 2373104,
+      "window_sha256": "c84f731b09ad23cf06f390dcb5ffb6aafe3c12ec93f97f34df7d33224e8c147b",
+      "consumed_rom_end": 2373099,
+      "consumed_sha256": "bd081fb928965031ef1ba5f9b1bc3e02e0a5d25c6c8f013e7267b1db57283281",
+      "gap_sha256": "8855508aade16ec573d21e6a485dfd0a7624085c1a14b5ecdd6485de0c6839a4",
+      "decoded_size": 77312,
+      "decoded_sha256": "0f87118aee72563798b247bac28afc39ccafa8a547398399b5318a38c2eb72de",
+      "expected_cursors": {
+        "mask_end": 220,
+        "link_end": 1980,
+        "literal_end": 3019
+      }
+    },
+    {
+      "id": "rom-002435f0",
+      "rom_start": 2373104,
+      "rom_end": 2437184,
+      "window_sha256": "f0804cb7158c5c1d5de31e90da8f4d6f8bf6296241fbddefa70846cb3e67735b",
+      "consumed_rom_end": 2437169,
+      "consumed_sha256": "c7e865a501978a7138ca732505ceadaff4602302313adcde84e4c8636ce38cc3",
+      "gap_sha256": "5322fecfc92a5e3248a297a3df3eddfb9bd9049504272e4f572b87fa36d4b3bd",
+      "decoded_size": 77312,
+      "decoded_sha256": "dd106c2b875190c7b525ee85917a47e6a76f608c1b527fe3e68879a62675e203",
+      "expected_cursors": {
+        "mask_end": 6280,
+        "link_end": 21454,
+        "literal_end": 64065
+      }
+    }
+  ]
+}

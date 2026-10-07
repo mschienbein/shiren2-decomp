@@ -1,0 +1,3 @@
+#include "common.h"
+typedef struct { unsigned char field_00[0x9A]; unsigned short field_9A; } Object;
+void func_800F3A64(Object *object) { object->field_9A |= 0x100; }

@@ -1,0 +1,7 @@
+// Entrypoint address loads; these values are determined by the original instructions.
+rom:0x001000 reloc:MIPS_HI16 symbol:main_BSS_START
+rom:0x001004 reloc:MIPS_LO16 symbol:main_BSS_START
+rom:0x001008 reloc:MIPS_HI16 symbol:main_BSS_SIZE
+rom:0x00100C reloc:MIPS_LO16 symbol:main_BSS_SIZE
+rom:0x001030 reloc:MIPS_HI16 symbol:main
+rom:0x001034 reloc:MIPS_LO16 symbol:main

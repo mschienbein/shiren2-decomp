@@ -1,0 +1,19 @@
+# Build outputs and toolchains
+build/
+.cache/
+generated/
+report.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# ROMs and dumps (never commit game data)
+*.z64
+*.n64
+*.v64
+inputs/
+
+# OS / editors
+.DS_Store

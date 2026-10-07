@@ -1,0 +1,2 @@
+entrypoint = 0x80025C00; // type:func
+main = 0x80025C60; // type:func
