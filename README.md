@@ -13,14 +13,15 @@ the original.
 
 ## Status
 
-Accepted checkpoint **omp-b4m**: **3,387 functions** and **389,140 bytes** of matching C,
-36.34% of the provisional mapped CPU catalogue.
+Accepted checkpoint **omp-b6r**: **6,396 functions** and **978,648 bytes** of matching source,
+91.40% of the provisional mapped CPU catalogue. That is 6,355 C functions (956,860 bytes)
+and 41 C++ functions (21,788 bytes), the latter proven original C++ units.
 Live progress, history and a per-function map: [decomp.dev/mschienbein/shiren2-decomp](https://decomp.dev/mschienbein/shiren2-decomp).
 
 | Image | Matched functions | Matched code bytes | Code % |
 | --- | ---: | ---: | ---: |
-| Main game | 3,170 / 6,249 | 333,868 / 1,001,476 | 33.34% |
-| Resident (boot + libultra) | 217 / 268 | 55,272 / 69,224 | 79.85% |
+| Main game | 6,170 / 6,249 | 919,604 / 1,001,476 | 91.82% |
+| Resident (boot + libultra) | 226 / 268 | 59,044 / 69,224 | 85.29% |
 
 The denominator is a fixed catalogue of 6,517 original CPU functions in the resident
 and main images (`docs/progress-catalogues/`). The two overlays, RSP microcode, assets and the

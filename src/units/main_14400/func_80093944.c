@@ -6,7 +6,7 @@ typedef struct { void *container; void *item; } Pair;
 extern void *func_800D8FB0(u32 size);
 extern unsigned char *func_800DDDE0(void *),*func_800DE130(void *),*func_800DE460(void *,TableEntry *),*func_800DEBC0(void *);
 extern s32 func_8009A038(void *);
-extern void *func_8009A054(Pair *,void *,s32);
+extern Pair func_8009A054(void *,s32);
 extern void func_800D05A4(void *,Pair *);
 /* The original call contract retains this first receiver, intentionally unused. */
 void *func_80093944(void *unused,s32 type,Context *ctx,void *source) {
@@ -37,7 +37,7 @@ void *func_80093944(void *unused,s32 type,Context *ctx,void *source) {
     for(;;) {
         Pair item;
         if(!(i<count)) break;
-        func_8009A054(&item,source,i);
+        item = func_8009A054(source,i);
         func_800D05A4(result+0xB0,&item);
         ++i;
     }

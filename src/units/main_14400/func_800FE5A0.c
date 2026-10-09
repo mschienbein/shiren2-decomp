@@ -8,7 +8,9 @@ typedef struct { u8 field_0,field_1,field_2,field_3; s32 field_4; ItemVTable *fi
 extern s32 func_800F069C(Object *),func_80049CB4(s32,...);
 extern char *func_800A3B20(void *),*func_800AE674(void *);
 extern s32 func_800E0F40(Object *);
-extern void func_80049AE8(s32,...),func_800497F0(s32,...),func_800E3678(Object *,Object *),func_800CEAF0(s32 *,void *,s32);
+extern void func_80049AE8(s32,...),func_800497F0(s32,...),func_800E3678(Object *,Object *);
+/* Iterator constructor: returns its receiver; the 16-byte iterator storage stays opaque. */
+extern void *func_800CEAF0(void *iterator,void *collection,s32 mode);
 extern s32 func_800CEBA0(s32 *);
 extern Item *func_800CEC68(s32 *);
 static inline s32 is_special(const Flags *flags) { return flags->special; }

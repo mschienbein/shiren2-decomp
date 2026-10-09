@@ -18,16 +18,23 @@ typedef struct {
     u8 pad18[0x8];
 } Msg;
 
+/* Actor table at +8, entry +0x38/+0x3C: message handler s32 (void *receiver, void *event)
+ * (decided contract); only this entry is used here and its result is not needed. */
 typedef struct {
     s16 delta;
     s16 index;
-    void (*func)(void *self, Msg *msg);
-} VEntry;
+    s32 (*func)(void *receiver, void *event);
+} MessageEntry;
+
+typedef struct {
+    u8 pad0[0x38];
+    MessageEntry message_38;
+} VTable;
 
 typedef struct {
     u8 type;
     u8 pad1[0x7];
-    VEntry *vtable;
+    VTable *vtable;
 } Actor;
 
 typedef struct {
@@ -48,7 +55,7 @@ void func_800C4CA8(Obj *obj, void *arg, u8 *code, Pair *pos) {
         msg.pos = *pos;
         m = &msg;
         m->code = *code;
-        actor->vtable[7].func((u8 *)actor + actor->vtable[7].delta, m);
+        actor->vtable->message_38.func((u8 *)actor + actor->vtable->message_38.delta, m);
     }
     func_800ADB64(obj->handle, arg, pos, 1);
 }

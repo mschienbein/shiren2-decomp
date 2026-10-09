@@ -4,7 +4,7 @@ typedef struct { unsigned char pad_00[5]; signed char field_05; } Entry;
 extern s32 func_80098E34(Object *object, s32 value);
 extern Entry *func_800980F0(Object *object, s32 index);
 extern s32 func_80098F54(Object *object, s32 index);
-extern void func_800514F0(Entry *entry, unsigned char *output, s32 mode, s32 scale, s32 offset, s32 kind, s32 flags);
+extern char *func_800514F0(Entry *entry, unsigned char *output, s32 mode, s32 scale, s32 offset, s32 kind, s32 flags);
 void func_80047098(Object *object, unsigned char *output, s32 value, s32 flags) {
     s32 index;
     Entry *entry;

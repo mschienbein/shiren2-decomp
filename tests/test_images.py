@@ -284,6 +284,16 @@ class ImageInventoryTests(unittest.TestCase):
             with self.subTest(image=name), self.assertRaisesRegex(ValueError, "Overlay source bindings are unsupported"):
                 validate_inventory(altered)
 
+    def test_cpp_sources_bind_and_cannot_share_a_c_unit_object(self) -> None:
+        self.document["source_bindings"]["src/units/main_14400/cxx_unit.cpp"] = "main_14400"
+        inventory = validate_inventory(self.document)
+        self.assertEqual(image_for_source("src/units/main_14400/cxx_unit.cpp", inventory).image_id, "main_14400")
+        self.document["source_bindings"]["src/units/main_14400/cxx_unit.c"] = "main_14400"
+        with self.assertRaisesRegex(ValueError, "share one object path"):
+            validate_inventory(self.document)
+        with self.assertRaisesRegex(ValueError, "ending in .c or .cpp"):
+            image_for_source("src/units/main_14400/cxx_unit.cc", inventory)
+
     def test_b_clear_leads_cannot_be_promoted_into_bss(self) -> None:
         overlay = self.document["images"][3]
         overlay["bss_status"] = "reviewed"

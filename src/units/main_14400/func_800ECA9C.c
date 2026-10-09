@@ -1,7 +1,9 @@
 #include "common.h"
 typedef struct { unsigned char key; unsigned char value; } Pair800ECA9C;
 extern Pair800ECA9C D_80158F60[];
-extern s32 D_801C9FB8;
+/* Address-only view of the state object at .bss 0x801C9FB8 (label spacing 0xA8): func_800CC288
+ * accesses it up to +0x97 (0x800CC654..0x800CC668), so it is never a 4-byte scalar. */
+extern unsigned char D_801C9FB8[];
 unsigned char func_800A9958(void);
 void func_800EC68C(void *record, u32 value);
 void func_800CC288(void *state);
@@ -21,8 +23,8 @@ s32 func_800ECA9C(void *obj, s32 flag) {
         if (p->key == end) return 0;
     }
     func_800EC68C(obj, p->value);
-    func_800CC288(&D_801C9FB8);
-    func_800CC934(func_800A9958(), &D_801C9FB8);
-    if (flag != 0) func_800CCF20(&D_801C9FB8);
+    func_800CC288(D_801C9FB8);
+    func_800CC934(func_800A9958(), D_801C9FB8);
+    if (flag != 0) func_800CCF20(D_801C9FB8);
     return 1;
 }

@@ -25,7 +25,9 @@ s32 func_800A8FC8(Iter *, s32);
 void *func_800A910C(Iter *);
 void *func_800F0314(void *);
 s32 func_800CD090(void *, void *);
-void func_800F0404(void *);
+/* Returns zero or func_80121848's forwarded status (0x800F0424/0x800F0428); this
+ * statement call intentionally discards it. */
+s32 func_800F0404(void *);
 void func_800A7B68(void *, Buffer *);
 
 void func_800EFE30(void)

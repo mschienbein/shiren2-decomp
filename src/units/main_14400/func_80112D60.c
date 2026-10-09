@@ -2,7 +2,7 @@
 
 typedef unsigned char u8;
 extern u8 D_80148644[];
-extern u8 D_8015488C[];
+extern const u8 D_8015488C[8];
 u8 func_800AC1AC(u8 id);
 s32 func_80112D60(u8 id) {
     s32 bit;

@@ -2,7 +2,7 @@
 typedef struct { s32 x, y; } Point;
 typedef struct { Point low, high; } Rect;
 typedef struct { Point current, first, last; } Iterator;
-typedef struct { s32 field_0[5]; } Region;
+typedef struct { s32 field_0[4]; unsigned char pad10[4]; } Region;
 typedef struct { unsigned char field_0[0x3DC]; s32 field_3DC; unsigned char field_3E0[0x1C]; unsigned char field_3FC; } Object;
 extern unsigned char D_80147620[], D_8014344C, D_80143392;
 extern Region D_801431F0[];

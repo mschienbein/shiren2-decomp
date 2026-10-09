@@ -1,4 +1,6 @@
 #include "common.h"
+typedef struct { unsigned char index, count, previous, field_03, masks[2], field_06, previous_count, field_08; signed char result; unsigned char field_0A; } SelectionSave;
+extern SelectionSave D_80142F24;
 
 typedef unsigned char u8;
 
@@ -19,7 +21,7 @@ typedef struct {
 } Obj;
 
 extern State *D_801476B8;
-extern u8 D_80142F24;
+
 
 s32 func_801162E4(Obj *obj, s32 kind) {
     if (kind == 0x23) {
@@ -37,7 +39,7 @@ s32 func_801162E4(Obj *obj, s32 kind) {
             *p = s->flags;
             if (!enabled) {
                 result = 1;
-            } else if ((obj->flags & 1) && D_80142F24 != 10) {
+            } else if ((obj->flags & 1) && D_80142F24.index != 10) {
                 result = 1;
             }
         }

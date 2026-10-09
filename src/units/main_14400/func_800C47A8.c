@@ -1,15 +1,18 @@
 #include "common.h"
 
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef short s16;
-typedef signed char s8;
-
-typedef struct { u8 pad0[0x20]; s32 field_20; u8 pad24[0x18]; s32 field_3C; } Obj800C47A8;
-s32 func_800C47A8(Obj800C47A8 *obj) {
-    s32 value = obj->field_3C;
-    if (value == 0) {
-        value = obj->field_20;
+/* Both alternatives are object pointers: func_800C4360 stores the owner at
+ * +0x20 and initializes the replacement source at +0x3C. The selected source
+ * is forwarded to the damage record constructor by func_801250B0. */
+typedef struct {
+    unsigned char pad_00[0x20];
+    void *owner_20;
+    unsigned char pad_24[0x18];
+    void *source_3C;
+} Path;
+void *func_800C47A8(Path *path) {
+    void *source = path->source_3C;
+    if (source == 0) {
+        source = path->owner_20;
     }
-    return value;
+    return source;
 }

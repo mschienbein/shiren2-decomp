@@ -40,17 +40,17 @@ void func_8006D34C(void);
 void func_80058CE4(u16 *, u16 *, u16 *, s8 *, s8 *);
 s32 func_80042B5C(void);
 void func_80058D50(void);
-void func_8006D184(s32, s32);
+s32 func_8006D184(u8, u8);
 void func_800418FC(s32 *, s32 *);
 s32 func_80083920(void);
 s32 func_80041FF8(void);
 s32 func_80041E3C(void);
 s32 func_80041E50(void);
 s32 func_80041EB0(void);
-u8 func_80041EC4(void);
+s32 func_80041EC4(void);
 s32 func_80062C64(s32, s32);
-void func_8007C410(s32, s32);
-void func_8007C324(void);
+s32 func_8007C410(s32, s32);
+s32 func_8007C324(void); /* returns -1 when disabled, else 0; result unused here */
 
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
@@ -175,7 +175,7 @@ s32 func_8006D550(s32 mode) {
     func_8006D184(2, 0);
     func_800418FC(&posX, &posY);
     if (result == -1 && !(u8)func_80083920() && !(u8)func_80041FF8() && (u8)func_80041E3C() == 1 && !(u8)func_80041EB0() &&
-        !func_80041EC4() && !func_80062C64(posX, posY)) {
+        !(u8)func_80041EC4() && !func_80062C64(posX, posY)) {
         if (++D_8013D40C == 60) {
             func_8007C410(0x1B, 1);
             func_8007C410(0x17, 1);
@@ -183,7 +183,7 @@ s32 func_8006D550(s32 mode) {
     } else {
         D_8013D40C = 0;
     }
-    if (result == -1 && !(u8)func_80041FF8() && !(u8)func_80041E50() && !(u8)func_80041EB0() && !func_80041EC4()) {
+    if (result == -1 && !(u8)func_80041FF8() && !(u8)func_80041E50() && !(u8)func_80041EB0() && !(u8)func_80041EC4()) {
         if (++D_8013D410 >= 4 && !(D_8013D410 & 1)) {
             func_8007C324();
         }

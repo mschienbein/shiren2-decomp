@@ -11,9 +11,10 @@ typedef struct {
     u8 field_00[0x18];
     Methods *field_18;
 } Object;
-extern s32 D_8015D87C[];
+/* "Ring": NUL-terminated type-name tag in rodata, read byte-wise by func_800CA584. */
+extern const char D_8015D87C[];
 extern void func_800AF174(void *, Object *);
-extern void func_800CA4E8(Object *, void *);
+extern void func_800CA4E8(Object *, const char *name);
 
 void func_80113B94(u8 *source, Object *object) {
     func_800AF174(source, object);

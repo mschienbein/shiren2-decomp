@@ -1,4 +1,8 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
+typedef struct { unsigned char index, count, previous, field_03, masks[2], field_06, previous_count, field_08; signed char result; unsigned char field_0A; } SelectionSave;
+extern SelectionSave D_80142F24;
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -80,31 +84,34 @@ typedef struct {
 
 typedef struct {
     char pad0[0x4C];
-    void *vtable;
+    const void *vtable;
+    char pad50[0xAC];
+    s32 count;
+    char pad100[0xC];
+    s32 unk10C;
+    const void *unk110;
+    char pad114[0x2C];
 } MenuSub80096140;
 
 typedef struct {
     char pad0[0x4C];
-    void *vtable;
+    const void *vtable;
     char pad50[0x5C - 0x50];
     Unit80096140 *unit;
     char pad60[0x64 - 0x60];
     MenuSub80096140 sub64;
-    char padB4[0x170 - 0xB4];
-    s32 unk170;
-    void *unk174;
 } Menu80096140;
 
 extern char D_80151F30[];
-extern char D_80153078[];
+extern const unsigned char D_80153078[152];
 extern char D_80151EC8[];
 extern MenuDef80096140 D_80151EDC[10];
 extern MenuItem80096140 D_801403F8[];
 extern u8 D_801403EC[];
-extern u8 D_80140165;
-extern u8 D_80142F24;
-extern u8 D_80142F1B;
-extern s16 D_80140260;
+extern u8 D_80140160[];
+
+
+extern MenuItem80096140 D_80140260[2];
 extern Pair80096140 D_80138D88;
 
 extern void *func_800953C0(void *obj);
@@ -113,7 +120,7 @@ extern s32 func_800E4454(Unit80096140 *unit);
 extern s32 func_800EC630(Unit80096140 *unit, Info80096140 *info);
 extern s32 func_801E9D0C(void);
 extern s32 func_800A99D0(void);
-extern s32 func_800CDA70(void *item, s32 kind);
+extern void *func_800CDA70(void *item, unsigned char kind);
 extern void func_80097240(Menu80096140 *menu, MenuItem80096140 *items, Layout80096140 *layout,
                           Selection80096140 *sel);
 
@@ -134,8 +141,8 @@ Menu80096140 *func_80096140(Menu80096140 *menu, Unit80096140 *unit) {
     sub = &menu->sub64;
     func_800953C0(sub);
     sub->vtable = D_80153078;
-    menu->unk170 = -1;
-    menu->unk174 = D_80151EC8;
+    menu->sub64.unk10C = -1;
+    menu->sub64.unk110 = D_80151EC8;
     menu->unit = unit;
     kind = 0;
     info = 0;
@@ -181,7 +188,7 @@ Menu80096140 *func_80096140(Menu80096140 *menu, Unit80096140 *unit) {
                 break;
             }
             case 0x466: {
-                s32 locked = (D_80140165 & 1) ^ 1;
+                s32 locked = (D_80140160[5] & 1) ^ 1;
 
                 if (locked) {
                     enabled = 0;
@@ -248,7 +255,7 @@ Menu80096140 *func_80096140(Menu80096140 *menu, Unit80096140 *unit) {
                 } else {
                     s32 missing = 0;
 
-                    if (D_80142F24 != 7) {
+                    if (D_80142F24.index != 7) {
                         Unit80096140 *u = menu->unit;
 
                         missing = func_800CDA70(u->vtable->entry98.func((char *)u + u->vtable->entry98.delta), 0xAC) == 0;
@@ -272,22 +279,22 @@ Menu80096140 *func_80096140(Menu80096140 *menu, Unit80096140 *unit) {
             D_801403F8[count].id = id;
             D_801403F8[count].value = value;
             D_801403EC[count] = width;
-            if (id == 0x463 && (D_80142F1B & 3) == 3) {
+            if (id == 0x463 && (D_80142F18.flags & 3) == 3) {
                 D_801403F8[count].id = 0x464;
             }
             count++;
         }
         i++;
     }
-    switch (D_80142F1B & 3) {
+    switch (D_80142F18.flags & 3) {
         case 2:
-            D_80140260 = 0x434;
+            D_80140260[0].id = 0x434;
             break;
         case 1:
-            D_80140260 = 0x433;
+            D_80140260[0].id = 0x433;
             break;
         default:
-            D_80140260 = 0x435;
+            D_80140260[0].id = 0x435;
             break;
     }
     origin = &D_80138D88;

@@ -19,7 +19,7 @@ typedef struct {
     s32 len;
 } Obj;
 typedef struct { s32 a; s32 b; } Sel;
-extern s32 D_801528B0;
+extern const s32 D_801528AC[4];
 void func_80045A24(s32);
 void func_8009AF4C(Obj *, s32);
 void func_80048764(Obj *);
@@ -53,7 +53,7 @@ s32 func_8009BB74(Obj *self, Sel *sel) {
                 self->buf[i] = 0;
             }
             func_8006A810(&m, 0, 8);
-            m.unk4 = D_801528B0;
+            m.unk4 = D_801528AC[1];
             e = &self->vtbl[16];
             e->fn.position((char *)self + e->delta, &m);
         }

@@ -12,11 +12,11 @@ typedef struct {
     VTable800B77B4 *vtable_18;
 } Obj800B77B4;
 
-extern s32 D_80153B84;
-extern s32 D_80147490;
-void func_800CA4E8(Obj800B77B4 *obj, void *arg1);
+extern const char D_80153B84[]; /* "PStatus", NUL-terminated rodata type tag. */
+extern unsigned char D_80147490; /* Save/load transfer exactly one status byte. */
+void func_800CA4E8(Obj800B77B4 *obj, const char *name);
 
 void func_800B77B4(Obj800B77B4 *obj) {
-    func_800CA4E8(obj, &D_80153B84);
+    func_800CA4E8(obj, D_80153B84);
     obj->vtable_18->func_2C((char *)obj + obj->vtable_18->delta_28, 1, &D_80147490);
 }

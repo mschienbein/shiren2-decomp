@@ -3,15 +3,23 @@
 typedef unsigned char u8;
 
 typedef struct {
+    u8 state;
+    u8 walls;
     u8 x;
     u8 y;
-    u8 pad2[2];
 } Cell;
 
+/* The generator has eleven rows of eight four-byte cells at +0x13.
+ * Its separate word-valued availability array starts at +0x174; the
+ * axis-edge pointers remain at +0x2D4/+0x2D8 (see func_800B8628). */
 typedef struct {
-    u8 pad0[0x15];
-    Cell cells[21][8];
-    u8 pad2B5[0x1F];
+    u8 pad0[0x10];
+    u8 rows;
+    u8 columns;
+    u8 wanted;
+    Cell cells[11][8];
+    u8 pad173;
+    s32 available[11][8];
     u8 *rowEdges;
     u8 *colEdges;
 } Grid;

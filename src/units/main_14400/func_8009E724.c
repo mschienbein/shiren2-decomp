@@ -58,7 +58,7 @@ char *func_80048480(u16 textId);
 void func_80048764(Save8009E724 *self);
 void func_800487EC(Save8009E724 *self, s32 row, s32 col, char *text);
 void func_80048870(Save8009E724 *self, s32 color);
-void func_800514F0(Unit8009E724 *unit, char *buf, s32 a, s32 b, s32 c, s32 d, s32 e);
+char *func_800514F0(Unit8009E724 *unit, char *buf, s32 a, s32 b, s32 c, s32 d, s32 e);
 s32 func_8005EF30(char *buf, const char *fmt, ...);
 char *func_80083C90(char *dst, char *src);
 char *func_80083D04(char *dst, char *src);
@@ -67,7 +67,7 @@ void func_8009DE8C(Save8009E724 *self);
 Unit8009E724 *func_800AC3CC(u8 id, void *storage);
 void func_800ACD34(Unit8009E724 *unit);
 void func_800AE55C(Unit8009E724 *unit, s32 arg);
-s32 func_800CC728(void *data);
+char *func_800CC728(void *data);
 char *func_800CC74C(void *data, u8 index);
 char *func_800CC7EC(void *data);
 void func_8010BC98(Unit8009E724 *unit, u8 arg);
@@ -105,8 +105,8 @@ void func_8009E724(Save8009E724 *self) {
         func_800487EC(self, n, n, out);
         data = &self->record54;
         {
-            s32 count = func_800CC728(data);
-            func_8005EF30(out, func_80048480(0x532), count);
+            char *name = func_800CC728(data);
+            func_8005EF30(out, func_80048480(0x532), name);
         }
         func_800487EC(self, 1, n, out);
         seconds = self->record54.playTime;

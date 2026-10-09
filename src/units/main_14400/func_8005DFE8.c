@@ -1,7 +1,9 @@
 #include "common.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
-extern void func_8005E134(u16, s32 *, s32 *);
+/* func_8005E134 takes the 16-bit character code as an int (it forwards a0 unmasked);
+ * callers pass the u16 code (andi a0,0xFFFF before the call). */
+extern void func_8005E134(s32, s32 *, s32 *);
 extern u16 func_80083844(void);
 s32 func_8005DFE8(u8 *str){ s32 total = 0; u8 *s = str;
   for (;;) { u16 c = *s++; s32 w, h;

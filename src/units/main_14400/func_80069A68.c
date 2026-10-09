@@ -13,7 +13,7 @@ u8 *func_8006B580(s32 a);
 void func_8006AAF0(void *dst, u32 devAddr, s32 size);
 void func_80135ED4(s32 a);
 void func_8013591C(void *src, void *dst, s32 width, void *work);
-void func_8005EFF0(void *dst, void *src, u32 size);
+u32 func_8005EFF0(void *dst, void *src, u32 size);
 void func_8006B4FC(void *p);
 void func_8006B6F4(void *p);
 void func_8006A088(u8 a, u8 b, u8 c, u8 d);

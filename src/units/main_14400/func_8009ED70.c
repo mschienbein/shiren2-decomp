@@ -5,12 +5,12 @@ typedef unsigned char u8;
 typedef signed short s16;
 typedef unsigned short u16;
 
-extern u8 D_80151E38[];
+extern const unsigned char D_80151E38[144];
 void func_800D8FA8(void *object);
 
 typedef struct {
     u8 pad0[0x4C];
-    void *vtable;
+    const void *vtable;
 } Obj8009ED70;
 
 void func_8009ED70(Obj8009ED70 *self, s32 flags) {

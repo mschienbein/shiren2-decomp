@@ -2,11 +2,11 @@
 
 typedef unsigned char u8;
 
-typedef struct { void *vtable; u8 pad4[0xC]; s32 x10; u8 pad14[0xC]; } Reader;
-typedef struct { u8 pad0[0x4C]; void *vtable; u8 pad50[0x10]; Reader reader; } Loader;
-extern u8 D_80153110[];
-extern u8 D_80151DF8[];
-extern u8 D_80151E38[];
+typedef struct { const void *vtable; u8 pad4[0xC]; s32 x10; u8 pad14[0xC]; } Reader;
+typedef struct { u8 pad0[0x4C]; const void *vtable; u8 pad50[0x10]; Reader reader; } Loader;
+extern const unsigned char D_80153110[144];
+extern const unsigned char D_80151DF8[24];
+extern const unsigned char D_80151E38[144];
 Loader *func_800953C0(Loader *loader);
 void func_8009FDD0(Loader *loader, s32 key);
 s32 func_800957C0(Loader *loader, s32 *out, s32 a, void *b, s32 c);

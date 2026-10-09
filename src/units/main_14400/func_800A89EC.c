@@ -4,7 +4,7 @@ typedef unsigned char u8;
 
 extern u8 D_801C35E0[];
 extern u8 D_801C51A4[];
-extern u8 D_80154894[];
+extern const u8 D_80154894[8];
 u8 func_800A8C00(void *obj);
 
 void func_800A89EC(void *obj) {

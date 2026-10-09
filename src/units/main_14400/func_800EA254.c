@@ -33,7 +33,7 @@ extern void *func_800E8A68(Obj800EA254 *obj, u8 slot);
 extern void func_8010ED94(void *item, Flags800EA254 *flags);
 extern void func_8010CDCC(void *item, Flags800EA254 *flags);
 extern void func_800E8790(Obj800EA254 *obj, Flags800EA254 *flags);
-extern s32 func_800CDA70(void *item, s32 kind);
+extern void *func_800CDA70(void *item, u8 kind);
 extern s32 func_800A99D0(void);
 extern s32 func_800E1CD4(Obj800EA254 *obj, s32 kind);
 extern s32 func_800E1CC4(Obj800EA254 *obj, s32 kind);

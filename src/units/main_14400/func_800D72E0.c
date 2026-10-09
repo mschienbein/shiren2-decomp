@@ -7,7 +7,7 @@ typedef signed char s8;
 
 extern s32 D_80148090;
 void func_800D5A30(u8 *obj);
-void func_800D5BF0(u8 *obj, u8 *arg1, u8 *arg2, s32 arg3);
+s32 func_800D5BF0(void *owner, void *pos, void *dir, s32 flag);
 void func_800D72E0(u8 *obj, s32 mode) {
     D_80148090 = mode;
     switch (mode) {

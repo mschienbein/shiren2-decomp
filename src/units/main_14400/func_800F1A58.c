@@ -2,7 +2,8 @@
 typedef struct { s32 x, y; } Point;
 typedef struct { Point position; unsigned char field_8; } Obj;
 typedef struct { char pad[0x18]; Obj *field_18; s32 field_1C; } Iterator;
-extern void func_800C2B40(Iterator *, Point *, unsigned char *, s32);
+/* Constructs and explicitly returns the supplied iterator (0x800C2B48, 0x800C2B70). */
+extern Iterator *func_800C2B40(Iterator *, Point *, unsigned char *, s32);
 extern s32 func_800C2BBC(Iterator *, unsigned char), func_800A4520(Obj *, Obj *), func_800A674C(Obj *, Obj *), func_800A6E90(Obj *);
 Obj *func_800F1A58(Obj *a, s32 b, s32 c) {
     Point position; Iterator iter; unsigned char kind; Point *pos = &position;

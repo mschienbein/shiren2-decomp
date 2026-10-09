@@ -2,7 +2,7 @@
 
 typedef struct {
     unsigned char pad0[0x4C];
-    void *vtable;
+    const void *vtable;
     unsigned char pad50[0x10];
     s32 unk60;
     void *unk64;
@@ -14,7 +14,7 @@ extern unsigned char D_80138AD0[];
 extern unsigned char D_80152130[];
 extern unsigned char D_80151EC8[];
 extern unsigned char D_80152098[];
-extern unsigned char D_80151E38[];
+extern const unsigned char D_80151E38[144];
 extern Work *func_800953C0(Work *work);
 extern void func_80096CE4(Work *work, void *target, void *src);
 extern s32 func_800957C0(Work *work, void *out, s32 a2, void *a3, s32 a4);

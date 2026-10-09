@@ -1,3 +1,4 @@
 #include "common.h"
 
-s32 func_8011E67C(void) { return 1; }
+/* Trap +0x44 supplies self; this constant predicate does not read it. */
+s32 func_8011E67C(void *self) { return 1; }

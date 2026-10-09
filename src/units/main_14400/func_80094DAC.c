@@ -6,7 +6,7 @@ void func_800CB288(Obj80094DAC *obj, s32 flag);
 void func_800CADBC(Obj80094DAC *obj);
 void func_800925E0(s32 flag);
 void func_80048240(u16 id, ...);
-void func_80094DAC(void) {
+void func_80094DAC(void *unused_receiver) {
     Obj80094DAC *obj = func_800C9E10();
     s32 flag = obj->field_24 ^ 1;
     func_800CB288(obj, flag);

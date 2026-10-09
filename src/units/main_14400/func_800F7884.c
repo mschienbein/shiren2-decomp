@@ -1,8 +1,10 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
 typedef struct { char pad[0x72]; unsigned char unk72; char pad73[0xA8 - 0x73]; s32 unkA8; } Obj;
-typedef struct { unsigned char b7 : 1; unsigned char b6 : 1; unsigned char b5 : 1; unsigned char b4 : 1; unsigned char b3 : 1; unsigned char b2 : 1; unsigned char b1 : 1; unsigned char b0 : 1; } Flags;
-extern Flags D_80142F1B;
-extern signed char D_80140164;
+
+
+extern signed char D_80140160[];
 s32 func_80049CB4(s32, ...);
 s32 func_800E2074(Obj *);
 s32 func_800F7970(Obj *, void *);
@@ -15,7 +17,7 @@ s32 func_800F7884(Obj *o, void *arg) {
     if (func_800E2074(o)) {
         if (func_800F7970(o, arg)) {
             o->unkA8 = 0;
-            { s32 on = D_80142F1B.b2; if (on) { s32 ne = D_80140164 != 2; if (!ne) func_800C9870(); } }
+            { s32 on = ((D_80142F18.flags >> 2) & 1); if (on) { s32 ne = D_80140160[4] != 2; if (!ne) func_800C9870(); } }
         }
         o->unk72 |= 4;
     } else {

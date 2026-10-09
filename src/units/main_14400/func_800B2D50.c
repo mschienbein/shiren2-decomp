@@ -3,7 +3,7 @@ typedef unsigned char u8;
 typedef struct { s32 a; s32 b; } Pos;
 void *func_800A8CB0(s32 cell);
 s32 func_800A8974(Pos *p);
-void func_800B48C0(Pos *copy, Pos *p);
+s32 func_800B48C0(Pos *copy, Pos *p);
 void func_800B2D50(void) {
     s32 i;
     for (i = 0; ; i++) {

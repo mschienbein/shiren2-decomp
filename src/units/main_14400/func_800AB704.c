@@ -2,13 +2,14 @@
 
 typedef unsigned short u16;
 
-/* func_800C5D70 brackets this three-word state array with begin/end pointers. */
+/* Whole 0x40-byte RNG: three state words and three saved 12-byte states. */
 typedef struct {
     u32 *state_begin;
-    u32 *state_end;
-    u32 unknown_8;
+    u32 *saved_states;
+    s32 depth_8;
     void *vtable_C;
     u32 state_10[3];
+    u32 saved_1C[9];
 } Rng800AB704;
 extern Rng800AB704 D_80147620;
 extern u16 D_801569BE;

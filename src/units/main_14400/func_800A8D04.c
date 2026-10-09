@@ -13,7 +13,7 @@ typedef struct {
 } Unit;
 extern char D_80153650[];
 extern unsigned char D_801C51A4[];
-extern unsigned char D_8015488C[];
+extern const unsigned char D_8015488C[8];
 extern Unit D_801C36EC[];
 void func_800CA4A4(Stream *s, void *name);
 s32 func_800E0F40(Unit *u);

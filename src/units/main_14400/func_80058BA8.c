@@ -7,15 +7,15 @@ void func_80058BA8(u16 *out_3118, u16 *out_311e,
                    u8 *out_311a, u8 *out_311b)
 {
     if (out_3118 != 0) {
-        *out_3118 = D_80163118;
+        *out_3118 = D_80163118.buttons_00;
     }
     if (out_311e != 0) {
-        *out_311e = D_8016311E;
+        *out_311e = D_80163118.buttons_06;
     }
     if (out_311a != 0) {
-        *out_311a = D_8016311A;
+        *out_311a = D_80163118.x_02;
     }
     if (out_311b != 0) {
-        *out_311b = D_8016311B;
+        *out_311b = D_80163118.y_03;
     }
 }

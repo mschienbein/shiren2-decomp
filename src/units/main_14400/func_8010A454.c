@@ -23,7 +23,9 @@ s32 func_800E20CC(Obj *);
 void *func_800A6CC0(void *, void *);
 void *func_800B4928(Pos *);
 void *func_800A65E4(void *, void *, void *);
-Pos func_8010ECD0(Target *, Obj *, Dir *);
+/* Explicit-output contract: the result buffer is the first argument (sp+0x10 in a0
+ * at 0x8010A4E4..0x8010A4F0); obj is passed as its leading position. */
+Pos *func_8010ECD0(Pos *out, Target *effect, Obj *position, Dir *direction);
 s32 func_800A251C(Pos *, void *);
 u8 func_800A6420(Obj *, void *);
 s32 func_800E1CC4(Obj *, s32);
@@ -51,7 +53,7 @@ s32 func_8010A454(Obj *obj) {
         dir = direction;
         if (target != 0 && obj->modeDC == 2) {
             s32 blocked;
-            pos = func_8010ECD0(target, obj, &dir);
+            func_8010ECD0(&pos, target, obj, &dir);
             blocked = func_800A251C(&pos, other) ^ 1;
             if (blocked) {
                 return 0;

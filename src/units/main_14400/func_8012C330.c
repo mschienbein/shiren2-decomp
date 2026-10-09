@@ -37,7 +37,7 @@ typedef struct {
 extern void func_8012C004(Obj *);
 extern s32 D_801CA6F0;
 
-s32 func_8012C330(Obj *o, Def *def, s32 idx, s16 a3, s16 a4, s32 a5) {
+s32 func_8012C330(Obj *o, Def *def, s32 idx, s32 a3, s32 a4, s32 a5) {
     func_8012C004(o);
     o->field_A6 = idx;
     o->def_78 = def;

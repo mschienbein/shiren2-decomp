@@ -1,0 +1,39 @@
+;; Function func_8008C6B8
+;;	 -- basic block number 0 from 128 to 48 --
+;; ready list initially:
+;; 48 
+;; insn[ 130]: priority =    1, ref_count =    1
+;; insn[  17]: priority =    1, ref_count =    1
+;; insn[  19]: priority =    1, ref_count =    1
+;; insn[  21]: priority =    1, ref_count =    1
+;; ready list at T-10: 130 (1) 17 (1) 19 (1) 21 (1), now 21 19 17 130
+;; insn 130 has a greater potential hazard, now 130 21 19 17
+;; ready list at T-11: 21 (1) 19 (1) 17 (1), now 21 19 17
+;; ready list at T-12: 19 (1) 17 (1), now 19 17
+;; total time = 18
+;; new basic block head = 126
+;; new basic block end = 48
+;;	 -- basic block number 7 from 112 to 145 --
+;; ready list initially:
+;; 145 
+;; insn[ 115]: priority =    1, ref_count =    4
+;; insn[ 137]: priority =    1, ref_count =    1
+;; insn[ 139]: priority =    1, ref_count =    1
+;; insn[ 141]: priority =    1, ref_count =    1
+;; insn[ 142]: priority =    2, ref_count =    3
+;; insn[ 144]: priority =    2, ref_count =    1
+;; insn[ 116]: priority =    2, ref_count =    1
+;; insn[ 145]: priority = 2147483556, ref_count =    0
+;; ready list at T-1: 145 (7fffffa4), now 145
+;; ready list at T-2: 144 (2), now 144
+;; ready list at T-3: 142 (2), now 142
+;; launching 141 before 142 with 1 stalls at T-4
+;; launching 139 before 142 with 1 stalls at T-4
+;; launching 137 before 142 with 1 stalls at T-4
+;; ready list at T-5: 141 (1) 139 (1) 137 (1), now 141 139 137
+;; ready list at T-6: 139 (1) 137 (1), now 139 137
+;; ready list at T-7: 137 (1) 115 (1), now 137 115
+;; ready list at T-8: 115 (1), now 115
+;; total time = 8
+;; new basic block head = 112
+;; new basic block end = 145

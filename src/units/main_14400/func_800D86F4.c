@@ -4,7 +4,7 @@ typedef unsigned char u8;
 
 typedef struct {
     u8 pad0[0x4C];
-    void *vtable;
+    const void *vtable;
     u8 pad50[0xAC];
     s32 count;
     u8 pad100[0xC];
@@ -21,9 +21,9 @@ typedef struct {
     s32 xD0;
 } Unit;
 typedef struct { s32 value; s32 x4; } ReadResult;
-extern u8 D_80153078[];
+extern const unsigned char D_80153078[152];
 extern u8 D_80151EC8[];
-extern u8 D_80151E38[];
+extern const unsigned char D_80151E38[144];
 void *func_800953C0(void *o);
 void func_8009F680(Loader *loader, s32 arg);
 s32 func_800CD278(void *container);

@@ -5,15 +5,14 @@ typedef unsigned char u8;
 typedef signed short s16;
 typedef unsigned short u16;
 
-/* Owned .data block 0x801397D8..0x801397E0 (original bytes 01 50 06 00 00 00 00 00). */
-u8 D_801397D8 = 0x01;
-u8 D_801397D9 = 0x50;
-u8 D_801397DA = 0x06;
+/* Owned .data: the toggle byte D_801397DB (original value 0). The four zero bytes
+ * 0x801397DC..0x801397DF that follow are not an object of this file: GCC 2.8.1's
+ * MIPS DATA_ALIGNMENT word-aligns every array/struct, so no aggregate can begin at
+ * the odd address 0x801397DB; they stay in the unowned data that leads up to the
+ * table D_801397E0.
+ * The preceding defaults D_801397D9/DA belong to func_80051E9C, whose
+ * call delay slot reads them; this function never references those defaults. */
 u8 D_801397DB = 0;
-u8 D_801397DC = 0;
-u8 D_801397DD = 0;
-u8 D_801397DE = 0;
-u8 D_801397DF = 0;
 extern u8 D_80161670;
 
 void func_80052C34(void);

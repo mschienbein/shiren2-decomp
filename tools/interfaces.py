@@ -42,10 +42,48 @@ function (its C definition, else the agreed declaration) for authors; `--registr
 external function shapes and object categories/sites, with disagreements. `tools/adopt.py`
 uses `Gate` to refuse a candidate that introduces findings over the canonical tree plus the
 candidates adopted before it.
+
+C++ translation units (`.cpp`, a `language: c++` profile) take the same preprocessing step with
+their own driver and flags, so cc1plus's view of the expanded TU (`-D__cplusplus`, headers) is
+what is audited. pycparser cannot parse C++, so the preprocessed text is handed to the clang pinned
+as `clang_ast` in toolchain.lock.json (hash-checked, `-fsyntax-only -Xclang -ast-dump=json` for a
+32-bit MIPS target) and its JSON AST is walked: every function with C language linkage (declared
+inside `extern "C"` or redeclaring one) contributes its declarations, definitions (including
+inline bodies) and every direct call whose callee is that declaration, with the same categories
+and integer kinds as C. Types are bound by clang's declaration identities, never by a spelling
+looked up at the wrong scope: a typedef by its id and clang's type tree (implicit builtin typedefs
+included), a record or enum by its declaration. A parameter or object spelling without a typedef
+id is no typedef; its record/enum is the tag declaration clang's printed name (which omits
+function scopes) denotes, and every tag it can denote must agree, else the TU is refused. Only a
+written return type is looked up by name, through modelled scopes: blocks in order, selection and
+iteration statements (each unbraced substatement its own block), complete classes inside member and
+friend bodies, a namespace with its anonymous namespace (clang's implicit using-directive), and an
+out-of-line definition's own class or namespace. A tag only a friend declaration has declared is
+invisible to that lookup, and a lookup that would pass over one refuses; elaborated tags a local
+class declares belong to its innermost enclosing non-class scope. `bool` and
+`wchar_t` are distinct 4-byte integer kinds (g++ 2.8.1 on this target) compatible only with
+themselves, references are pointers, and an enum's compatible type follows the same GCC 2.8.1 rule
+as C. C++-linkage functions, methods and constructors are not part of the C interface (the C++
+object may not export or import mangled names; see `tools/match.py`). External objects with
+unmangled linkage, including ordinary global C++ objects and block-scope externs, join the
+unchanged object-category gate without array decay. Clang's mangled identities distinguish these
+from static, const, local-static and anonymous-namespace objects; externally mangled object names
+fail closed. A missing or changed pinned clang, a clang error, a template, an asm label or alias,
+an inline namespace, a using-declaration/directive, a member pointer anywhere in a type (behind a
+typedef, pointer, reference or array too), a typeof/decltype spelling without a typedef's type tree,
+a statement kind the scope model does not know, sugared function types or any type the classifier
+cannot resolve makes the TU a parse-failure finding. Qualified names bind their
+first prefix in the nearest scope; inherited, aliased or later-member (ill-formed, no diagnostic)
+class lookups refuse rather than fall back to an outer shadow. Enum values require layout-independent
+initializer dependencies (including static members): no sizeof/alignof/offsetof or type trait and
+no pointer, reference, array or function value (pointer arithmetic scales by clang's element sizes),
+and value-preserving known integer conversions of at most 32 bits; values outside the supported
+32-bit enum range, or a negative enumerator with one above 0x7FFFFFFF, are refused.
 """
 from __future__ import annotations
 
 import argparse
+import bisect
 import json
 import operator
 import os
@@ -59,11 +97,12 @@ from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, NamedTuple
 
 from pycparser import c_ast, c_generator, c_parser
 
-from certification import compiler_environment, profile_toolchain, tool_profile
+from certification import compiler_environment, profile_kind, profile_toolchain, read_json, sha256, tool_profile
+from evidence import COMPILED_SUFFIXES, compiled_kind
 from rom import PROJECT
 
 KINDS = ("parse-failure", "declaration-vs-definition", "declaration-disagreement", "unprototyped", "call-arity", "object-category")
@@ -122,6 +161,8 @@ class Kind:
 POINTER = Kind("pointer", "pointer", 4)
 VOID = Kind("void", "void", 0)
 INT = Kind("int", "integer", 4)
+# g++ 2.8.1 on this target: sizeof(bool) == sizeof(wchar_t) == 4 (measured with cc1plus).
+CXX_INTEGERS = {"bool": Kind("bool", "integer", 4), "wchar_t": Kind("wchar_t", "integer", 4)}
 
 
 @dataclass(frozen=True)
@@ -154,7 +195,8 @@ def incompatibilities(a: Kind, b: Kind) -> list[str]:
     category; for integers (ISO-strict, even at equal width): width, int-vs-long, signedness,
     char-signedness when plain `char` meets an explicitly signed or unsigned char, and
     enum-underlying when an enum's compatible type (unsigned int without negative enumerators,
-    else int) differs from the other side's integer or enum type. Pointers are compatible
+    else int) differs from the other side's integer or enum type. C++ `bool` and `wchar_t` are
+    distinct types compatible only with themselves (`cxx-type`). Pointers are compatible
     whatever their pointee; by-value aggregates compare by category.
     """
     if a.category != b.category:
@@ -165,6 +207,8 @@ def incompatibilities(a: Kind, b: Kind) -> list[str]:
         return ["width"]
     if a.underlying or b.underlying:
         return ["enum-underlying"]
+    if {a.rank, b.rank} & CXX_INTEGERS.keys():
+        return ["cxx-type"]
     subkinds = ["int-vs-long"] if a.rank != b.rank else []
     if "plain" in (a.sign, b.sign):
         subkinds.append("char-signedness")
@@ -632,6 +676,813 @@ def parse_tu(preprocessed: str, tu: str, profile: str | None = None) -> TUResult
         return TUResult(tu, profile, error=f"parse: {type(error).__name__}: {error}")
 
 
+# ---------------------------------------------------------------- C++ (pinned clang JSON AST)
+
+LINE_DIRECTIVE = re.compile(r'#(?:line)? (\d+) "([^"]*)"')
+CLANG_LOCATION = re.compile(r"<stdin>:(\d+):(\d+)")
+CXX_QUALIFIERS = {"const", "volatile", "__restrict", "restrict"}
+CXX_QUALIFIER_EDGES = re.compile(r"^(?:(?:const|volatile|__restrict|restrict)\s+)+|(?:\s+(?:const|volatile|__restrict|restrict))+$")
+CXX_BUILTIN_WORDS = {"void", "bool", "wchar_t", "char", "short", "int", "long", "float", "double", "signed", "unsigned"}
+CXX_TYPE_SUFFIXES = (" throw()", " noexcept", " __attribute__((noreturn))")
+# Constructs whose C interface this walker does not model; a TU using one is a parse-failure.
+CXX_UNSUPPORTED = {"FunctionTemplateDecl", "ClassTemplateDecl", "ClassTemplatePartialSpecializationDecl",
+                   "VarTemplateDecl", "TypeAliasTemplateDecl", "UnresolvedLookupExpr", "UnresolvedMemberExpr",
+                   "CXXDependentScopeMemberExpr", "AsmLabelAttr", "AliasAttr",
+                   "UsingDecl", "UsingDirectiveDecl", "NamespaceAliasDecl"}
+CXX_FUNCTIONS = {"FunctionDecl", "CXXMethodDecl", "CXXConstructorDecl", "CXXDestructorDecl", "CXXConversionDecl"}
+CXX_RECORDS = {"CXXRecordDecl", "RecordDecl"}
+CXX_TAGS = CXX_RECORDS | {"EnumDecl"}
+CXX_TYPEDEFS = {"TypedefDecl", "TypeAliasDecl"}
+# Not ordinary-lookup class members: constructors, destructors and conversions are found through the
+# class name, never by their own.
+CXX_NOT_MEMBERS = CXX_RECORDS | CXX_TYPEDEFS | {"EnumDecl", "FriendDecl", "AccessSpecDecl", "StaticAssertDecl",
+                                                "CXXConstructorDecl", "CXXDestructorDecl", "CXXConversionDecl"}
+CXX_RECORD_KEYWORDS = {"struct", "class", "union"}
+CXX_ARRAY = Kind("array", "array", None)
+CXX_ANONYMOUS_NAMESPACE = "(anonymous namespace)"
+CXX_ANONYMOUS_TAG = re.compile(r"\((?:anonymous|unnamed) (struct|class|union|enum) at [^()]*\)")
+# The outer pointer, reference or array declarator decides the category of these type nodes.
+CXX_DECLARATOR_TYPES = {"PointerType", "LValueReferenceType", "RValueReferenceType", "ConstantArrayType",
+                        "IncompleteArrayType"}
+# typeof/decltype spell an operand, not the type tree it stands for.
+CXX_OPAQUE_SPELLING = re.compile(r"\b(?:typeof|typeof_unqual|__typeof__|__typeof|decltype|__decltype)\s*\(")
+# Selection and iteration statements are scopes and so is each of their substatements, braced or not
+# (C++98 6.4/1, 6.5/2). Any other statement kind must be scope-neutral and listed here, or it refuses.
+CXX_STATEMENT_SCOPES = {"IfStmt", "SwitchStmt", "WhileStmt", "DoStmt", "ForStmt", "CXXForRangeStmt"}
+CXX_PLAIN_STATEMENTS = {"CompoundStmt", "DeclStmt", "NullStmt", "LabelStmt", "CaseStmt", "DefaultStmt", "ReturnStmt",
+                        "BreakStmt", "ContinueStmt", "GotoStmt", "IndirectGotoStmt", "AttributedStmt", "GCCAsmStmt"}
+# Name lookup: a nested-name-specifier names a namespace or type; an elaborated name ignores non-types.
+# A "friend" entry (a tag only a friend declaration has declared) is never found.
+CXX_TYPE_ENTRIES = frozenset({"typedef", "record", "enum"})
+CXX_QUALIFIER_ENTRIES = CXX_TYPE_ENTRIES | {"namespace"}
+CXX_ORDINARY_ENTRIES = CXX_QUALIFIER_ENTRIES | {"other"}
+# Enumerator dependencies whose value clang derives from its own layout or type properties.
+CXX_LAYOUT_EXPRESSIONS = {"UnaryExprOrTypeTraitExpr", "OffsetOfExpr", "ArraySubscriptExpr", "TypeTraitExpr",
+                          "ArrayTypeTraitExpr", "ExpressionTraitExpr", "AddrLabelExpr"}
+CXX_POINTER_CASTS = {"PointerToIntegral", "PointerToBoolean", "IntegralToPointer", "NullToPointer",
+                     "ArrayToPointerDecay", "FunctionToPointerDecay", "BuiltinFnToFnPtr", "BitCast", "LValueBitCast"}
+MANGLED_LENGTH = re.compile(r"[1-9][0-9]*")
+
+
+def clang_ast_command(tool_root: Path, source_root: Path) -> tuple[list[str] | None, str | None]:
+    """The pinned clang argv dumping a preprocessed C++ TU (stdin) as a JSON AST, or why it cannot run."""
+    try:
+        spec = read_json(source_root / "toolchain.lock.json")["clang_ast"]
+        relative = Path(spec["install_directory"])
+        invocation = spec["invocation"]
+        if relative.is_absolute() or relative.parts[0] != ".cache" or ".." in relative.parts:
+            return None, "invalid clang_ast install directory"
+        if not isinstance(invocation, list) or any(not isinstance(flag, str) for flag in invocation):
+            return None, "invalid clang_ast invocation"
+        path = tool_root / relative / "clang"
+        if not path.is_file() or sha256(path) != spec["binary_sha256"]:
+            return None, f"pinned clang_ast {relative / 'clang'} is missing or changed; run tools/setup.py"
+        return [str(path.resolve()), *invocation, "-"], None
+    except (OSError, KeyError, TypeError, ValueError) as error:
+        return None, f"no usable clang_ast pin in toolchain.lock.json ({type(error).__name__}: {error})"
+
+
+class _LineMap:
+    """Preprocessed-text offsets -> (displayed file, presumed line, column) through cpp linemarkers."""
+
+    def __init__(self, text: str, tu: str) -> None:
+        self.tu = tu
+        self.starts: list[int] = []
+        self.markers: list[tuple[int, str, int]] = []  # physical line, file, presumed line of the next line
+        offset = 0
+        for index, line in enumerate(text.split("\n")):
+            self.starts.append(offset)
+            offset += len(line) + 1
+            found = LINE_DIRECTIVE.match(line)
+            if found:
+                self.markers.append((index, found[2], int(found[1])))
+        self.marker_lines = [marker[0] for marker in self.markers]
+
+    def __call__(self, offset: int) -> tuple[str, int, int]:
+        index = bisect.bisect_right(self.starts, offset) - 1
+        column = offset - self.starts[index] + 1
+        position = bisect.bisect_left(self.marker_lines, index) - 1  # last marker before this line
+        if position < 0:
+            return self.tu, index + 1, column
+        line, file, presumed = self.markers[position]
+        return display(file), presumed + index - line - 1, column
+
+
+def split_function_type(text: str) -> tuple[str, list[str]]:
+    """`R (P1, P2, ...)` -> (R, [P1, P2, ...]); `...` stays as the last parameter."""
+    text = text.strip()
+    for suffix in CXX_TYPE_SUFFIXES:
+        text = text.removesuffix(suffix)
+    if not text.endswith(")"):
+        raise ValueError(f"unsupported function type {text!r}")
+    depth = 0
+    for index in range(len(text) - 1, -1, -1):
+        depth += {")": 1, "(": -1}.get(text[index], 0)
+        if depth == 0:
+            break
+    else:
+        raise ValueError(f"unbalanced function type {text!r}")
+    inside, parameters, depth, start = text[index + 1:-1], [], 0, 0
+    for position, character in enumerate(inside + ","):
+        depth += {"(": 1, "[": 1, "<": 1, ")": -1, "]": -1, ">": -1}.get(character, 0)
+        if character == "," and depth == 0:
+            parameters.append(inside[start:position].strip())
+            start = position + 1
+    parameters = [] if parameters in ([""], ["void"]) else parameters
+    return text[:index].rstrip(), parameters
+
+
+def _without_qualifiers(text: str) -> str:
+    return CXX_QUALIFIER_EDGES.sub("", text.strip())
+
+
+def _split_keyword(text: str) -> tuple[str | None, str]:
+    """`struct T` -> ("struct", "T"); an unelaborated spelling has no keyword."""
+    head, _, rest = text.partition(" ")
+    return (head, rest.strip()) if head in CXX_RECORD_KEYWORDS | {"enum"} and rest.strip() else (None, text)
+
+
+def _layout_free(type_: dict[str, Any]) -> bool:
+    """A value of this clang type has no pointer, reference, array or function component."""
+    spelling = type_.get("desugaredQualType", type_.get("qualType", ""))
+    spelling = CXX_ANONYMOUS_TAG.sub("", spelling).replace(CXX_ANONYMOUS_NAMESPACE, "")
+    return not any(character in spelling for character in "*&[(")
+
+
+def _internal_mangling(emitted: str) -> bool:
+    """Itanium names of internal-linkage objects: `_ZL`, local statics (`_ZZ`), and nested names inside
+    an anonymous namespace or whose last component is `L`-prefixed (a namespace-scope const object)."""
+    if emitted.startswith(("_ZL", "_ZZ")):
+        return True
+    if not emitted.startswith("_ZN") or not emitted.endswith("E"):
+        return False
+    index, internal, names = 3, False, []
+    while index < len(emitted) - 1:
+        internal = emitted[index] == "L"
+        index += internal
+        length = MANGLED_LENGTH.match(emitted, index)
+        if length is None:
+            return False
+        index = length.end() + int(length[0])
+        names.append(emitted[length.end():index])
+    return index == len(emitted) - 1 and (internal or any(name.startswith("_GLOBAL__N") for name in names))
+
+
+class _Entry(NamedTuple):
+    order: int  # AST pre-order position of the declaration
+    kind: str  # typedef | record | enum | namespace | other (a non-type class member) | friend (see CXX_TYPE_ENTRIES)
+    ref: str  # declaration id, or a namespace's scope
+
+
+@dataclass
+class _Tag:
+    kind: str  # record | enum
+    printed: str | None  # clang's printed name (no function scopes); None when not derived here
+    names: set[str]  # its own name, or the typedef names of an unnamed tag
+    node: dict[str, Any]
+    members: str | None = None  # a record's member scope
+
+
+class _CxxCollector:
+    """Walk clang's JSON AST: C-linkage function sites/calls and unmangled external objects.
+
+    Types are bound by clang's declaration identities: a typedef by its id and type tree, a record or
+    enum by its declaration. A spelling without an id is no typedef; its tag must be the only agreeing
+    one under clang's printed name. Only a written return type is looked up by name, in modelled scopes
+    (blocks, selection/iteration statements and their substatements, complete classes, namespaces with
+    their anonymous namespaces, an out-of-line body's own scope), among visible declarations: a
+    friend-only tag never binds and a lookup past one refuses; any other step refuses.
+    """
+
+    def __init__(self, tu: str, text: str) -> None:
+        self.tu = tu
+        self.locate = _LineMap(text, tu)
+        self.orders: dict[str, int] = {}
+        self.entries: dict[str, dict[str, list[_Entry]]] = defaultdict(lambda: defaultdict(list))  # scope -> name
+        self.contexts: dict[str, tuple[str | None, str | None]] = {}  # declaration context id -> (scope, printed prefix)
+        self.lookups: dict[str, tuple[str, frozenset[str]]] = {}  # function id -> (lexical scope, complete classes)
+        self.class_scopes: set[str] = set()
+        self.namespace_scopes: set[str] = set()
+        self.inherited_scopes: set[str] = set()  # unmodelled base lookup must not fall through to an outer typedef
+        self.tags: dict[str, _Tag] = {}
+        self.typedef_nodes: dict[str, dict[str, Any]] = {}  # every typedef, implicit ones included
+        self.typedef_kinds: dict[str, Kind] = {}
+        self.resolving: set[str] = set()
+        self.enum_kinds: dict[str, str] = {}
+        self.constants: dict[str, dict[str, Any]] = {}
+        self.enum_predecessors: dict[str, str] = {}
+        self.c_functions: dict[str, str] = {}  # clang declaration id -> name, every C-linkage redeclaration
+        self.function_local: dict[str, bool] = {}  # linkage follows declaration identity, not a namespace's short name
+        self.raw_sites: list[Site] = []
+        self.raw_calls: list[Call] = []
+        self.objects: list[ObjectSite] = []
+
+    def location(self, node: dict[str, Any]) -> tuple[str, int, int]:
+        loc = node.get("loc") or node.get("range", {}).get("begin") or {}
+        offset = loc.get("offset", loc.get("spellingLoc", {}).get("offset"))
+        return (self.tu, 0, 0) if offset is None else self.locate(offset)
+
+    def where(self, node: dict[str, Any]) -> str:
+        return ":".join(map(str, self.location(node)[:2]))
+
+    # -- pre-pass: declaration identities, lexical scopes and clang's printed tag names
+    def index(self, root: dict[str, Any]) -> None:
+        self.contexts[root.get("id", "")] = ("", "")
+        self._index(root, "", "", frozenset())
+
+    def _index(self, node: dict[str, Any], scope: str, printed: str | None, complete: frozenset[str],
+               friend: bool = False) -> None:
+        identity, kind, name = node.get("id", ""), node.get("kind"), node.get("name")
+        order = self.orders.setdefault(identity, len(self.orders))
+        children = node.get("inner", [])
+        if kind in ("VarDecl", "EnumConstantDecl"):
+            self.constants[identity] = node  # declaration identities, not DeclRefExpr's initializer-free summaries
+        if kind == "NamespaceDecl":
+            if node.get("isInline"):  # an implicit scope import that is not modelled
+                raise ValueError(f"{self.tu}: unsupported C++ construct inline NamespaceDecl at {self.where(node)}")
+            part = name or CXX_ANONYMOUS_NAMESPACE
+            self.add(scope, part, "namespace", f"{scope}{part}::", order)
+            scope, printed = f"{scope}{part}::", None if printed is None else f"{printed}{part}::"
+            self.namespace_scopes.add(scope)
+            self.contexts[identity] = (scope, printed)
+        elif kind == "LinkageSpecDecl":
+            self.contexts[identity] = (scope, printed)
+        elif kind in CXX_RECORDS and not node.get("isImplicit"):
+            home, prefix = self.home(node, scope, printed)
+            if name:  # a friend-only tag is invisible to ordinary lookup until redeclared
+                self.add(home, name, "friend" if friend else "record", identity, order)
+            scope = f"{home}{name}::" if name else f"{home}(record {identity})::"  # unnamed: members stay inside
+            # Clang prints an unnamed class's nested names through its typedef name; not derived here.
+            tag_printed = f"{prefix}{name}" if name and prefix is not None else None
+            self.tags[identity] = _Tag("record", tag_printed, {name} if name else set(), node, scope)
+            self.class_scopes.add(scope)
+            if node.get("bases"):
+                self.inherited_scopes.add(scope)
+            printed = None if tag_printed is None else f"{tag_printed}::"
+            self.contexts[identity] = (scope, printed)
+            for child in children:
+                self._index(child, scope, printed, complete)
+                self.add_member(scope, child)
+            return
+        elif kind == "EnumDecl":
+            home, prefix = self.home(node, scope, printed)
+            if name:
+                self.add(home, name, "friend" if friend else "enum", identity, order)
+            self.tags[identity] = _Tag("enum", f"{prefix}{name}" if name and prefix is not None else None,
+                                       {name} if name else set(), node)
+            enumerators = [child["id"] for child in children if child.get("kind") == "EnumConstantDecl"]
+            self.enum_predecessors.update(zip(enumerators[1:], enumerators))
+        elif kind in CXX_TYPEDEFS:
+            self.typedef_nodes[identity] = node
+            if name and not node.get("isImplicit"):
+                self.add(scope, name, "typedef", identity, order)
+                self.name_unnamed_tag(node)
+            return  # a type tree declares nothing
+        elif kind in CXX_FUNCTIONS:
+            self.lookups[identity] = (scope, complete)
+            self.contexts[identity] = (None, "")  # clang prints function-local types without outer scopes
+            body = scope
+            if ("parentDeclContextId" in node and scope not in self.class_scopes
+                    and any(child.get("kind") == "CompoundStmt" for child in children)):
+                body = self.home(node, scope, printed)[0]  # an out-of-line body looks up in its own class/namespace
+            # Every body inside a class definition is a complete-class context of the enclosing classes.
+            inside = complete | {prefix for prefix in self.prefixes(body) if prefix in self.class_scopes}
+            for child in children:
+                compound = child.get("kind") == "CompoundStmt"
+                self._index(child, body if compound else scope, "", inside if compound else complete)
+            return
+        elif kind == "FriendDecl":
+            for child in children:
+                self._index(child, scope, printed, complete, friend=child.get("kind") in CXX_TAGS)
+            return
+        elif kind in CXX_STATEMENT_SCOPES:
+            scope = f"{scope}(statement {identity})::"
+            substatements = self.substatements(node)
+            for position, child in enumerate(children):
+                inner = f"{scope}(substatement {position})::" if position in substatements else scope
+                self._index(child, inner, printed, complete)
+            return
+        elif kind == "CompoundStmt":
+            scope = f"{scope}(block {identity})::"
+        elif str(kind).endswith("Stmt") and kind not in CXX_PLAIN_STATEMENTS:
+            raise ValueError(f"{self.tu}: unsupported C++ statement {kind} at {self.where(node)}")
+        for child in children:
+            self._index(child, scope, printed, complete)
+
+    def substatements(self, node: dict[str, Any]) -> set[int]:
+        """Positions of a selection/iteration statement's substatements in clang's children: an optional
+        init statement and condition variable precede the condition, absent `for` parts are `{}`."""
+        kind, count = node["kind"], len(node.get("inner", []))
+        head = bool(node.get("hasInit")) + bool(node.get("hasVar"))
+        expected, positions = {"IfStmt": (head + 2 + bool(node.get("hasElse")), {head + 1, head + 2}),
+                               "SwitchStmt": (head + 2, {head + 1}), "WhileStmt": (head + 2, {head + 1}),
+                               "DoStmt": (2, {0}), "ForStmt": (5, {4}), "CXXForRangeStmt": (8, {7})}[kind]
+        if count != expected or node.get("isConsteval"):
+            raise ValueError(f"{self.tu}: unsupported C++ {kind} layout at {self.where(node)}")
+        return {position for position in positions if position < count}
+
+    def home(self, node: dict[str, Any], scope: str, printed: str | None) -> tuple[str, str | None]:
+        """Scope and printed prefix of a declaration's semantic context (friend, elaborated, out-of-line).
+        A function context (a local class's friend or elaborated tag) is the innermost non-class scope
+        around the declaration, a block or statement scope."""
+        context = node.get("parentDeclContextId")
+        if context is None:
+            return scope, printed
+        if context not in self.contexts:
+            raise ValueError(f"{self.tu}: unmodelled declaration context of {node.get('kind')} {node.get('name')}")
+        home, prefix = self.contexts[context]
+        if home is None:
+            home = scope
+            while home in self.class_scopes:
+                home = self.enclosing(home)
+        return home, prefix
+
+    def add(self, scope: str, name: str, kind: str, ref: str, order: int) -> None:
+        self.entries[scope][name].append(_Entry(order, kind, ref))
+
+    def add_member(self, scope: str, child: dict[str, Any]) -> None:
+        """Non-type class members (and enumerators) also take part in class-scope lookup."""
+        if child.get("isImplicit"):
+            return
+        kind = child.get("kind")
+        members = ([item for item in child.get("inner", []) if item.get("kind") == "EnumConstantDecl"]
+                   if kind == "EnumDecl" else [] if kind in CXX_NOT_MEMBERS else [child])
+        for member in members:
+            if member.get("name"):
+                self.add(scope, member["name"], "other", member["id"], self.orders[member["id"]])
+
+    def name_unnamed_tag(self, node: dict[str, Any]) -> None:
+        """`typedef struct { ... } S;`: clang prints the unnamed class as S."""
+        trees = self.type_children(node)
+        tree = trees[0] if len(trees) == 1 else {}
+        while tree.get("kind") == "ElaboratedType" and len(self.type_children(tree)) == 1:
+            tree = self.type_children(tree)[0]
+        tag = self.tags.get(tree.get("decl", {}).get("id"))
+        if tag is not None and not tag.node.get("name"):
+            tag.names.add(node["name"])
+
+    @staticmethod
+    def prefixes(scope: str) -> list[str]:
+        parts = scope.split("::")[:-1]
+        return ["".join(f"{part}::" for part in parts[:count]) for count in range(1, len(parts) + 1)]
+
+    @staticmethod
+    def enclosing(scope: str) -> str:
+        parent = scope[:-2].rpartition("::")[0]
+        return parent + "::" if parent else ""
+
+    # -- pass 1: C-linkage declarations, definitions and objects
+    def declarations(self, node: dict[str, Any], c_linkage: bool = False, linkage_extern: bool = False) -> None:
+        kind, name = node.get("kind"), node.get("name")
+        if kind in CXX_UNSUPPORTED and not self.anonymous_using(node):
+            raise ValueError(f"{self.tu}: unsupported C++ construct {kind} at {self.where(node)}")
+        if kind == "LinkageSpecDecl":
+            c_linkage = node.get("language") == "C"
+            linkage_extern = not node.get("hasBraces", False)
+        elif kind in CXX_TYPEDEFS:
+            if name and not node.get("isImplicit"):
+                self.typedef_by_id(node["id"])  # every written typedef must classify, used or not
+            return
+        elif kind == "EnumDecl" and name:
+            self.enum_kind(node["id"])
+        elif kind == "FunctionDecl" and not node.get("isImplicit"):
+            self.function(node, c_linkage)
+        elif kind == "VarDecl" and not node.get("isImplicit"):
+            self.object(node, linkage_extern)
+        for child in node.get("inner", []):
+            self.declarations(child, c_linkage, linkage_extern if kind == "LinkageSpecDecl" else False)
+
+    @staticmethod
+    def anonymous_using(node: dict[str, Any]) -> bool:
+        """Clang's implicit using-directive after an anonymous namespace (modelled by `visible`)."""
+        return (node.get("kind") == "UsingDirectiveDecl" and bool(node.get("isImplicit"))
+                and node.get("nominatedNamespace", {}).get("name") == "")
+
+    def enum_underlying(self, node: dict[str, Any]) -> str:
+        """GCC 2.8.1's compatible type, as for C: unsigned int, or int when any enumerator is negative."""
+        if "fixedUnderlyingType" in node:
+            raise ValueError(f"{self.tu}: enum {node.get('name')} has a fixed underlying type")
+        if not self.target_independent_constant(node):
+            # Clang's bool/record layout is not g++ 2.8.1's; follow const aliases before trusting a value.
+            raise ValueError(f"{self.tu}: layout-dependent or unresolved enum {node.get('name')} is unsupported")
+        value, low, high = -1, 0, 0
+        for child in node.get("inner", []):
+            if child.get("kind") != "EnumConstantDecl":
+                continue
+            if child.get("inner"):
+                value = self.enum_constant_value(child["inner"][0])
+            else:
+                value += 1
+            if not -(1 << 31) <= value <= 0xFFFFFFFF:
+                raise ValueError(f"{self.tu}: enumerator {child.get('name')} is outside supported 32-bit range")
+            low, high = min(low, value), max(high, value)
+        if low < 0 and high > 0x7FFFFFFF:  # no 32-bit type holds both: g++ and clang widen the enum
+            raise ValueError(f"{self.tu}: enum {node.get('name')} spans {low}..{high}, outside supported 32-bit range")
+        return "int" if low < 0 else "int unsigned"
+
+    def enum_constant_value(self, node: dict[str, Any]) -> int:
+        """Read a folded value through only proven value-preserving enum conversions."""
+        if node.get("kind") == "ConstantExpr" and "value" in node:
+            return int(node["value"])
+        children = node.get("inner", [])
+        if len(children) == 1:
+            if node.get("kind") == "ParenExpr":
+                return self.enum_constant_value(children[0])
+            if node.get("kind") == "ImplicitCastExpr" and node.get("castKind") in ("IntegralCast", "NoOp"):
+                value = self.enum_constant_value(children[0])
+                type_ = node.get("type", {})
+                words = type_.get("desugaredQualType", type_.get("qualType", "")).split()
+                # These target integer widths are known; bool, wchar_t, plain char and unknown
+                # types do not justify unwrapping a representation conversion.
+                if words and set(words) <= {"char", "short", "int", "long", "signed", "unsigned"}:
+                    converted = basic_kind(words)
+                    if converted.width > 4:  # clang widened the enum beyond any 32-bit type
+                        raise ValueError(f"{self.tu}: enum constant conversion to {type_.get('qualType')} "
+                                         "is outside supported 32-bit range")
+                    if converted.name != "char":
+                        bits = converted.width * 8
+                        low = 0 if converted.sign == "unsigned" else -(1 << (bits - 1))
+                        high = (1 << (bits if converted.sign == "unsigned" else bits - 1)) - 1
+                        if low <= value <= high:
+                            return value
+                raise ValueError(f"{self.tu}: unsupported enum constant conversion to {type_}")
+        raise ValueError(f"{self.tu}: enumerator has no supported constant value")
+
+    def target_independent_constant(self, node: dict[str, Any], active: frozenset[str] = frozenset()) -> bool:
+        """Prove that the expression and all referenced initializers avoid foreign layout: no sizeof,
+        alignof, offsetof or type trait, and no pointer, reference, array or function value (pointer
+        arithmetic, subscripts and address casts scale by clang's element sizes)."""
+        kind = node.get("kind")
+        if kind in CXX_LAYOUT_EXPRESSIONS or node.get("castKind") in CXX_POINTER_CASTS:
+            return False
+        if "type" in node and not _layout_free(node["type"]):
+            return False
+        if kind in ("DeclRefExpr", "MemberExpr"):
+            identity = (node.get("referencedDecl", {}).get("id") if kind == "DeclRefExpr"
+                        else node.get("referencedMemberDecl"))
+            target = self.constants.get(identity)
+            if target is None or identity in active:
+                return False
+            if not self.target_independent_constant(target, active | {identity}):
+                return False
+            # MemberExpr's base is also an expression; its initializer cannot hide layout use.
+        children = node.get("inner", [])
+        if kind == "VarDecl" and (not node.get("init") or not children):
+            previous = node.get("previousDecl")
+            target = self.constants.get(previous)
+            if target is None or previous in active:
+                return False  # no initializer whose target independence can be established
+            return self.target_independent_constant(target, active | {previous})
+        if kind == "EnumConstantDecl" and not children:
+            previous = self.enum_predecessors.get(node["id"])
+            if previous is not None:
+                if previous in active:
+                    return False
+                return self.target_independent_constant(self.constants[previous], active | {previous})
+        return all(self.target_independent_constant(child, active) for child in children)
+
+    def function(self, node: dict[str, Any], c_linkage: bool) -> None:
+        if not (c_linkage or node.get("previousDecl") in self.c_functions):
+            return  # C++ linkage: mangled, outside the C interface
+        name = node.get("name")
+        if not name:
+            raise ValueError(f"{self.tu}: unnamed C-linkage function")
+        self.c_functions[node["id"]] = name
+        local = node.get("storageClass") == "static" or self.function_local.get(node.get("previousDecl"), False)
+        self.function_local[node["id"]] = local
+        body = any(child.get("kind") == "CompoundStmt" for child in node.get("inner", []))
+        role = "definition" if body else "declaration"
+        type_ = node["type"]
+        if "desugaredQualType" in type_ or "typeAliasDeclId" in type_:
+            # Spellings inside function-type sugar are written in another scope (a typedef's, an operand's).
+            raise ValueError(f"{self.tu}: sugared C++ function type {type_['qualType']!r} of {name} is unsupported")
+        returns, written = split_function_type(type_["qualType"])
+        variadic = bool(written) and written[-1] == "..."
+        written = written[:-1] if variadic else written
+        if variadic != bool(node.get("variadic")):
+            raise ValueError(f"{self.tu}: inconsistent variadic C++ declaration of {name}")
+        parms = [child for child in node.get("inner", []) if child.get("kind") == "ParmVarDecl"]
+        if len(parms) != len(written):
+            raise ValueError(f"{self.tu}: {name} declares {len(written)} parameter(s) but has {len(parms)} parameter declarations")
+        if "(" in returns or "[" in returns:
+            raise ValueError(f"{self.tu}: unsupported return type {returns!r} of {name}")
+        scope, complete = self.lookups[node["id"]]
+        shape = Shape(self.written_kind(returns, scope, self.orders[node["id"]], complete),
+                      tuple(self.classify_use(p["type"], parameter=True) for p in parms), variadic)
+        file, line, column = self.location(node)
+        text = f'extern "C" {returns} {name}({", ".join([*written, *(["..."] if variadic else [])])})'
+        self.raw_sites.append(Site(name, role, file, line, column, text, shape, local=local))
+
+    def object(self, node: dict[str, Any], linkage_extern: bool) -> None:
+        name, emitted = node.get("name"), node.get("mangledName")
+        if not emitted or node.get("storageClass") == "static":
+            return  # automatic/local static, or explicit internal linkage
+        # These are clang's AST identities only, never names used to compile/link the game.
+        # Redeclarations (including block externs) retain the internal identity of their first declaration.
+        if emitted != name and _internal_mangling(emitted):
+            return
+        if emitted != name:
+            raise ValueError(f"{self.tu}: external C++ object {name} has unsupported mangled linkage")
+        type_ = node["type"]
+        category = self.classify_use(type_, parameter=False, object_type=True).category
+        if category == "void":
+            raise ValueError(f"{self.tu}: external object {name} has void type")
+        role = "definition" if "init" in node or (node.get("storageClass") != "extern" and not linkage_extern) else "declaration"
+        file, line, column = self.location(node)
+        self.objects.append(ObjectSite(name, role, file, line, column, f"{type_['qualType']} {name}", category))
+
+    # -- types by declaration identity
+    @staticmethod
+    def type_children(node: dict[str, Any]) -> list[dict[str, Any]]:
+        return [child for child in node.get("inner", []) if str(child.get("kind", "")).endswith("Type")]
+
+    def typedef_by_id(self, identity: str) -> Kind:
+        """A typedef's kind from clang's type tree, every name in it bound by declaration id."""
+        if identity in self.typedef_kinds:
+            return self.typedef_kinds[identity]
+        node = self.typedef_nodes.get(identity)
+        if node is None or identity in self.resolving:
+            raise ValueError(f"{self.tu}: unresolved C++ typedef identity {identity}")
+        trees = self.type_children(node)
+        if len(trees) != 1:
+            raise ValueError(f"{self.tu}: C++ typedef {node.get('name')} has no single type tree")
+        self.resolving.add(identity)
+        try:
+            kind = self.type_kind(trees[0])
+        finally:
+            self.resolving.discard(identity)
+        self.typedef_kinds[identity] = kind
+        return kind
+
+    def type_kind(self, node: dict[str, Any]) -> Kind:
+        kind, spelled = node.get("kind"), node.get("type", {}).get("qualType", "")
+        children = self.type_children(node)
+        if kind in ("ElaboratedType", "ParenType", "QualType") and len(children) == 1:
+            return self.type_kind(children[0])
+        if kind == "TypedefType":
+            return self.typedef_by_id(node.get("decl", {}).get("id", ""))
+        if kind == "BuiltinType":
+            return self.builtin(spelled)
+        if kind in CXX_DECLARATOR_TYPES:
+            self.member_pointer_free(node, spelled)  # the outer declarator decides the category, not the subset
+            return CXX_ARRAY if kind.endswith("ArrayType") else POINTER  # references pass/store an address
+        if kind in ("RecordType", "EnumType"):
+            identity = node.get("decl", {}).get("id", "")
+            tag = self.tags.get(identity)
+            if tag is None or tag.kind != ("record" if kind == "RecordType" else "enum"):
+                raise ValueError(f"{self.tu}: unresolved C++ type identity {spelled!r}")
+            return Kind(spelled, "aggregate", None) if tag.kind == "record" else self.enum_type(identity, spelled)
+        if kind == "MemberPointerType":
+            raise ValueError(f"{self.tu}: member pointer type {spelled!r} is unsupported")
+        raise ValueError(f"{self.tu}: unclassifiable C++ type {spelled!r} ({kind})")
+
+    def member_pointer_free(self, node: dict[str, Any], outer: str) -> None:
+        """Refuse a member pointer anywhere below a type node: pointee, element, function parameter or
+        return, and through typedef and typeof nodes, which carry their own type trees."""
+        for child in self.type_children(node):
+            if child.get("kind") == "MemberPointerType":
+                raise ValueError(f"{self.tu}: member pointer type {child.get('type', {}).get('qualType')!r} "
+                                 f"inside {outer!r} is unsupported")
+            self.member_pointer_free(child, outer)
+
+    def builtin(self, text: str) -> Kind:
+        words = [word for word in text.split() if word not in CXX_QUALIFIERS]
+        if len(words) == 1 and words[0] in CXX_INTEGERS:
+            return CXX_INTEGERS[words[0]]
+        if not words or not set(words) <= CXX_BUILTIN_WORDS or set(words) & CXX_INTEGERS.keys():
+            raise ValueError(f"{self.tu}: unclassifiable C++ type {text!r}")
+        return basic_kind(words)
+
+    def enum_kind(self, identity: str) -> str:
+        if identity not in self.enum_kinds:
+            self.enum_kinds[identity] = self.enum_underlying(self.tags[identity].node)
+        return self.enum_kinds[identity]
+
+    def enum_type(self, identity: str, shown: str) -> Kind:
+        return Kind(f"enum {shown}", "integer", 4, self.enum_kind(identity))
+
+    def typedef_kind(self, resolved: Kind, parameter: bool, object_type: bool) -> Kind:
+        if resolved.category == "array":
+            if parameter:
+                return POINTER
+            if not object_type:
+                raise ValueError(f"{self.tu}: array typedef in a return position")
+        return resolved
+
+    def structure(self, text: str, parameter: bool, object_type: bool) -> Kind | None:
+        """Pointer, reference and array declarators of a spelling; None for a named type."""
+        if "::*" in text:
+            raise ValueError(f"{self.tu}: member pointer type {text!r} is unsupported")
+        if CXX_OPAQUE_SPELLING.search(CXX_ANONYMOUS_TAG.sub("", text)):  # its operand's type is not spelled
+            raise ValueError(f"{self.tu}: typeof/decltype type {text!r} has no type tree to check")
+        # Parenthesized abstract declarators distinguish pointer-to-array from array-of-pointers.
+        declarator = re.search(r"\(([*&]+)\s*(?:(?:const|volatile|__restrict|restrict)\s*)*((?:\[[^\]]*\])*)\)", text)
+        array = bool(declarator[2]) if declarator else "[" in text
+        if (declarator and not array) or text.endswith(("*", "&")):
+            return POINTER  # references pass/store an address
+        if array:
+            if parameter:
+                return POINTER
+            if object_type:
+                return CXX_ARRAY
+            raise ValueError(f"{self.tu}: array type {text!r} in a return position")
+        return None
+
+    def classify_use(self, type_: dict[str, Any], parameter: bool, *, object_type: bool = False) -> Kind:
+        """A parameter or object type: a typedef by its id, else clang's canonical spelling."""
+        alias = type_.get("typeAliasDeclId")
+        if alias is not None:
+            if alias not in self.typedef_nodes:
+                raise ValueError(f"{self.tu}: unresolved C++ typedef identity for {type_.get('qualType')!r}")
+            return self.typedef_kind(self.typedef_by_id(alias), parameter, object_type)
+        # Without a typedef id the type is no typedef: a builtin, a declarator, or a record or enum.
+        text = _without_qualifiers(type_.get("desugaredQualType", type_["qualType"]))
+        shaped = self.structure(text, parameter, object_type)
+        if shaped is not None:
+            return shaped
+        keyword = _split_keyword(_without_qualifiers(type_["qualType"]))[0]
+        name = _split_keyword(text)[1]
+        anonymous = CXX_ANONYMOUS_TAG.fullmatch(name.split("::")[-1])
+        if anonymous:  # clang names an unnamed tag by its location: only its kind is evident
+            if anonymous[1] == "enum":
+                raise ValueError(f"{self.tu}: unnamed C++ enum type {name!r} has no declaration identity")
+            return Kind(name, "aggregate", None)
+        bare = name.replace(CXX_ANONYMOUS_NAMESPACE, "")  # clang's spelling of an anonymous namespace scope
+        words = bare.split()
+        if "(" in bare:
+            raise ValueError(f"{self.tu}: unclassifiable C++ type {text!r}")
+        if keyword is None and set(words) <= CXX_BUILTIN_WORDS:
+            return self.builtin(name)
+        if len(words) != 1:
+            raise ValueError(f"{self.tu}: unclassifiable C++ type {text!r}")
+        if keyword in CXX_RECORD_KEYWORDS:
+            return Kind(name, "aggregate", None)  # only a class can be named so
+        return self.printed_tag(name, enum_only=keyword == "enum")
+
+    def printed_tag(self, name: str, enum_only: bool) -> Kind:
+        """A tag known by clang's printed name, which omits function scopes: every tag declaration it
+        can denote (by printed name, or by short name where that is not derived) must agree."""
+        last = name.split("::")[-1]
+        tags = [identity for identity, tag in self.tags.items()
+                if (tag.printed == name or tag.printed is None and last in tag.names)
+                and (tag.kind == "enum" or not enum_only)]
+        if not tags:
+            raise ValueError(f"{self.tu}: unresolved C++ type identity {name!r}")
+        kinds = {Kind(name, "aggregate", None) if self.tags[identity].kind == "record" else self.enum_type(identity, name)
+                 for identity in tags}
+        if len(kinds) != 1:
+            raise ValueError(f"{self.tu}: ambiguous C++ type identity {name!r} ({len(tags)} tag declarations)")
+        return kinds.pop()
+
+    # -- written return types: name lookup through modelled scopes
+    def written_kind(self, text: str, scope: str, at: int, complete: frozenset[str]) -> Kind:
+        text = _without_qualifiers(text)
+        shaped = self.structure(text, parameter=False, object_type=False)
+        if shaped is not None:
+            return shaped
+        keyword, name = _split_keyword(text)
+        words = name.split()
+        if "(" in name:
+            raise ValueError(f"{self.tu}: unclassifiable C++ type {text!r}")
+        if keyword is None and set(words) <= CXX_BUILTIN_WORDS:
+            return self.builtin(name)
+        if len(words) != 1:
+            raise ValueError(f"{self.tu}: unclassifiable C++ type {text!r}")
+        if keyword in CXX_RECORD_KEYWORDS:
+            return Kind(name, "aggregate", None)  # only a class can be named so
+        entries = self.lookup(name, scope, at, complete, elaborated=keyword is not None)
+        if keyword == "enum" and any(entry.kind != "enum" for entry in entries):
+            raise ValueError(f"{self.tu}: enum {name} does not name an enum")
+        return self.entry_kind(entries, name)
+
+    def lookup(self, name: str, scope: str, at: int, complete: frozenset[str], *, elaborated: bool) -> list[_Entry]:
+        """Bind the first qualifier lexically; member lookup must never retry an outer prefix."""
+        parts = name.removeprefix("::").split("::")
+        if not all(parts):
+            raise ValueError(f"{self.tu}: unsupported C++ type name {name}")
+        final = CXX_TYPE_ENTRIES if elaborated else CXX_ORDINARY_ENTRIES
+        accept = CXX_QUALIFIER_ENTRIES if len(parts) > 1 else final
+        if name.startswith("::"):
+            entries = self.visible("", parts[0], at, complete, accept)
+            if not entries:
+                raise ValueError(f"{self.tu}: unresolved C++ type {name}")
+        else:
+            entries = self.unqualified(parts[0], scope, at, complete, accept, name)
+        for index, member in enumerate(parts[1:], 2):
+            target = self.qualifier(entries, parts[index - 2], name)
+            entries = self.visible(target, member, at, complete, final if index == len(parts) else CXX_QUALIFIER_ENTRIES)
+            if not entries:
+                if target in self.inherited_scopes:
+                    raise ValueError(f"{self.tu}: inherited type lookup for {name} in {target} is unsupported")
+                raise ValueError(f"{self.tu}: unresolved C++ type {name} in {target}")
+        return entries
+
+    def unqualified(self, name: str, scope: str, at: int, complete: frozenset[str], accept: frozenset[str],
+                    written: str) -> list[_Entry]:
+        while True:
+            entries = self.visible(scope, name, at, complete, accept)
+            if entries:
+                return entries
+            if scope in self.inherited_scopes:
+                raise ValueError(f"{self.tu}: inherited type lookup for {written} in {scope} is unsupported")
+            if not scope:
+                raise ValueError(f"{self.tu}: unresolved C++ type {written}")
+            scope = self.enclosing(scope)
+
+    def visible(self, scope: str, name: str, at: int, complete: frozenset[str], accept: frozenset[str]) -> list[_Entry]:
+        """Declarations of `name` in one scope at AST position `at`. A class shows all its members in a
+        complete-class context; elsewhere a later member would change the meaning (ill-formed, no
+        diagnostic required), so it refuses. A namespace also shows its anonymous namespace's members
+        (clang's implicit using-directive). A tag only a friend declaration has declared is never found
+        (C++98 7.3.1.2/3), but pre-standard friend injection made it visible: a lookup that would pass
+        over one refuses instead of binding an outer name."""
+        entries = self.entries.get(scope, {}).get(name, [])
+        if scope in self.class_scopes:
+            if scope not in complete and any(entry.order > at for entry in entries):
+                raise ValueError(f"{self.tu}: C++ class member {name} of {scope} is declared after its use")
+            declared = entries
+        else:
+            declared = [entry for entry in entries if entry.order < at]
+        found = [entry for entry in declared if entry.kind in accept]
+        anonymous = f"{scope}{CXX_ANONYMOUS_NAMESPACE}::"
+        if anonymous in self.namespace_scopes:
+            found += self.visible(anonymous, name, at, complete, accept)
+        if not found and any(entry.kind == "friend" for entry in declared):
+            raise ValueError(f"{self.tu}: C++ name {name} in {scope or '::'} is only declared by a friend declaration; "
+                             "lookup past it is unsupported")
+        return found
+
+    def qualifier(self, entries: list[_Entry], component: str, written: str) -> str:
+        """The one namespace or class a nested-name-specifier component names."""
+        kinds = {entry.kind for entry in entries}
+        if kinds == {"namespace"}:
+            scopes = {entry.ref for entry in entries}
+        elif kinds == {"record"}:
+            scopes = {self.tags[entry.ref].members for entry in entries}
+        else:  # a typedef keeps its ABI kind, not a member scope: never read its members elsewhere
+            raise ValueError(f"{self.tu}: unsupported C++ type qualifier {component} in {written}")
+        if len(scopes) != 1:
+            raise ValueError(f"{self.tu}: ambiguous C++ type qualifier {component} in {written}")
+        return scopes.pop()
+
+    def entry_kind(self, entries: list[_Entry], written: str) -> Kind:
+        kinds: list[Kind] = []
+        for entry in entries:
+            if entry.kind == "typedef":
+                kinds.append(self.typedef_by_id(entry.ref))
+            elif entry.kind == "record":
+                kinds.append(Kind(self.tags[entry.ref].printed or written, "aggregate", None))
+            elif entry.kind == "enum":
+                kinds.append(self.enum_type(entry.ref, self.tags[entry.ref].printed or written))
+            else:
+                raise ValueError(f"{self.tu}: C++ name {written} does not denote a type")
+        if len({(kind.category, kind.compared) for kind in kinds}) != 1:
+            raise ValueError(f"{self.tu}: ambiguous C++ type name {written}")
+        return kinds[0]
+
+    # -- pass 2: direct calls of C-linkage functions
+    def calls(self, node: dict[str, Any]) -> None:
+        if node.get("kind") == "CallExpr":
+            children = node.get("inner", [])
+            callee = children[0] if children else None
+            while callee is not None and (callee.get("kind") in ("ImplicitCastExpr", "ParenExpr", "CStyleCastExpr",
+                                                                "CXXStaticCastExpr", "CXXReinterpretCastExpr")
+                                          or callee.get("kind") == "UnaryOperator" and callee.get("opcode") in ("*", "&")):
+                callee = (callee.get("inner") or [None])[0]
+            target = callee.get("referencedDecl", {}) if callee is not None and callee.get("kind") == "DeclRefExpr" else {}
+            if target.get("kind") == "FunctionDecl" and target.get("id") in self.c_functions:
+                file, line, column = self.location(node)
+                self.raw_calls.append(Call(self.c_functions[target["id"]], file, line, column, len(children) - 1,
+                                           local=self.function_local[target["id"]]))
+        for child in node.get("inner", []):
+            self.calls(child)
+
+    def result(self, profile: str | None) -> TUResult:
+        return TUResult(self.tu, profile, self.raw_sites, self.raw_calls, objects=self.objects)
+
+
+def parse_cxx_tu(preprocessed: str, tu: str, profile: str | None, command: list[str] | None, *,
+                 environment: dict[str, str] | None = None, unavailable: str | None = None) -> TUResult:
+    """Collect C-linkage sites and direct calls from one preprocessed C++ TU through the pinned clang."""
+    if command is None:
+        return TUResult(tu, profile, error=f"parse: C++ AST unavailable: {unavailable}")
+    try:
+        completed = subprocess.run(command, input=preprocessed.encode("latin-1"), env=environment, capture_output=True)
+        if completed.returncode != 0:
+            locate = _LineMap(preprocessed, tu)
+            errors = [CLANG_LOCATION.sub(lambda m: "{}:{}".format(*locate(locate.starts[int(m[1]) - 1])[:2]), line)
+                      for line in completed.stderr.decode("latin-1").splitlines() if "error:" in line]
+            return TUResult(tu, profile, error=f"parse: clang exit {completed.returncode}: {'; '.join(errors[:5])}")
+        collector = _CxxCollector(tu, preprocessed)
+        ast = json.loads(completed.stdout)
+        collector.index(ast)
+        collector.declarations(ast)
+        collector.calls(ast)
+        return collector.result(profile)
+    except Exception as error:  # every failure becomes a parse-failure finding
+        return TUResult(tu, profile, error=f"parse: {type(error).__name__}: {error}")
+
+
 # ---------------------------------------------------------------- collection
 
 @dataclass(frozen=True)
@@ -642,27 +1493,35 @@ class TranslationUnit:
     includes: tuple[str, ...] = ()
     candidate: int | None = None
     error: str | None = None
+    cxx: bool = False  # a C++ (.cpp) TU, analysed through the pinned clang
 
 
 def translation_units(profile: dict[str, Any], source_root: Path, extra: Iterable[dict[str, Any]]) -> list[TranslationUnit]:
-    units = [TranslationUnit(source, f"{WORK_LINK}/{source}", key) for source, key in sorted(profile["tu_profiles"].items())]
+    units = [TranslationUnit(source, f"{WORK_LINK}/{source}", key, cxx=profile_kind(profile, key) == "cpp")
+             for source, key in sorted(profile["tu_profiles"].items())]
     for index, item in enumerate(extra):
         path = Path(item["source"]).resolve()
         tu = display(str(path))  # as its linemarkers display
         key = item.get("profile") or profile["tu_profiles"].get(display(str(path), source_root))
         includes = tuple(str(Path(p).resolve()) for p in item.get("includes") or [])
+        cxx = path.suffix == COMPILED_SUFFIXES["cpp"]
         error = None
         if not path.is_file():
             error = f"missing candidate source {path}"
+        elif path.suffix not in COMPILED_SUFFIXES.values():
+            error = f"candidate source must be .c or .cpp: {path.name}"
         elif key is None:
             error = "candidate needs a profile"
         elif key not in profile["profiles"]:
             error = f"unknown profile {key}"
-        units.append(TranslationUnit(tu, str(path), key, includes, index, error))
+        elif profile_kind(profile, key) != compiled_kind(path.name):
+            error = f"profile {key} does not compile {path.suffix} sources"
+        units.append(TranslationUnit(tu, str(path), key, includes, index, error, cxx))
     return units
 
 
-def preprocess_and_parse(unit: TranslationUnit, profile: dict[str, Any], work: Path, environment: dict[str, str]) -> TUResult:
+def preprocess_and_parse(unit: TranslationUnit, profile: dict[str, Any], work: Path, environment: dict[str, str],
+                         cxx: tuple[list[str] | None, str | None] = (None, "no C++ AST tool")) -> TUResult:
     if unit.error:
         result = TUResult(unit.tu, unit.profile, error=f"input: {unit.error}")
     else:
@@ -672,6 +1531,9 @@ def preprocess_and_parse(unit: TranslationUnit, profile: dict[str, Any], work: P
         if completed.returncode != 0:
             stderr = completed.stderr.decode("latin-1").strip()
             result = TUResult(unit.tu, unit.profile, error=f"preprocess: exit {completed.returncode}: {stderr}")
+        elif unit.cxx:
+            result = parse_cxx_tu(completed.stdout.decode("latin-1"), unit.tu, unit.profile, cxx[0],
+                                  environment=environment, unavailable=cxx[1])
         else:
             result = parse_tu(completed.stdout.decode("latin-1"), unit.tu, unit.profile)
     result.candidate = unit.candidate
@@ -679,17 +1541,20 @@ def preprocess_and_parse(unit: TranslationUnit, profile: dict[str, Any], work: P
 
 
 def collect(source_root: Path = PROJECT, extra: Iterable[dict[str, Any]] = (), *, jobs: int | None = None) -> list[TUResult]:
-    """Preprocess (threaded) and parse every canonical TU, then every extra candidate, in order."""
+    """Preprocess (threaded) and parse every canonical TU, then every extra candidate, in order.
+
+    The pinned clang is located and hash-checked once, only when a C++ TU takes part."""
     source_root = Path(source_root).resolve()
     profile = tool_profile(PROJECT, source_root)
     units = translation_units(profile, source_root, extra)
+    cxx = clang_ast_command(PROJECT, source_root) if any(unit.cxx and not unit.error for unit in units) else (None, None)
     with tempfile.TemporaryDirectory(prefix="interfaces-") as directory:
         work = Path(directory)
         (work / WORK_LINK).symlink_to(source_root, target_is_directory=True)
         (work / "tmp").mkdir()
         environment = compiler_environment(work, profile)
         with ThreadPoolExecutor(max_workers=jobs or os.cpu_count() or 4) as pool:
-            return list(pool.map(lambda unit: preprocess_and_parse(unit, profile, work, environment), units))
+            return list(pool.map(lambda unit: preprocess_and_parse(unit, profile, work, environment, cxx), units))
 
 
 # ---------------------------------------------------------------- analysis

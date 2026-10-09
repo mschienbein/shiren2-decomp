@@ -4,6 +4,7 @@ import copy
 import hashlib
 import json
 import os
+import re
 import shutil
 import stat
 import struct
@@ -187,7 +188,8 @@ class ToolchainRegistryTests(unittest.TestCase):
         lock = {"gcc_candidate": {"install_directory": ".cache/gcc-kmc", "binaries_sha256": {}},
                 "gcc_pm281": {"install_directory": ".cache/gcc-pm281", "binaries_sha256": {}},
                 "binutils_kmc": {"install_directory": ".cache/binutils-kmc-2.6"},
-                "binutils_gnu291": {"install_directory": ".cache/binutils-gnu-2.9.1"}}
+                "binutils_gnu291": {"install_directory": ".cache/binutils-gnu-2.9.1"},
+                "binutils_gnu291_fp32": {"install_directory": ".cache/binutils-gnu-2.9.1-fp32"}}
         for name in ["as", "objcopy", "nm", "objdump"]:
             (root / ".cache/binutils/bin").mkdir(parents=True, exist_ok=True)
             (root / f".cache/binutils/bin/mips64-elf-{name}").write_text(name)
@@ -195,12 +197,12 @@ class ToolchainRegistryTests(unittest.TestCase):
         linker.write_text("#!/bin/sh\necho 'Supported emulations: elf32btsmip'\n")
         linker.chmod(0o755)
         for entry in ["gcc_candidate", "gcc_pm281"]:
-            for name in ["gcc", "cc1", "cpp"]:
+            for name in ["gcc", "cc1", "cpp"] + (["cc1plus"] if entry == "gcc_pm281" else []):
                 path = root / lock[entry]["install_directory"] / name
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(f"{entry} {name}")
                 lock[entry]["binaries_sha256"][name] = sha256(path)
-        for entry in ["binutils_kmc", "binutils_gnu291"]:
+        for entry in ["binutils_kmc", "binutils_gnu291", "binutils_gnu291_fp32"]:
             path = root / lock[entry]["install_directory"] / "as"
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(entry)
@@ -214,7 +216,7 @@ class ToolchainRegistryTests(unittest.TestCase):
         declared = {key: {"assembler_flags": ["-EB"], "compiler_flags": self.FLAGS, "scope": "fixture", **item} for key, item in profiles.items()}
         (root / "config/compiler_profiles.json").write_text(json.dumps({
             "schema_version": 1, "profiles": declared, "compiler_environment": {"VR4300MUL": "ON"},
-            "tu_profiles": {f"src/{key}.c": key for key in declared}}))
+            "tu_profiles": {f"src/{key}.{'cpp' if item.get('language') == 'c++' else 'c'}": key for key, item in declared.items()}}))
 
     def test_unknown_compiler_assembler_or_pass_override_is_rejected(self) -> None:
         cases = [({"assembler": "as", "compiler": "gcc999"}, "Unsupported translation-unit compiler"),
@@ -234,6 +236,82 @@ class ToolchainRegistryTests(unittest.TestCase):
                 (root / changed).write_text("tampered")
                 with self.assertRaisesRegex(ValueError, message):
                     tool_profile(root)
+
+    def test_changed_pinned_fp32_assembler_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = self.fixture(Path(temporary), {"fp32": {"compiler": "gcc281pm", "assembler": "as_gnu291_fp32"}})
+            profile = tool_profile(root)
+            item = {"source_kind": "c", "source": "src/fp32.c", "input": "source/src/fp32.c"}
+            assembler = root / ".cache/binutils-gnu-2.9.1-fp32/as"
+            self.assertEqual(object_commands("obj/fp32.o", item, profile)[2][0], str(assembler.resolve()))
+            assembler.write_text("tampered")
+            with self.assertRaisesRegex(ValueError, "pinned assembler as_gnu291_fp32"):
+                tool_profile(root)
+
+    def test_asg_profile_adds_only_assembler_debug_scheduling(self) -> None:
+        profiles = read_json(PROJECT / "config/compiler_profiles.json")["profiles"]
+        main = profiles["gcc281pm-gnu291-O2-unsigned"]
+        asg = profiles["gcc281pm-gnu291-O2-unsigned-asg"]
+        self.assertEqual(asg["compiler"], main["compiler"])
+        self.assertEqual(asg["assembler"], "as_gnu291_fp32")
+        self.assertEqual(asg["assembler"], main["assembler"])
+        self.assertEqual(asg["compiler_flags"], main["compiler_flags"])
+        self.assertEqual(asg["assembler_flags"], [*main["assembler_flags"], "-g"])
+        self.assertNotIn("-g", asg["compiler_flags"])
+
+    def test_cxx_fp32_profile_uses_the_same_main_assembler_recipe(self) -> None:
+        profiles = read_json(PROJECT / "config/compiler_profiles.json")["profiles"]
+        main = profiles["gcc281pm-gnu291-O2-unsigned"]
+        cxx = profiles["gxx281pm-gnu291-O2-unsigned"]
+        self.assertEqual(cxx["language"], "c++")
+        self.assertEqual(cxx["compiler"], main["compiler"])
+        self.assertEqual(cxx["compiler_flags"],
+                         [*main["compiler_flags"], "-fno-exceptions", "-fno-rtti"])
+        self.assertEqual(cxx["assembler"], "as_gnu291_fp32")
+        self.assertEqual(cxx["assembler_flags"], main["assembler_flags"])
+
+    def test_asg_profile_binds_the_complete_service_manager_range(self) -> None:
+        declaration = read_json(PROJECT / "config/compiler_profiles.json")
+        pointer = read_json(PROJECT / "docs/progress.json")["denominator"]
+        catalogue = read_json(PROJECT / pointer["path"])["identity"]["functions"]
+        symbols = {item["symbol"] for item in catalogue
+                   if item["image_id"] == "main_14400" and 0x80130A00 <= item["vram_start"] < 0x80132050}
+        self.assertEqual(len(symbols), 48)
+        matches = read_json(PROJECT / "config/matches.json")["functions"]
+        expected = {item["source"] for item in matches if item["symbol"] in symbols}
+        self.assertTrue(expected)
+        actual = {source for source, profile_id in declaration["tu_profiles"].items()
+                  if profile_id == "gcc281pm-gnu291-O2-unsigned-asg"}
+        self.assertEqual(actual, expected)
+        for item in matches:
+            if item["source"] in actual:
+                self.assertIn(item["symbol"], symbols)
+        self.assertTrue(all((PROJECT / source).is_file() for source in actual))
+        self.assertEqual(declaration["tu_profiles"]["src/units/main_14400/func_80130930.c"],
+                         "gcc281pm-gnu291-O2-unsigned")
+        self.assertEqual(declaration["tu_profiles"]["src/units/main_14400/func_80132050.c"],
+                         "gcc272-gnu291-mips2-unsigned")
+
+    @unittest.skipUnless(
+        (PROJECT / ".cache/gcc-pm281/gcc").is_file()
+        and (PROJECT / ".cache/gcc-kmc/cc1").is_file()
+        and (PROJECT / ".cache/binutils-gnu-2.9.1-fp32/as").is_file(),
+        "Pinned GCC 2.8.1, GCC 2.7.2 and FP32 GNU gas installs required",
+    )
+    def test_asg_bound_units_use_the_real_fp32_object_recipe(self) -> None:
+        profile = tool_profile(PROJECT)
+        for source, profile_id in profile["tu_profiles"].items():
+            if profile_id != "gcc281pm-gnu291-O2-unsigned-asg":
+                continue
+            with self.subTest(source=source):
+                item = {"source_kind": "c", "source": source, "input": f"source/{source}"}
+                commands = object_commands(f"obj/{source}.o", item, profile)
+                self.assertNotIn("-g", commands[0])
+                self.assertNotIn("-g", commands[1])
+                self.assertEqual(commands[2][0], profile["tools"]["as_gnu291_fp32"]["path"])
+                self.assertEqual(commands[2][1:-4],
+                                 profile["profiles"][profile_id]["assembler_flags"][:-1])
+                self.assertEqual(commands[2][-4], "-g")
 
     def test_object_commands_use_the_profile_compiler_and_assembler(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -256,9 +334,11 @@ class ToolchainRegistryTests(unittest.TestCase):
             root = self.fixture(Path(temporary), {"old": {"assembler": "as"}})
             shutil.rmtree(root / ".cache/gcc-pm281")
             shutil.rmtree(root / ".cache/binutils-gnu-2.9.1")
+            shutil.rmtree(root / ".cache/binutils-gnu-2.9.1-fp32")
             profile = tool_profile(root)
             self.assertEqual(set(profile["compilers"]), {"gcc272"})
             self.assertNotIn("as_gnu291", profile["tools"])
+            self.assertNotIn("as_gnu291_fp32", profile["tools"])
 
     @unittest.skipUnless((PROJECT / ".cache/gcc-pm281/gcc").is_file() and (PROJECT / ".cache/gcc-kmc/cc1").is_file(), "Pinned GCC 2.8.1 and 2.7.2 installs required")
     def test_installed_gcc281_driver_runs_its_own_passes_despite_compiler_path(self) -> None:
@@ -278,6 +358,219 @@ class ToolchainRegistryTests(unittest.TestCase):
             pm281 = Path(profile["compilers"]["gcc281pm"]["gcc"]["path"]).parent
             self.assertEqual(passes, [str(pm281 / "cpp"), str(pm281 / "cc1")])
             self.assertIn("GNU C version 2.8.1", completed.stderr)
+
+    CXX = {"compiler": "gcc281pm", "assembler": "as_gnu291", "language": "c++", "compiler_flags": [*FLAGS, "-fno-exceptions", "-fno-rtti"]}
+
+    def test_cxx_profile_measures_cc1plus_and_compiles_only_cpp_sources(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = self.fixture(Path(temporary), {"old": {"assembler": "as"}, "c281": {"compiler": "gcc281pm", "assembler": "as_gnu291"}})
+            self.assertNotIn("cc1plus", tool_profile(root)["compilers"]["gcc281pm"])  # C-only declarations keep their profile
+            self.write_profiles(root, {"old": {"assembler": "as"}, "cxx": self.CXX})
+            profile = tool_profile(root)
+            pm281 = (root / ".cache/gcc-pm281").resolve()
+            self.assertEqual(profile["compilers"]["gcc281pm"]["cc1plus"]["path"], str(pm281 / "cc1plus"))
+            self.assertEqual(profile["tu_profiles"], {"src/old.c": "old", "src/cxx.cpp": "cxx"})
+            item = {"source_kind": "cpp", "source": "src/cxx.cpp", "input": "source/src/cxx.cpp"}
+            commands = object_commands("obj/source/src/cxx.o", item, profile)
+            self.assertEqual([command[:2] for command in commands[:2]], [[str(pm281 / "gcc"), f"-B{pm281}/"]] * 2)
+            self.assertEqual(commands[1][-4:], ["-S", "source/src/cxx.cpp", "-o", "compiled/src/cxx.s"])
+            self.assertTrue({"-fno-exceptions", "-fno-rtti"} <= set(commands[0]))
+            with self.assertRaisesRegex(ValueError, "does not compile C\\+\\+"):
+                object_commands("obj/source/src/old.o", {**item, "source": "src/old.c"}, {**profile, "tu_profiles": {"src/old.c": "old"}})
+            with self.assertRaisesRegex(ValueError, "does not compile C"):
+                object_commands("obj/source/src/cxx.o", {**item, "source_kind": "c"}, profile)
+
+    def test_cxx_profile_declarations_are_validated(self) -> None:
+        cases = [({**self.CXX, "compiler_flags": [*self.FLAGS, "-fno-exceptions"]}, "disable exceptions and RTTI"),
+                 ({**self.CXX, "compiler_flags": [*self.CXX["compiler_flags"], "-xc++"]}, "language selection"),
+                 ({"assembler": "as", "compiler_flags": ["-x", "c++", *self.FLAGS]}, "language selection"),
+                 ({**self.CXX, "language": "objc"}, "Unsupported translation-unit language")]
+        for item, message in cases:
+            with self.subTest(item=item), tempfile.TemporaryDirectory() as temporary:
+                root = self.fixture(Path(temporary), {"bad": item})
+                with self.assertRaisesRegex(ValueError, message):
+                    tool_profile(root)
+        for source in ["src/cxx.c", "src/cxx.cc"]:
+            with self.subTest(source=source), tempfile.TemporaryDirectory() as temporary:
+                root = self.fixture(Path(temporary), {"cxx": self.CXX})
+                path = root / "config/compiler_profiles.json"
+                declaration = json.loads(path.read_text())
+                declaration["tu_profiles"] = {source: "cxx"}
+                path.write_text(json.dumps(declaration))
+                with self.assertRaisesRegex(ValueError, "Invalid translation-unit profile assignment"):
+                    tool_profile(root)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = self.fixture(Path(temporary), {"cxx": self.CXX})
+            (root / ".cache/gcc-pm281/cc1plus").write_text("tampered")
+            with self.assertRaisesRegex(ValueError, "pinned compiler gcc281pm: cc1plus"):
+                tool_profile(root)
+
+    @unittest.skipUnless((PROJECT / ".cache/gcc-pm281/cc1plus").is_file() and (PROJECT / ".cache/gcc-kmc/cc1").is_file(), "Pinned GCC 2.8.1 cc1plus and 2.7.2 installs required")
+    def test_installed_gcc281_driver_runs_cc1plus_for_cpp_sources(self) -> None:
+        profile = tool_profile(PROJECT)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "tmp").mkdir()
+            (root / "compiled/src/units/main_14400").mkdir(parents=True)
+            (root / "f.cpp").write_text('struct S { int a; S() : a(1) {} };\nextern "C" int f(void) { S s; return s.a; }\n')
+            item = {"source_kind": "cpp", "source": "src/units/main_14400/f.cpp", "input": "f.cpp"}
+            with patch.dict(profile["tu_profiles"], {item["source"]: "gxx281pm-gnu291-O2-unsigned"}):
+                commands = object_commands("f.o", item, profile)
+            command = [flag for flag in commands[1] if flag not in {"-I", "source/include"}]
+            completed = subprocess.run([*command[:2], "-v", *command[2:]], cwd=root, env=compiler_environment(root, profile), capture_output=True, text=True)
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            passes = [line.split()[0] for line in completed.stderr.splitlines() if line.startswith(" /")]
+            pm281 = Path(profile["compilers"]["gcc281pm"]["gcc"]["path"]).parent
+            self.assertEqual(passes, [str(pm281 / "cpp"), str(pm281 / "cc1plus")])
+            self.assertIn("GNU C++ version 2.8.1", completed.stderr)
+            assembly = (root / "compiled/src/units/main_14400/f.s").read_text()
+            self.assertIn(".globl\tf\n", assembly)
+            self.assertNotIn("eh_frame", assembly)
+
+
+class Fp32AssemblerBehaviorTests(unittest.TestCase):
+    """Exercise pinned gas binaries, not patch text or compiler source spelling."""
+
+    FLAGS = ["-non_shared", "-EB", "-G", "0", "-mips3", "-mcpu=r3000", "-32"]
+    CONTROL = """\
+.text
+.align 2
+.globl lid_features
+.ent lid_features
+lid_features:
+    move $2,$4
+    la $3,lid_external
+    li.d $f0,4294967296.0
+    add.d $f2,$f0,$f0
+    mtc1 $4,$f10
+    cvt.s.w $f10,$f10
+    c.eq.s $f10,$f12
+    bc1t 1f
+    nop
+    mult $4,$5
+    mflo $2
+    mult $6,$7
+    mflo $3
+1:
+    jr $31
+    nop
+.end lid_features
+"""
+
+    def setUp(self) -> None:
+        lock = read_json(PROJECT / "toolchain.lock.json")
+        self.assemblers = {
+            key: PROJECT / lock[key]["install_directory"] / "as"
+            for key in ("binutils_gnu291", "binutils_gnu291_fp32")
+        }
+        self.objdump = PROJECT / ".cache/binutils/bin/mips64-elf-objdump"
+        self.objcopy = PROJECT / ".cache/binutils/bin/mips64-elf-objcopy"
+        for path in [*self.assemblers.values(), self.objdump, self.objcopy]:
+            if not path.is_file():
+                self.skipTest(f"Required installed assembler control tool is absent: {path}")
+        for key, path in self.assemblers.items():
+            self.assertEqual(sha256(path), lock[key]["assembler_sha256"], f"Installed {key} pin differs")
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+
+    def assemble(self, key: str, text: str, *, fp32: bool = False) -> tuple[list[str], bytes]:
+        source = self.root / "control.s"
+        obj = self.root / "control.o"
+        source.write_text(text)
+        result = subprocess.run(
+            [str(self.assemblers[key]), *self.FLAGS, *(["-mfp32"] if fp32 else []),
+             "-o", str(obj), str(source)], capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        result = subprocess.run(
+            [str(self.objdump), "-drz", "-m", "mips:4300", "-M", "no-aliases,reg-names=32", str(obj)],
+            capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        words = re.findall(r"^\s*[0-9a-f]+:\s+([0-9a-f]{8})\s", result.stdout, re.MULTILINE)
+        self.assertTrue(words, result.stdout)
+        return words, obj.read_bytes()
+
+    def assert_sequence(self, words: list[str], sequence: list[str]) -> None:
+        self.assertTrue(
+            any(words[index:index + len(sequence)] == sequence for index in range(len(words) - len(sequence) + 1)),
+            f"Missing {sequence!r} in {words!r}",
+        )
+
+    def test_fp32_literal_keeps_move_address_and_hazard_macros(self) -> None:
+        words, _ = self.assemble("binutils_gnu291_fp32", self.CONTROL, fp32=True)
+        self.assertEqual(words[:3], ["0080102d", "3c030000", "24630000"])
+        self.assert_sequence(words, ["3c0141f0", "44810800", "44800000", "00000000", "46200080"])
+        self.assert_sequence(words, ["44845000", "00000000", "468052a0"])
+        self.assert_sequence(words, ["460c5032", "00000000"])
+        self.assert_sequence(words, ["00001012", "00000000", "00000000", "00c70018"])
+        self.assertFalse(any(int(word, 16) & 0xFFE00000 == 0x44A00000 for word in words), words)
+
+    def test_without_fp32_matches_stock_and_retains_dmtc1(self) -> None:
+        stock_words, stock_object = self.assemble("binutils_gnu291", self.CONTROL)
+        words, obj = self.assemble("binutils_gnu291_fp32", self.CONTROL)
+        self.assertEqual(words, stock_words)
+        self.assertEqual(obj, stock_object)
+        self.assertIn("44a10000", words)
+
+    def test_fp32_does_not_change_gpr_target_li_d(self) -> None:
+        text = ".text\nli.d $2,4294967296.0\n"
+        stock_words, stock_object = self.assemble("binutils_gnu291", text)
+        for fp32 in (False, True):
+            with self.subTest(fp32=fp32):
+                words, obj = self.assemble("binutils_gnu291_fp32", text, fp32=fp32)
+                self.assertEqual(words, stock_words)
+                self.assertEqual(obj, stock_object)
+                self.assertFalse(any(int(word, 16) >> 26 == 0x11 for word in words), words)
+
+    def test_set_mips3_and_mips4_reset_command_line_fp32(self) -> None:
+        for isa in (3, 4):
+            with self.subTest(isa=isa):
+                text = f".text\n.set mips{isa}\nli.d $f0,4294967296.0\n"
+                stock_words, stock_object = self.assemble("binutils_gnu291", text)
+                words, obj = self.assemble("binutils_gnu291_fp32", text, fp32=True)
+                self.assertEqual(words, stock_words)
+                self.assertEqual(obj, stock_object)
+                self.assertIn("44a10000", words)
+
+    def test_set_mips1_and_mips2_select_fpr_pairs(self) -> None:
+        for isa in (1, 2):
+            with self.subTest(isa=isa):
+                text = f".text\n.set mips{isa}\nli.d $f0,4294967296.0\n"
+                stock_words, stock_object = self.assemble("binutils_gnu291", text)
+                words, obj = self.assemble("binutils_gnu291_fp32", text, fp32=True)
+                self.assertEqual(words, stock_words)
+                self.assertEqual(obj, stock_object)
+                self.assert_sequence(words, ["3c0141f0", "44810800", "44800000"])
+
+    def test_set_mips0_restores_command_line_fpr_width(self) -> None:
+        literal = "li.d $f0,4294967296.0\n"
+        for fp32 in (False, True):
+            with self.subTest(fp32=fp32):
+                baseline = self.assemble("binutils_gnu291_fp32", ".text\n" + literal, fp32=fp32)
+                restored = self.assemble("binutils_gnu291_fp32", ".text\n.set mips3\n.set mips0\n" + literal, fp32=fp32)
+                self.assertEqual(restored, baseline)
+
+    def test_set_push_pop_restores_fp32_after_isa_reset(self) -> None:
+        literal = "li.d $f0,4294967296.0\n"
+        baseline = self.assemble("binutils_gnu291_fp32", ".text\n" + literal, fp32=True)
+        restored = self.assemble("binutils_gnu291_fp32", ".text\n.set push\n.set mips3\n.set pop\n" + literal, fp32=True)
+        self.assertEqual(restored, baseline)
+
+    def test_fp32_preserves_odd_sized_data_without_added_padding(self) -> None:
+        payload = bytes(range(123))
+        text = ".text\nnop\n.section .rodata\n.byte " + ",".join(map(str, payload)) + "\n"
+        for key, fp32 in (("binutils_gnu291", False), ("binutils_gnu291_fp32", False), ("binutils_gnu291_fp32", True)):
+            with self.subTest(assembler=key, fp32=fp32):
+                self.assemble(key, text, fp32=fp32)
+                output = self.root / "rodata.bin"
+                result = subprocess.run(
+                    [str(self.objcopy), "-O", "binary", "-j", ".rodata", str(self.root / "control.o"), str(output)],
+                    capture_output=True, text=True,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(output.read_bytes(), payload)
 
 
 class IntermediateInventoryTests(unittest.TestCase):
@@ -332,6 +625,118 @@ class IntermediateInventoryTests(unittest.TestCase):
 
     def test_dictionary_sections_require_c_owned_reference_evidence(self) -> None:
         self.assert_c_owned_section_references(dictionary=True)
+
+
+class CxxGraphTests(unittest.TestCase):
+    """A `cpp` splat subsegment is a C++ TU: same object path scheme, `.cpp` source, own kind."""
+    image = SimpleNamespace(image_id="main_14400", split_status="active", rom_start=0x14400, rom_end=0x1339F0,
+        vram_start=0x800413C0, vram_end=0x801609B0, vram_rom_delta=0x8002CFC0, splat_segments=("main",), bss_ranges=())
+    units = {"c": "units/main_14400/c_unit", "cpp": "units/main_14400/cxx_unit"}
+
+    def write(self, root: Path, *, kinds: dict[str, str] | None = None, files: tuple[str, ...] = ("c_unit.c", "cxx_unit.cpp"),
+              bindings: dict[str, str] | None = None) -> SimpleNamespace:
+        kinds = kinds or {"c_unit": "c", "cxx_unit": "cpp"}
+        config = {"segments": [{"name": "main", "type": "code", "start": 0x14400, "vram": 0x800413C0, "subsegments": [
+            [0x14400, "asm", "main_head"], [0x15A80, kinds["c_unit"], self.units["c"]],
+            [0x15AC0, kinds["cxx_unit"], self.units["cpp"]], [0x15B00, "asm", "main_tail"]]}, [0x1339F0]]}
+        (root / "source/config").mkdir(parents=True)
+        (root / "source/config/shiren2.jp.yaml").write_text(yaml.safe_dump(config))
+        for name in files:
+            path = root / "source/src/units/main_14400" / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("/* fixture */\n")
+        for name in ("main_head", "main_tail"):
+            path = root / f"generated/asm/{name}.s"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("/* fixture */\n")
+        objects = ["obj/generated/asm/main_head.o", f"obj/source/src/{self.units['c']}.o", f"obj/source/src/{self.units['cpp']}.o",
+                   "obj/generated/asm/main_tail.o"]
+        (root / "shiren2.ld").write_text("SECTIONS\n{\n    .main :\n    {\n" + "".join(f"        {name}(.text);\n" for name in objects) + "    }\n}\n")
+        bindings = bindings if bindings is not None else {f"src/{self.units['c']}.c": "main_14400", f"src/{self.units['cpp']}.cpp": "main_14400"}
+        return SimpleNamespace(images={"main_14400": self.image}, source_bindings=bindings, components=(), evidence={})
+
+    def test_cpp_subsegment_yields_a_cpp_graph_object_and_intermediates(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            inventory = self.write(root)
+            with patch("certification.load_inventory", return_value=inventory):
+                graph = build_graph(root)
+            cxx = graph[f"obj/source/src/{self.units['cpp']}.o"]
+            self.assertEqual(cxx, {"source": f"src/{self.units['cpp']}.cpp", "input": f"source/src/{self.units['cpp']}.cpp",
+                                   "source_kind": "cpp", "image_id": "main_14400"})
+            self.assertEqual(graph[f"obj/source/src/{self.units['c']}.o"]["source_kind"], "c")
+            matches = [{"source": f"src/{self.units['cpp']}.cpp", "symbol": "func_80042E80"}]
+            generated, compiled = intermediate_keys(graph, matches, root / "source")
+            self.assertEqual(compiled, {f"src/{self.units[kind]}.{suffix}" for kind in ("c", "cpp") for suffix in ("s", "d")})
+            self.assertIn(f"asm/matchings/{self.units['cpp']}/func_80042E80.s", generated)
+
+    def test_cpp_declarations_need_their_file_binding_and_one_unit_name(self) -> None:
+        cases = [({"files": ("c_unit.c", "cxx_unit.c")}, "Missing declared cpp input"),
+                 ({"bindings": {f"src/{self.units['c']}.c": "main_14400", f"src/{self.units['cpp']}.c": "main_14400"}},
+                  "C\\+\\+ translation-unit image declaration"),
+                 ({"kinds": {"c_unit": "c", "cxx_unit": "c"}}, "C translation-unit image declaration")]
+        for options, message in cases:
+            with self.subTest(options=options), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                inventory = self.write(root, **options)
+                with patch("certification.load_inventory", return_value=inventory), self.assertRaisesRegex(ValueError, message):
+                    build_graph(root)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            inventory = self.write(root)
+            path = root / "source/config/shiren2.jp.yaml"
+            config = yaml.safe_load(path.read_text())
+            config["segments"][0]["subsegments"].insert(3, [0x15AE0, "c", self.units["cpp"]])
+            path.write_text(yaml.safe_dump(config))
+            with self.assertRaisesRegex(ValueError, "translation-unit image declaration is missing or ambiguous"):
+                splat_bindings(root / "source", inventory)
+
+    def test_duplicate_compiled_stems_fail_with_valid_source_bindings(self) -> None:
+        for first, second in (("c", "cpp"), ("cpp", "c"), ("c", "c"), ("cpp", "cpp")):
+            for split_segments in (False, True):
+                with self.subTest(kinds=(first, second), split_segments=split_segments), tempfile.TemporaryDirectory() as temporary:
+                    root = Path(temporary)
+                    inventory = self.write(root)
+                    path = root / "source/config/shiren2.jp.yaml"
+                    config = yaml.safe_load(path.read_text())
+                    segment = config["segments"][0]
+                    parts = [[0x14400, first, self.units["c"]],
+                             [0x15A80, "c", self.units["cpp"]],
+                             [0x15AC0, second, self.units["c"]]]
+                    segment["subsegments"] = parts
+                    inventory.source_bindings = {
+                        f"src/{unit}.{kind}": "main_14400" for _, kind, unit in parts
+                    }
+                    if split_segments:
+                        segment["subsegments"] = parts[:2]
+                        config["segments"].insert(1, {
+                            **segment, "name": "main_second", "start": 0x15AC0,
+                            "vram": 0x15AC0 + self.image.vram_rom_delta, "subsegments": parts[2:],
+                        })
+                        inventory.images["main_14400"] = SimpleNamespace(
+                            **{**vars(self.image), "splat_segments": ("main", "main_second")}
+                        )
+                    path.write_text(yaml.safe_dump(config))
+                    with self.assertRaisesRegex(ValueError, "translation-unit image declaration is missing or ambiguous"):
+                        splat_bindings(root / "source", inventory)
+
+    def test_compiled_stems_keep_directory_and_embedded_suffix_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            inventory = self.write(root)
+            path = root / "source/config/shiren2.jp.yaml"
+            config = yaml.safe_load(path.read_text())
+            parts = [[0x14400, "c", "units/main_14400/left/shared.v1"],
+                     [0x15A80, "cpp", "units/main_14400/right/shared.v1"],
+                     [0x15AC0, "cpp", "units/main_14400/left/shared.v2"]]
+            config["segments"][0]["subsegments"] = parts
+            inventory.source_bindings = {
+                f"src/{unit}.{kind}": "main_14400" for _, kind, unit in parts
+            }
+            path.write_text(yaml.safe_dump(config))
+            sections, sources = splat_bindings(root / "source", inventory)
+            self.assertEqual(sections, {"main": "main_14400", "main_bss": "main_14400"})
+            self.assertEqual(sources, inventory.source_bindings)
 
 
 class Stage1StorageTests(unittest.TestCase):
@@ -633,6 +1038,18 @@ class SourcePolicyTests(unittest.TestCase):
                 self.assertIn("include", violations[0])
         self.assertEqual(self.violations({"src/f.c": '#include "common.h"\n#include <sub/ok.h>\n// #include "../x.h"\n'}), [])
 
+    def test_cpp_sources_are_scanned_and_reject_exception_and_rtti_constructs(self) -> None:
+        self.assertEqual(self.violations({"src/f.cpp": 'extern "C" void f(void) { asm("nop"); }\n'}), ["src/f.cpp: inline assembly token"])
+        for body in ["void f() { throw 1; }\n", "void f() { try { } catch (...) { } }\n", "int f(S *s) { return typeid(*s) == 0; }\n",
+                     "T *f(S *s) { return dynamic_cast<T *>(s); }\n"]:
+            with self.subTest(body=body):
+                violations = self.violations({"src/f.cpp": body})
+                self.assertEqual(len(violations), 1, violations)
+                self.assertIn("exception/RTTI construct", violations[0])
+        # The same words are ordinary identifiers in C, and comments/strings are ignored in C++.
+        self.assertEqual(self.violations({"src/f.c": "int try, catch, throw;\n",
+                                          "src/g.cpp": '// throw away\nconst char *s = "try";\n'}), [])
+
 
 @unittest.skipUnless(CANONICAL_ROM.is_file() and (PROJECT / "build/latest.json").is_file(), "Private ROM and a completed build required")
 class LiveVerificationTests(unittest.TestCase):
@@ -656,6 +1073,52 @@ class LiveVerificationTests(unittest.TestCase):
     def test_current_build_passes(self) -> None:
         verify_receipt(self.receipt_path)
         compare_rom(self.receipt_path.parent / "shiren2.z64")
+
+    def test_cpp_tu_builds_and_replays_with_language_coverage(self) -> None:
+        """Real private-ROM proof, intentionally run only with the integrator's full suite."""
+        with tempfile.TemporaryDirectory(dir=PROJECT / "scratch") as temporary:
+            directory = Path(temporary) / "cpp-run"
+            directory.mkdir()
+            create_snapshot(self.receipt_path.parent / "source", directory / "source")
+            source_root = directory / "source"
+            matches_path = source_root / "config/matches.json"
+            matches = read_json(matches_path)
+            row = next(m for m in matches["functions"] if m["symbol"] == "func_80042A50")
+            old = row["source"]
+            new = Path(old).with_suffix(".cpp").as_posix()
+            if old != new:
+                original = source_root / old
+                (source_root / new).write_text('extern "C" {\n' + original.read_text() + '\n}\n')
+                original.unlink()
+                row["source"] = new
+                write_json(matches_path, matches)
+                images_path = source_root / "config/images.json"
+                images = read_json(images_path)
+                images["source_bindings"][new] = images["source_bindings"].pop(old)
+                write_json(images_path, images)
+                split_path = source_root / "config/shiren2.jp.yaml"
+                split = yaml.safe_load(split_path.read_text())
+                unit = Path(old).relative_to("src").with_suffix("").as_posix()
+                for segment in split["segments"]:
+                    if isinstance(segment, dict):
+                        for part in segment.get("subsegments", []):
+                            if isinstance(part, list) and len(part) >= 3 and part[1:3] == ["c", unit]:
+                                part[1] = "cpp"
+                split_path.write_text(yaml.safe_dump(split))
+            profiles_path = source_root / "config/compiler_profiles.json"
+            profiles = read_json(profiles_path)
+            profiles["tu_profiles"].pop(old, None)
+            profiles["tu_profiles"][new] = "gxx281pm-gnu291-O2-unsigned"
+            write_json(profiles_path, profiles)
+            write_json(directory / "input-manifest.json", input_manifest(source_root))
+            receipt = read_json(execute_snapshot(directory, PROJECT, CANONICAL_ROM))
+            object_path = f"obj/source/{Path(new).with_suffix('.o').as_posix()}"
+            self.assertEqual(receipt["graph"][object_path]["source_kind"], "cpp")
+            self.assertIn(new, receipt["dependencies"])
+            self.assertIn(object_path, receipt["reproduction"]["c_objects"])
+            self.assertGreaterEqual(receipt["coverage"]["matched_cpp_functions"], 1)
+            self.assertGreaterEqual(receipt["coverage"]["matched_cpp_bytes"], 24)
+            verify_receipt(directory / "receipt.json", require_current=False)
 
     def test_python_aliases_share_the_same_venv_runtime_identity(self) -> None:
         for name in ["python", "python3"]:

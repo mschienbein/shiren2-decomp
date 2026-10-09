@@ -23,7 +23,8 @@ typedef struct {
 } Part800E8D0C;
 
 extern void *func_800E8A68(void *obj, u8 kind);
-extern u16 func_8010EAF4(Part800E8D0C *part);
+/* func_8010EAF4 returns its clamped total full width; this caller narrows it (andi after the call). */
+extern u32 func_8010EAF4(Part800E8D0C *part);
 extern s32 func_8010CD1C(Part800E8D0C *part);
 
 u16 func_800E8D0C(void *obj) {

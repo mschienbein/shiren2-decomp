@@ -3,12 +3,12 @@
 typedef struct { s32 x,y; } Position;
 typedef struct { char pad[0x14]; } Entry;
 typedef struct { char pad[0x18]; } Slot;
-typedef struct { char pad0[0x3DF]; unsigned char count; char pad3E0[0x57C]; s32 available[16]; } Object;
+typedef struct { char pad0[0x3DC]; s32 count; char pad3E0[0x57C]; s32 available[16]; } Object;
 extern char D_80147620[];
 extern Entry D_801431F0[];
 extern Slot D_80143330[];
 extern unsigned char D_80156ABF;
-extern unsigned char func_800C57CC(void *,unsigned char);
+extern unsigned char func_800C57CC(void *,s32);
 extern s32 func_800B68B0(Entry *),func_800A2854(Position *,Position *,Position *),func_800C587C(void *,unsigned char);
 extern void *func_800B6A98(void *out,void *room,s32 index);
 extern Position *func_800A256C(Position *,Position *,Position *),*func_800A2544(Position *,Position *,Position *);
@@ -23,7 +23,7 @@ s32 func_800BC78C(Object *obj,unsigned char id) {
         s32 left=--remaining;
         s32 index,type;
         if(left==-1) break;
-        index=func_800C57CC(D_80147620,obj->count-1);
+        index=func_800C57CC(D_80147620,(unsigned char)(obj->count-1));
         if(!obj->available[index]) continue;
         entry=&D_801431F0[index];
         type=func_800B68B0(entry);

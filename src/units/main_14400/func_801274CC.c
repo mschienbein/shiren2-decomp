@@ -9,7 +9,7 @@ extern short D_801CA684[30];
 extern char *func_800A3B20(void *obj), *func_800AE674(void *obj);
 extern void func_800498E4(s32, ...);
 extern s32 func_80049CB4(s32, ...);
-extern void *func_800A6B70(Position *, Object *, unsigned char, s32);
+extern Position func_800A6B70(Object *, unsigned char, s32);
 extern Object *func_800B4928(Position *), *func_800A8CB0(s32);
 extern s32 func_800A5388(Object *, s32);
 extern unsigned char func_800A8C00(Object *);
@@ -30,7 +30,7 @@ s32 func_801274CC(Object *object, Message *message) {
     remaining = D_801CA67F[object->field_0C];
     for (;;) {
         Object *target; s32 more = remaining-- > 0; if (!more) break;
-        func_800A6B70(&target_position, owner, 0x7C, 1);
+        target_position = func_800A6B70(owner, 0x7C, 1);
         if (!(target_position.field_04 | target_position.field_00)) break;
         func_80049CB4(6); func_80049CB4(0xCF, object, &target_position); func_80049CB4(0x114, &target_position);
         target = func_800B4928(&target_position);

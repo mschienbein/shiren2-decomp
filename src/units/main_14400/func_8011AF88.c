@@ -1,0 +1,66 @@
+#include "common.h"
+typedef unsigned char u8;
+typedef struct { u8 pad_00[5]; signed char value_05; u8 pad_06[6]; u8 flags_0C; } Item;
+extern void *func_800AC5F4(s32, void *);
+extern void func_800ACF34(void *);
+extern void func_800AE974(void *, signed char);
+extern void *func_80119980(void *);
+extern void *func_8011A020(void *);
+extern void *func_8011A1D0(void *);
+extern void *func_8011A410(void *);
+extern void *func_8011A5E0(void *);
+extern void *func_8011A760(void *);
+extern void *func_8011A8E0(void *);
+extern void *func_8011AB60(void *);
+extern void *func_8011AD10(void *);
+extern void *func_8011B3F0(void *);
+extern void *func_8011B560(void *);
+extern void *func_8011B7F0(void *);
+extern void *func_8011B930(void *);
+extern void *func_8011BC00(void *);
+extern void *func_8011BE20(void *);
+extern void *func_8011BF90(void *);
+extern void *func_8011C140(void *);
+extern void *func_8011C280(void *);
+extern void *func_8011C430(void *);
+extern void *func_8011C560(void *);
+extern void *func_8011C790(void *);
+extern void *func_8011C9D0(void *);
+extern void *func_8011CBD0(void *);
+extern void *func_8011CE30(void *);
+extern void *func_8011CFF0(void *);
+extern void *func_8011D1D0(void *);
+void func_8011AF88(Item *item, u8 kind) {
+    u8 previous = item->value_05;
+    switch (kind) {
+    case 23: func_80119980(func_800AC5F4(0x10, item)); break;
+    case 24: func_8011A020(func_800AC5F4(0x10, item)); break;
+    case 25: func_8011A1D0(func_800AC5F4(0x10, item)); break;
+    case 26: func_8011A410(func_800AC5F4(0x10, item)); break;
+    case 27: func_8011A5E0(func_800AC5F4(0x10, item)); break;
+    case 28: func_8011A760(func_800AC5F4(0x10, item)); break;
+    case 29: func_8011A8E0(func_800AC5F4(0x10, item)); break;
+    case 30: func_8011AB60(func_800AC5F4(0x10, item)); break;
+    case 31: func_8011AD10(func_800AC5F4(0x10, item)); break;
+    case 33: func_8011B3F0(func_800AC5F4(0x10, item)); break;
+    case 34: func_8011B560(func_800AC5F4(0x10, item)); break;
+    case 35: func_8011B7F0(func_800AC5F4(0x10, item)); break;
+    case 36: func_8011B930(func_800AC5F4(0x18, item)); break;
+    case 37: func_8011BC00(func_800AC5F4(0x10, item)); break;
+    case 38: func_8011BE20(func_800AC5F4(0x10, item)); break;
+    case 39: func_8011BF90(func_800AC5F4(0x18, item)); break;
+    case 40: func_8011C140(func_800AC5F4(0x10, item)); break;
+    case 41: func_8011C280(func_800AC5F4(0x10, item)); break;
+    case 42: func_8011C430(func_800AC5F4(0x10, item)); break;
+    case 43: func_8011C560(func_800AC5F4(0x10, item)); break;
+    case 44: func_8011C790(func_800AC5F4(0x10, item)); break;
+    case 45: func_8011C9D0(func_800AC5F4(0x10, item)); break;
+    case 46: func_8011CBD0(func_800AC5F4(0x10, item)); break;
+    case 47: func_8011CE30(func_800AC5F4(0x10, item)); break;
+    case 48: func_8011CFF0(func_800AC5F4(0x10, item)); break;
+    case 49: func_8011D1D0(func_800AC5F4(0x10, item)); break;
+    }
+    func_800ACF34(item);
+    item->flags_0C |= 2;
+    func_800AE974(item, (signed char)previous);
+}

@@ -17,7 +17,10 @@ extern u8 D_80143448;
 extern s32 D_80143444;
 extern u16 D_8014767C;
 extern char D_801431F0[];
-extern char D_80143330[];
+/* Two 0x18-byte region records initialized by func_800B1080: owner byte +0 (func_800D1D90
+ * clears it with sb zero,0(a0)) plus 3 padding bytes, area pointer +4; rest not interpreted. */
+typedef struct { signed char owner; u8 pad1[3]; void *area; u8 pad8[0x10]; } Region;
+extern Region D_80143330[2];
 extern RoomState D_80143434;
 void *func_800A3610(void *out, void *it);
 u32 func_800B1C6C(void *pos);
@@ -69,7 +72,7 @@ void func_800B23B0(void) {
     D_8014344C = 1;
     func_800B6728(D_801431F0, &D_801429C0);
     if (D_80143448) {
-        func_800D3640(D_80143330, 0);
+        func_800D3640(&D_80143330[0], 0);
         func_800D3C68();
         D_80143448 = 1;
     }

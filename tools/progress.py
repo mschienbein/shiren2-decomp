@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Account for accepted C instruction bytes against an immutable provisional catalogue.
+"""Account for accepted C and C++ instruction bytes against an immutable provisional catalogue.
 
 Publication belongs to verify.py and the integrator. This tool reads their
 accepted pointer and hash-bound independent validation records. It does not
@@ -23,7 +23,7 @@ from typing import Any
 
 from certification import (REQUIRED_ARTIFACTS, REQUIRED_RECEIPT_FIELDS, build_graph,
                            elf_code, image_evidence, json_digest, read_json, sha256)
-from evidence import require_inventory, validate_attributions, validate_matches
+from evidence import COMPILED_KINDS, compiled_kind, require_inventory, validate_attributions, validate_matches
 from images import ImageInventory, policy_records
 from packet import FunctionCatalogue, enumerate_functions
 from rom import CANONICAL_ROM, EXPECTED_SHA256, PROJECT, attest
@@ -31,6 +31,7 @@ from workspace import input_manifest, verify_manifest
 
 _SHA = re.compile(r"[0-9a-f]{64}\Z")
 _SCRATCH = "scratch/progress-accounting-2026-10-05"
+FAMILY_LABELS = {"c": "C", "cpp": "C++", "c_and_cpp": "C+C++"}
 
 
 def _digest(value: object) -> str:
@@ -123,12 +124,14 @@ def load_receipt(root: Path, reference: Path, identity: dict[str, str],
     if matches != receipt["c_matches"]:
         raise ValueError("Frozen accepted matches disagree with receipt")
     counts = validate_matches(matches, policy_records(inventory))
+    if set(receipt["coverage"]) - {"description"} != set(counts):
+        raise ValueError("Accepted coverage counter inventory disagrees with source languages")
     for key, value in counts.items():
         if type(receipt["coverage"].get(key)) is not int or receipt["coverage"].get(key) != value:
             raise ValueError("Accepted C coverage disagrees with unique instruction ranges")
     validate_attributions(matches, receipt["c_attributions"], graph)
     attributes = {(a["image_id"], a["symbol"]): a for a in receipt["c_attributions"]}
-    sources = {item["source"] for item in graph.values() if item["source_kind"] == "c"}
+    sources = {item["source"] for item in graph.values() if item["source_kind"] in COMPILED_KINDS}
     if set(receipt["profile"]["tu_profiles"]) != sources:
         raise ValueError("Accepted per-TU profile assignments disagree")
     for match in matches:
@@ -186,6 +189,13 @@ def validate_acceptance(accepted: AcceptedReceipt, reference: dict[str, str],
             or type(coverage.get("matched_c_instruction_bytes")) is not int
             or coverage["matched_c_instruction_bytes"] != receipt["coverage"]["matched_c_bytes"]):
         raise ValueError("Validation coverage disagrees with receipt")
+    if "matched_cpp_functions" in receipt["coverage"]:
+        for family in ("cpp", "c_and_cpp"):
+            if (type(coverage.get(f"matched_{family}_functions")) is not int
+                    or coverage[f"matched_{family}_functions"] != receipt["coverage"][f"matched_{family}_functions"]
+                    or type(coverage.get(f"matched_{family}_instruction_bytes")) is not int
+                    or coverage[f"matched_{family}_instruction_bytes"] != receipt["coverage"][f"matched_{family}_bytes"]):
+                raise ValueError(f"Validation {FAMILY_LABELS[family]} coverage disagrees with receipt")
     review_ref = document["independent_whole_rom_review"]
     review = read_json(_read_reference(root, review_ref))
     if (not str(review.get("status", "")).startswith("PASS")
@@ -302,6 +312,10 @@ def freeze_catalogue(accepted: AcceptedReceipt, validation: dict[str, str]) -> d
 
 
 def calculate(accepted: AcceptedReceipt, denominator: dict[str, Any]) -> dict[str, Any]:
+    """Matched C (and, when the receipt has any, C++ and C+C++) functions/bytes per image and in total.
+
+    A C-only receipt yields exactly the C counters, so its recorded progress is unchanged.
+    """
     if type(denominator.get("schema_version")) is not int or denominator.get("schema_version") != 1:
         raise ValueError("Unsupported immutable denominator schema")
     identity = denominator["identity"]
@@ -318,13 +332,18 @@ def calculate(accepted: AcceptedReceipt, denominator: dict[str, Any]) -> dict[st
                 image["rom_start"], image["rom_end"], image["vram_start"]):
             raise ValueError("Immutable denominator image mapping disagrees with accepted evidence")
     by_slot = {(f["image_id"], f["rom_start"]): f for f in identity["functions"]}
+    coverage = accepted.document["coverage"]
+    # Counter families: `c` alone for a C-only receipt; `c`, `cpp` and their sum once C++ is accepted.
+    families = ("c", "cpp", "c_and_cpp") if "matched_cpp_functions" in coverage else ("c",)
     images: dict[str, dict[str, Any]] = {}
     for image in identity["images"]:
         count = audit["images"].get(image["image_id"], {})
-        total = count.get("instruction_bytes", 0)
-        images[image["image_id"]] = {"matched_c_functions": 0, "matched_c_instruction_bytes": 0,
-            "catalogued_functions": count.get("functions", 0),
-            "provisional_catalogued_instruction_bytes": total or None, "mapped_catalogue_c_percent": None}
+        row: dict[str, Any] = {"catalogued_functions": count.get("functions", 0),
+                               "provisional_catalogued_instruction_bytes": count.get("instruction_bytes", 0) or None}
+        for family in families:
+            row.update({f"matched_{family}_functions": 0, f"matched_{family}_instruction_bytes": 0,
+                        f"mapped_catalogue_{family}_percent": None})
+        images[image["image_id"]] = row
     for match in accepted.document["c_matches"]:
         f = by_slot.get((match["image_id"], match["rom_start"]))
         if f is None or (f["vram_start"], f["size"]) != (match["vram_start"], match["size"]):
@@ -332,22 +351,30 @@ def calculate(accepted: AcceptedReceipt, denominator: dict[str, Any]) -> dict[st
         a = next(a for a in accepted.document["c_attributions"] if (a["image_id"], a["symbol"]) == (match["image_id"], match["symbol"]))
         if a["reference_sha256"] != f["sha256"]:
             raise ValueError("Accepted C reference differs from original denominator")
+        kind = compiled_kind(match["source"])
+        if kind not in families:
+            raise ValueError("Accepted C++ match without C++ receipt coverage")
         row = images[match["image_id"]]
-        row["matched_c_functions"] += 1
-        row["matched_c_instruction_bytes"] += match["size"]
+        for family in {kind, "c_and_cpp"} & set(families):
+            row[f"matched_{family}_functions"] += 1
+            row[f"matched_{family}_instruction_bytes"] += match["size"]
     for row in images.values():
         total = row["provisional_catalogued_instruction_bytes"]
         if total:
-            row["mapped_catalogue_c_percent"] = 100 * row["matched_c_instruction_bytes"] / total
-    matched = sum(row["matched_c_instruction_bytes"] for row in images.values())
-    functions = sum(row["matched_c_functions"] for row in images.values())
-    if (matched, functions) != (accepted.document["coverage"]["matched_c_bytes"], accepted.document["coverage"]["matched_c_functions"]):
-        raise ValueError("Duplicate or inconsistent accepted C numerator")
+            for family in families:
+                row[f"mapped_catalogue_{family}_percent"] = 100 * row[f"matched_{family}_instruction_bytes"] / total
     total = audit["instruction_bytes"]
-    return {"matched_c_functions": functions, "matched_c_instruction_bytes": matched,
-            "provisional_catalogued_instruction_bytes": total or None,
-            "mapped_catalogue_c_percent": 100 * matched / total if total else None,
-            "complete_game_denominator_bytes": None, "complete_game_percent": None, "images": images}
+    result: dict[str, Any] = {}
+    for family in families:
+        matched = sum(row[f"matched_{family}_instruction_bytes"] for row in images.values())
+        functions = sum(row[f"matched_{family}_functions"] for row in images.values())
+        if (matched, functions) != (coverage[f"matched_{family}_bytes"], coverage[f"matched_{family}_functions"]):
+            raise ValueError(f"Duplicate or inconsistent accepted {FAMILY_LABELS[family]} numerator")
+        result.update({f"matched_{family}_functions": functions, f"matched_{family}_instruction_bytes": matched,
+                       f"mapped_catalogue_{family}_percent": 100 * matched / total if total else None})
+    result.update({"provisional_catalogued_instruction_bytes": total or None,
+                   "complete_game_denominator_bytes": None, "complete_game_percent": None, "images": images})
+    return result
 
 
 def _history(path: Path) -> list[dict[str, Any]]:
@@ -405,18 +432,34 @@ def _freshness(accepted: AcceptedReceipt) -> dict[str, Any]:
 
 def markdown(report: dict[str, Any]) -> str:
     c, freshness = report["coverage"], report["freshness"]
+    split = "matched_cpp_functions" in c
     percent = c["mapped_catalogue_c_percent"]
-    text = ["# Matching C progress", "", f"**Accepted C: {c['matched_c_instruction_bytes']:,} instruction bytes across {c['matched_c_functions']} functions.**",
-            f"**PROVISIONAL mapped CPU catalogue: {percent:.6f}%.**" if percent is not None else "**Mapped CPU catalogue percentage: unknown.**",
-            "**Complete-game denominator and percentage: unknown.**", "",
-            "The denominator contains original catalogued CPU function instruction extents, including provisional handwritten annotations. It is not a complete-game or C-required-code denominator. Overlays, unknown storage and final CPU/data/handwritten classification remain unresolved.", "",
-            "| Image | Accepted C bytes | Catalogued instruction bytes (provisional) | C / catalogue |",
-            "| --- | ---: | ---: | ---: |"]
-    for image, row in c["images"].items():
-        p = row["mapped_catalogue_c_percent"]
-        total = row["provisional_catalogued_instruction_bytes"]
-        text.append(f"| {image} | {row['matched_c_instruction_bytes']:,} | {total:,} | {p:.6f}% |"
-                    if total else f"| {image} | {row['matched_c_instruction_bytes']:,} | unknown | unknown |")
+    text = ["# Matching C/C++ progress" if split else "# Matching C progress", "",
+            f"**Accepted C: {c['matched_c_instruction_bytes']:,} instruction bytes across {c['matched_c_functions']} functions.**"]
+    if split:
+        both = c["mapped_catalogue_c_and_cpp_percent"]
+        text += [f"**Accepted C++: {c['matched_cpp_instruction_bytes']:,} instruction bytes across {c['matched_cpp_functions']} functions.**",
+                 f"**Accepted C + C++: {c['matched_c_and_cpp_instruction_bytes']:,} instruction bytes across {c['matched_c_and_cpp_functions']} functions"
+                 + (f" ({both:.6f}% of the PROVISIONAL mapped CPU catalogue).**" if both is not None else ".**")]
+    text += [f"**PROVISIONAL mapped CPU catalogue: {percent:.6f}%{' (C only)' if split else ''}.**" if percent is not None else "**Mapped CPU catalogue percentage: unknown.**",
+             "**Complete-game denominator and percentage: unknown.**", "",
+             "The denominator contains original catalogued CPU function instruction extents, including provisional handwritten annotations. It is not a complete-game or C-required-code denominator. Overlays, unknown storage and final CPU/data/handwritten classification remain unresolved.", ""]
+    if split:
+        text += ["| Image | Accepted C bytes | Accepted C++ bytes | C + C++ bytes | Catalogued instruction bytes (provisional) | C / catalogue | C + C++ / catalogue |",
+                 "| --- | ---: | ---: | ---: | ---: | ---: | ---: |"]
+        for image, row in c["images"].items():
+            total = row["provisional_catalogued_instruction_bytes"]
+            counts = f"| {image} | {row['matched_c_instruction_bytes']:,} | {row['matched_cpp_instruction_bytes']:,} | {row['matched_c_and_cpp_instruction_bytes']:,} |"
+            text.append(f"{counts} {total:,} | {row['mapped_catalogue_c_percent']:.6f}% | {row['mapped_catalogue_c_and_cpp_percent']:.6f}% |"
+                        if total else f"{counts} unknown | unknown | unknown |")
+    else:
+        text += ["| Image | Accepted C bytes | Catalogued instruction bytes (provisional) | C / catalogue |",
+                 "| --- | ---: | ---: | ---: |"]
+        for image, row in c["images"].items():
+            p = row["mapped_catalogue_c_percent"]
+            total = row["provisional_catalogued_instruction_bytes"]
+            text.append(f"| {image} | {row['matched_c_instruction_bytes']:,} | {total:,} | {p:.6f}% |"
+                        if total else f"| {image} | {row['matched_c_instruction_bytes']:,} | unknown | unknown |")
     text += ["", "Preserved ASM/binary inputs, initialized data and inter-function padding earn zero matching C instruction credit. Zero-word NOPs inside function bodies remain instruction words. Rebuilding the exact 32 MiB ROM does not establish 100% matching C.", "",
              f"Accepted receipt: `{report['accepted_receipt']['path']}` (`{report['accepted_receipt']['sha256']}`).",
              f"Denominator identity: `{report['denominator']['id']}`; immutable catalogue: [{Path(report['denominator']['path']).name}](progress-catalogues/{Path(report['denominator']['path']).name}).",
@@ -493,6 +536,8 @@ def record(validation_path: Path, *, root: Path = PROJECT, reference: Path = CAN
                 "matched_c_byte_delta": counts["matched_c_instruction_bytes"] - (old["coverage"]["matched_c_instruction_bytes"] if old else 0),
                 "denominator_change": {"previous_id": old["denominator_id"] if old else None,
                                        "new_id": denominator["denominator_id"], "reason": reason if old else "Initial accepted original catalogue"}}
+            if "matched_cpp_instruction_bytes" in counts:
+                event["matched_cpp_byte_delta"] = counts["matched_cpp_instruction_bytes"] - (old["coverage"].get("matched_cpp_instruction_bytes", 0) if old else 0)
             event["event_sha256"] = json_digest(event)
         else:
             if existing["coverage"] != counts:

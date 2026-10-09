@@ -19,7 +19,20 @@ typedef struct {
     void *piHandle;
 } OSIoMesg;
 
-extern s32 D_80037280; /* __osPiDevMgr.active */
+typedef struct OSThread OSThread;
+typedef struct PiHandleView PiHandleView;
+typedef ControllerQueueView OSMesgQueue;
+typedef struct {
+    s32 active;
+    OSThread *thread;
+    OSMesgQueue *cmdQueue;
+    OSMesgQueue *evtQueue;
+    OSMesgQueue *acsQueue;
+    s32 (*dma)(s32, u32, void *, u32);
+    long (*edma)(PiHandleView *, long, unsigned long, void *, unsigned long);
+} OSDevMgr;
+
+extern OSDevMgr D_80037280;
 extern ControllerQueueView *func_8002F7A0(void); /* osPiGetCmdQueue */
 extern ControllerQueueS32 func_8002B130(ControllerQueueView *mq, OSMesg msg, ControllerQueueS32 flag);
 extern ControllerQueueS32 func_80031D50(ControllerQueueView *mq, OSMesg msg, ControllerQueueS32 flag);
@@ -27,9 +40,9 @@ extern ControllerQueueS32 func_80031D50(ControllerQueueView *mq, OSMesg msg, Con
 /* osEPiStartDma */
 s32 func_800299E0(void *pihandle, OSIoMesg *mb, s32 direction)
 {
-    register s32 ret;
+    s32 ret;
 
-    if (!D_80037280) {
+    if (!D_80037280.active) {
         return -1;
     }
     mb->piHandle = pihandle;

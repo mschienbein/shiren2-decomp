@@ -18,6 +18,7 @@ from types import MappingProxyType
 from typing import Any
 
 from certification import build_graph, file_inventory, image_evidence, json_digest, linked_image_records, read_json, runtime_fingerprint, sha256, tool_profile
+from evidence import COMPILED_KINDS, COMPILED_SUFFIXES
 from images import ImageInventory, ImageRecord, require_cpu_range
 from rom import CANONICAL_ROM, EXPECTED_SHA256, PROJECT, attest
 from verify import latest_receipt, verify_receipt
@@ -285,9 +286,9 @@ def enumerate_functions(receipt_path: Path | None = None, reference: Path = CANO
                 unit = PurePosixPath(source).relative_to("generated/asm").with_suffix("").as_posix()
                 sources.append((source, item["image_id"], object_path, unit, None))
     for key, match in matched.items():
-        owners = [(name, item) for name, item in graph.items() if item["source_kind"] == "c" and (item["image_id"], item["source"]) == (key[0], match["source"])]
+        owners = [(name, item) for name, item in graph.items() if item["source_kind"] in COMPILED_KINDS and (item["image_id"], item["source"]) == (key[0], match["source"])]
         if len(owners) != 1:
-            raise ValueError("Accepted function lacks a unique frozen C graph source")
+            raise ValueError("Accepted function lacks a unique frozen C/C++ graph source")
         unit = PurePosixPath(match["source"]).relative_to("src").with_suffix("").as_posix()
         source = f"generated/asm/matchings/{unit}/{match['symbol']}.s"
         sources.append((source, key[0], owners[0][0], unit, match))
@@ -385,9 +386,9 @@ def _editable_files(values: tuple[str, ...]) -> list[str]:
         if (
             not value or "\\" in value or path.is_absolute() or ".." in path.parts
             or path.as_posix() != value or len(path.parts) < 2 or path.parts[0] != "src"
-            or path.suffix != ".c" or value in result
+            or path.suffix not in COMPILED_SUFFIXES.values() or value in result
         ):
-            raise ValueError("Worker source ownership must contain distinct canonical src/*.c paths")
+            raise ValueError("Worker source ownership must contain distinct canonical src/*.c or src/*.cpp paths")
         result.append(value)
     return result
 

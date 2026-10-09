@@ -1,0 +1,7 @@
+;; Need 1 group (DImode) of class GR_REGS (for insn 77).
+;; Need 1 group (VOIDmode) of class ALL_REGS (for insn 77).
+Spilling reg 8.
+Spilling reg 9.
+;; Need 1 reg of class GR_REGS (for insn 50).
+;; Need 1 reg of class ALL_REGS (for insn 50).
+Spilling reg 12.

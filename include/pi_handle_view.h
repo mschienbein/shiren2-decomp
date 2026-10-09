@@ -64,6 +64,8 @@ extern PiResult func_80029DE0(PiHandleView *handle, PiWord device_address,
         PI_IO_WRITE(address, (handle)->field)
 
 /* Inline source macro, not a new runtime helper. Statements retain original order. */
+/* ODD_C: do { } while (0) multi-statement macro idiom (as libultra gbi.h _DW). No unit expands
+ * it, so it shapes nothing: the brace-only form leaves all 8 includers at 0 differing words. */
 #define PI_SYNCHRONIZE(handle, stat, domain) \
     do { \
         (stat) = PI_IO_READ(PI_STATUS); \

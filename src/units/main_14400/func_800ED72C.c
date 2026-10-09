@@ -1,4 +1,10 @@
 #include "common.h"
+typedef struct { unsigned char index, count, previous, field_03, masks[2], field_06, previous_count, field_08; signed char result; unsigned char field_0A; } SelectionSave;
+extern SelectionSave D_80142F24;
+static inline unsigned char selection_index(const SelectionSave *record) { return record->index; }
+
+static inline unsigned char selection_count(const SelectionSave *record) { return record->count; }
+
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef struct {
@@ -10,8 +16,8 @@ typedef struct {
     u8 timer108;
 } Obj800ED72C;
 typedef struct Event Event;
-extern u8 D_80142F24;
-extern u8 D_80142F25;
+
+
 extern u16 D_801476BE;
 extern u16 D_801476C0;
 s32 func_800E4B60(Obj800ED72C *, Event *);
@@ -50,11 +56,11 @@ void func_800ED72C(Obj800ED72C *self, Event *event) {
     }
     sound = 0;
     special = 0;
-    if (D_80142F24 == 11) {
+    if (selection_index(&D_80142F24) == 11) {
         special = D_801476BE == 20;
     }
     if (special) {
-        sound = D_80142F25 + 0xFA4;
+        sound = selection_count(&D_80142F24) + 0xFA4;
     } else if ((self->flagsE4 >> 5) & 1) {
         sound = 0xFA7;
         self->flagsE4 &= ~0x20;

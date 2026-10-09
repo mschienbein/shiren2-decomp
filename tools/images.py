@@ -14,10 +14,12 @@ from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 from typing import Mapping
 
+from evidence import COMPILED_SUFFIXES
 from rom import EXPECTED_SHA256, EXPECTED_SIZE
 
 
 ADDRESS_LIMIT = 0x100000000
+SOURCE_SUFFIXES = tuple(COMPILED_SUFFIXES.values())  # C and C++ translation units
 _IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 _REVIEWED_IMAGES = {
@@ -183,13 +185,14 @@ def _digest(value: object, label: str) -> str:
     return value
 
 
-def _path(value: object, label: str, *, root: str, suffix: str) -> str:
+def _path(value: object, label: str, *, root: str, suffix: str | tuple[str, ...]) -> str:
     text = _text(value, label)
     path = PurePosixPath(text)
+    suffixes = (suffix,) if isinstance(suffix, str) else suffix
     if ("\\" in text or path.is_absolute() or ".." in path.parts
             or path.as_posix() != text or len(path.parts) < 2
-            or path.parts[0] != root or path.suffix != suffix):
-        raise ValueError(f"{label} must be a canonical {root}/ path without escapes, ending in {suffix}")
+            or path.parts[0] != root or path.suffix not in suffixes):
+        raise ValueError(f"{label} must be a canonical {root}/ path without escapes, ending in {' or '.join(suffixes)}")
     return text
 
 
@@ -422,8 +425,13 @@ def validate_inventory(document: object) -> ImageInventory:
     if not isinstance(sources, dict):
         raise ValueError("Source bindings must be a dictionary")
     bindings: dict[str, str] = {}
+    stems: set[str] = set()
     for source, image_id in sources.items():
-        path = _path(source, "Source binding", root="src", suffix=".c")
+        path = _path(source, "Source binding", root="src", suffix=SOURCE_SUFFIXES)
+        stem = PurePosixPath(path).with_suffix("").as_posix()
+        if stem in stems:
+            raise ValueError(f"Source bindings share one object path: {stem}.c/.cpp")
+        stems.add(stem)
         name = _identity(image_id, "Source binding image")
         if name not in images:
             raise ValueError(f"Source binding references unknown image: {name}")
@@ -479,8 +487,8 @@ def image_for_segment(name: str, inventory: ImageInventory) -> ImageRecord | Non
 
 
 def image_for_source(source: str, inventory: ImageInventory) -> ImageRecord | None:
-    """Resolve an explicit canonical C source binding; never infer it from VRAM."""
-    path = _path(source, "C source", root="src", suffix=".c")
+    """Resolve an explicit canonical C/C++ source binding; never infer it from VRAM."""
+    path = _path(source, "C source", root="src", suffix=SOURCE_SUFFIXES)
     name = inventory.source_bindings.get(path)
     return None if name is None else inventory.images[name]
 

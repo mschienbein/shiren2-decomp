@@ -33,10 +33,21 @@
     "binaries_sha256": {
       "gcc": "5ff7e7ed4862a18c68522ccd1014c0c4bdfaef13d4d20a13c1c4e1e8f0a4c6da",
       "cc1": "674a9e395b76031c24187ee27aa9bb279ab1032127920beedc670ab8e56beeaf",
-      "cpp": "58f3c1bf2badff3138de996a77a62faaa8ff0356a219ec7c62829f213bacde0f"
+      "cpp": "58f3c1bf2badff3138de996a77a62faaa8ff0356a219ec7c62829f213bacde0f",
+      "cc1plus": "d5688337a6aed4a3ac53b22f81c75a19b09593fdb7bf7252a93ab5902ee0e479"
     },
-    "driver_selection": "Non-default compiler: object commands pass -B<install_directory>/ so the 2.8.1 driver runs its own cpp/cc1; COMPILER_PATH alone would select the 2.7.2 cc1",
-    "validation": "GAME image (main_14400) toolchain research: best measured reproduction with gas 2.9.1 CPU3000; per-TU assignment only"
+    "driver_selection": "Non-default compiler: object commands pass -B<install_directory>/ so the 2.8.1 driver runs its own cpp/cc1 (cc1plus for .cpp TUs); COMPILER_PATH alone would select the 2.7.2 cc1",
+    "validation": "GAME image (main_14400) toolchain research: best measured reproduction with gas 2.9.1 CPU3000; per-TU assignment only. cc1plus ('GNU C++ version 2.8.1 (mips-nintendo-nu64)', same archive) compiles gxx281pm-gnu291-O2-unsigned .cpp TUs; the g++ driver only adds link-time libraries and is unused"
+  },
+  "clang_ast": {
+    "purpose": "C++ interface gate only (tools/interfaces.py): parses the 2.8.1-preprocessed .cpp TU into a JSON AST; never compiles or links game code",
+    "version_observed": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "provision": "tools/setup.py copies the host Command Line Tools clang (xcrun -f clang) once; the binary is self-contained and runs from the copy",
+    "install_directory": ".cache/clang-ast",
+    "binary_sha256": "1590ac950a3d627817d09ade5cb60b2115f17a72182a3141e010b4bcc482a0c9",
+    "host_architecture": "arm64",
+    "invocation": ["-target", "mips-unknown-none-elf", "-x", "c++-cpp-output", "-std=gnu++98", "-fsyntax-only", "-ffreestanding", "-nostdinc", "-fno-builtin", "-funsigned-char", "-fno-exceptions", "-fno-rtti", "-Xclang", "-ast-dump=json"],
+    "validation": "Host-specific pin like binutils_gnu291: a different Command Line Tools clang must be reviewed and re-pinned; the gate fails closed on a missing or changed binary"
   },
   "binutils_gnu291": {
     "version": "2.9.1",
@@ -55,6 +66,34 @@
     "assembler_sha256": "00d952c14b1ddbed5bdab1ed5b507e17dd446a96e096269f506c4f3f52cd8f22",
     "host_architecture": "arm64",
     "validation": "Host-only patches (config.sub aarch64/darwin, Darwin const sys_nerr); no MIPS/opcode/BFD change. Built with relative srcdir so the binary embeds no checkout path; assembler_sha256 is specific to the recorded host clang"
+  },
+  "binutils_gnu291_fp32": {
+    "version": "2.9.1",
+    "url": "https://ftp.gnu.org/gnu/binutils/binutils-2.9.1.tar.gz",
+    "mirrors": ["https://mirrors.kernel.org/gnu/binutils/binutils-2.9.1.tar.gz"],
+    "sha256": "58d01daa576d8779e064922171276795f00ff1388b1b0f87aa1a00eb0da6c6bb",
+    "target": "mips-mips-elf",
+    "install_directory": ".cache/binutils-gnu-2.9.1-fp32",
+    "host_patches": [
+      {"path": "config.sub", "original_sha256": "d38fe4793443a10f1dde1c70fd39c71801843274a3e6f63e12dc719eeadaa5f5", "modified_sha256": "bce4ce758112a2ed87956295709cdac516e96f19efba5daeaae4efa7de8fd80c"},
+      {"path": "libiberty/strerror.c", "original_sha256": "8ab7e03a1dd10cb49f589ffe83887980a508e1c425702372da798cecb892cf81", "modified_sha256": "efb3fb1eb043fcf9016b050387980a13688cbc6dd4fb423687ba2c24e453c809"}
+    ],
+    "source_patch": {
+      "path": "tools/patches/binutils-2.9.1-fp32.patch",
+      "sha256": "c9c8bb8b0db81320a3579d5f726f75b34e805d89ef5fd68aa55e84f3379ff9b6",
+      "source_path": "gas/config/tc-mips.c",
+      "original_sha256": "bc1a7d2f8be740b52ee49300f564a8ed96db91fe01440edb414428e23d4900a6",
+      "modified_sha256": "fb4f35b3aae401090926c1821a4cdd8db5456021bb39e7455db1acfed5fb14d2"
+    },
+    "configure_extra": ["--disable-gprof", "--disable-gdb", "--disable-shared", "--disable-nls"],
+    "cflags": "-O2 -std=gnu89 -fcommon -fno-builtin -Wno-implicit-function-declaration -Wno-int-conversion -Wno-incompatible-pointer-types -Wno-return-type",
+    "make_target": "all-gas",
+    "assembler_sha256": "c6ea11942a636e263cba231c98b27eaeeb3e4c99a67fca17d2f2e12f0e123e8c",
+    "host_architecture": "arm64",
+    "host_compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "make_executable": "/usr/bin/make",
+    "license": "GPL-2.0-or-later, inherited from GNU binutils 2.9.1",
+    "validation": "Opt-in -mfp32 affects FPR li.d construction only, including GNU 2.12-style FPR-width resets for .set mips1..4 and command-line restoration for .set mips0. GPR literals, default behavior, relaxation, scheduling and data padding are unchanged. LF-exact patch and relative-srcdir native build; separate pin from stock GNU291 and the absolute-srcdir research binary. Not historical assembler identification."
   },
   "binutils_kmc": {
     "version": "2.6",

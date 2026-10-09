@@ -9,9 +9,9 @@ typedef struct {
     u8 field_46;
     u8 pad47;
     s32 field_48;
-    void *field_4C;
+    const void *field_4C;
 } Obj;
-extern u8 D_80151E38[];
+extern const unsigned char D_80151E38[144];
 extern u8 D_80151EC8[];
 Obj *func_800953C0(Obj *o) {
     o->field_4C = D_80151E38;

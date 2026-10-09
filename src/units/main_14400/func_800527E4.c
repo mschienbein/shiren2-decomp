@@ -1,12 +1,13 @@
 #include "common.h"
 
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef short s16;
-typedef signed char s8;
-
-extern s32 D_80161648;
+typedef struct { signed char x, y; } Pair;
+typedef struct { s32 handle; Pair position; } Playback;
+/* Complete 0xC-byte sound state at D_80161644 (type +0, playback.handle +4,
+ * playback.position +8/+9), the same layout as D_80161650 (func_800528BC
+ * clears both records from one base each; func_80051E9C copies D_8016165C whole). */
+typedef struct { short type; Playback playback; } State;
+extern State D_80161644;
 s32 func_8012A4E4(s32 id);
 void func_800527E4(void) {
-    func_8012A4E4(D_80161648);
+    func_8012A4E4(D_80161644.playback.handle);
 }

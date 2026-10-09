@@ -2,10 +2,12 @@
 typedef struct { s32 x, y; } Vec;
 typedef struct { s32 id; Vec pos; } End;
 typedef struct { s32 pad; End *ends; } Link;
+typedef struct Query Query;
 extern Vec *D_801476B8;
 extern Link *D_80138BB0;
 extern s32 func_800A23E8(Vec *, Vec *);
-End *func_80044840(void) {
+/* The original caller supplies a receiver; this method instead uses globals. */
+End *func_80044840(Query *unused_receiver) {
     Vec me;
     Vec t;
     Vec c;

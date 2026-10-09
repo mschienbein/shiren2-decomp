@@ -1,0 +1,40 @@
+#include "common.h"
+typedef unsigned char u8;
+typedef struct { u8 pad_0[0x14]; void *error_14; } Obj;
+typedef Obj Obj8004645C;
+extern const char D_801541C4[];
+extern u8 D_801C9BD8[], D_80142920[], D_80142930[];
+extern s32 D_80138C40[4];
+extern void func_800CA4E8(Obj *, void *);
+extern void func_800D1CC4(void *state, Obj *reader);
+extern void func_800B02F4(Obj *reader);
+extern void func_801EF5F8(Obj *reader);
+extern void func_80112E30(Obj *reader);
+extern void func_800B0DCC(Obj *reader);
+extern void func_800D83F0(Obj *reader);
+extern void func_80122820(Obj *reader);
+extern void func_800A17E0(void *state, Obj *reader);
+extern void func_800A1A34(void *arg, Obj *o);
+extern void func_8004645C(s32 *result, Obj8004645C *obj);
+void func_800C9AF8(Obj *reader) {
+    func_800CA4E8(reader, (void *)D_801541C4);
+    func_800D1CC4(D_801C9BD8, reader);
+    if (reader->error_14) return;
+    func_800B02F4(reader);
+    if (reader->error_14) return;
+    func_801EF5F8(reader);
+    if (reader->error_14) return;
+    func_80112E30(reader);
+    if (reader->error_14) return;
+    func_800B0DCC(reader);
+    if (reader->error_14) return;
+    func_800D83F0(reader);
+    if (reader->error_14) return;
+    func_80122820(reader);
+    if (reader->error_14) return;
+    func_800A17E0(D_80142920, reader);
+    if (reader->error_14) return;
+    func_800A1A34(D_80142930, reader);
+    if (reader->error_14) return;
+    func_8004645C(D_80138C40, reader);
+}

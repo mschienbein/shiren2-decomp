@@ -1,18 +1,19 @@
 #include "common.h"
 
-extern volatile s32 D_801486C0;
-extern volatile s32 D_801486C4;
-extern volatile s32 D_801486C8;
+typedef union {
+    s32 words[2];
+    struct {
+        unsigned char pad0[3];
+        unsigned char x;
+        unsigned char pad4[3];
+        unsigned char y;
+    } bytes;
+} Pos;
+extern s32 D_801486C0;
+extern Pos D_801486C4;
 
-s32 func_801168D4(s32 *out) {
-    s32 first;
-    s32 second;
-    s32 third;
-
-    first = D_801486C0;
-    second = D_801486C4;
-    third = D_801486C8;
-    out[0] = second;
-    out[1] = third;
-    return first;
+s32 func_801168D4(Pos *out) {
+    s32 status = D_801486C0;
+    *out = D_801486C4;
+    return status;
 }

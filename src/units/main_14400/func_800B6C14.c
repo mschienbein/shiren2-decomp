@@ -10,7 +10,7 @@ typedef struct { s32 value; } Result800B6C14;
 extern u8 D_80147620[];
 s32 func_800B68B0(Obj800B6C14 *obj);
 u16 func_800C58DC(void *rng, u16 range);
-void func_800B6BA0(Result800B6C14 *out, Obj800B6C14 *obj);
+Result800B6C14 *func_800B6BA0(Result800B6C14 *out, Obj800B6C14 *obj);
 void *func_800B6A98(void *out, void *obj, s32 value);
 Result800B6C14 *func_800B6C14(Result800B6C14 *out, Obj800B6C14 *obj, s32 index) {
     s32 value;

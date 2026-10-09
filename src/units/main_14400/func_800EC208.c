@@ -23,7 +23,7 @@ extern s32 D_80148090;
 extern u8 D_80154300[];
 Item800EC208 *func_800E215C(Obj800EC208 *obj);
 char *func_800AE674(void *obj);
-void func_800CFB60(Helper800EC208 *helper, Obj800EC208 *obj);
+Helper800EC208 *func_800CFB60(Helper800EC208 *helper, Obj800EC208 *obj);
 void *func_800D0190(void *output, void *helper, void *item);
 s32 func_800EC384(Obj800EC208 *obj, Item800EC208 *item);
 void func_800498E4(s32 message_id, ...);

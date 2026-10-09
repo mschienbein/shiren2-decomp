@@ -2,13 +2,13 @@
 
 typedef struct {
     char pad0[0x4C];
-    void *vtable4C;
+    const void *vtable4C;
     char pad50[0xA8 - 0x50];
-    void *vtableA8;
+    const void *vtableA8;
 } Obj8009C9CC;
 
-extern char D_80152968[];
-extern char D_80151E38[];
+extern const unsigned char D_80152968[152];
+extern const unsigned char D_80151E38[144];
 extern void func_800D8FA8(void *object);
 
 void func_8009C9CC(Obj8009C9CC *obj, s32 flags) {

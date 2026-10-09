@@ -10,7 +10,8 @@ char *func_80083C90(char *dst, char *src);
 s32 func_800D81D4(s32);
 s32 func_8005EF08(char *dst, const char *fmt, ...);
 char *func_80083D04(char *dst, char *src);
-void func_8009F818(s32 unused, s32 id, char *out) {
+/* The original caller supplies its receiver in a0 even though it is not consumed. */
+void func_8009F818(void *unused_owner, s32 id, char *out) {
     char buf[16];
     u8 a, b;
     s32 n;

@@ -196,5 +196,33 @@ class AttributionTests(unittest.TestCase):
             validate_attributions([PILOT], [{**ATTRIBUTION, "object": "/absolute.o"}], GRAPH)
 
 
+CPP = {**PILOT, "symbol": "cxx_function", "source": "src/units/main/cxx_function.cpp", "rom_start": 0x12D0,
+       "vram_start": 0x80025ED0, "size": 8}
+CPP_OBJECT = "obj/source/src/units/main/cxx_function.o"
+
+
+class CxxEvidenceTests(unittest.TestCase):
+    def test_cpp_matches_are_counted_separately_with_their_sum(self) -> None:
+        self.assertEqual(validate_matches([PILOT, CPP]), {
+            "matched_c_functions": 1, "matched_c_bytes": 16, "matched_cpp_functions": 1, "matched_cpp_bytes": 8,
+            "matched_c_and_cpp_functions": 2, "matched_c_and_cpp_bytes": 24})
+        self.assertEqual(validate_matches([CPP])["matched_c_functions"], 0)
+
+    def test_c_only_manifest_keeps_exactly_the_c_counters(self) -> None:
+        self.assertEqual(set(validate_matches([PILOT])), {"matched_c_functions", "matched_c_bytes"})
+
+    def test_cpp_object_attribution_and_suffix_kind_agreement(self) -> None:
+        graph = {**GRAPH, CPP_OBJECT: {"source": CPP["source"], "source_kind": "cpp", "image_id": "resident"}}
+        attribution = {"symbol": CPP["symbol"], "source": CPP["source"], "object": CPP_OBJECT,
+                       "vram_start": CPP["vram_start"], "size": CPP["size"]}
+        validate_attributions([PILOT, CPP], [ATTRIBUTION, attribution], graph)
+        for kind, source in [("c", CPP["source"]), ("cpp", "src/units/main/cxx_function.c")]:
+            wrong = {**graph, CPP_OBJECT: {"source": source, "source_kind": kind, "image_id": "resident"}}
+            with self.subTest(kind=kind), self.assertRaisesRegex(ValueError, "suffix"):
+                validate_attributions([PILOT, CPP], [ATTRIBUTION, attribution], wrong)
+        with self.assertRaisesRegex(ValueError, "suffix"):
+            validate_matches([{**CPP, "source": "src/units/main/cxx_function.cc"}])
+
+
 if __name__ == "__main__":
     unittest.main()

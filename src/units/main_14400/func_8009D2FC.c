@@ -2,7 +2,7 @@
 
 typedef struct {
     char pad0[0x4C];
-    void *vtbl;
+    const void *vtbl;
 } Base8009D2FC;
 
 typedef struct {
@@ -30,12 +30,13 @@ typedef struct {
 } Group8009D2FC;
 
 extern Group8009D2FC D_80141DB4;
-extern char D_801E80A0[];
-extern char D_80152968[];
-extern char D_80152AE8[];
+/* 0x90-byte derived menu vtables in overlay_1339f0 (0x801E80A0..0x801E812F, 0x801E8130..0x801E81BF). */
+extern const unsigned char D_801E80A0[144];
+extern const unsigned char D_80152968[152];
+extern const unsigned char D_80152AE8[144];
 extern char D_80151EC8[];
-extern char D_801E8130[];
-extern char D_801521D0[];
+extern const unsigned char D_801E8130[144];
+extern const unsigned char D_801521D0[144];
 
 void *func_800953C0(void *obj);
 void func_8009D2FC(void) {

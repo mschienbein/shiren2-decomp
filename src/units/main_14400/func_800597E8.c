@@ -1,11 +1,7 @@
 #include "common.h"
 
-/* Twelve-byte record copied word by word; field meaning unknown. */
-typedef struct {
-    u32 word0;
-    u32 word4;
-    u32 word8;
-} Triple_800597E8;
+/* Whole three-float camera vector; its middle component is an angle. */
+typedef struct { float x, y, z; } Triple_800597E8;
 
 extern Triple_800597E8 D_80165330;
 

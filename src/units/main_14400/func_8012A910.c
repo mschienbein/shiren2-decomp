@@ -5,7 +5,7 @@ typedef struct {
     s32 x4;
     s32 x8;
     s32 flags;
-    s32 x10;
+    void *x10; /* Channel-record bank pointer, set by func_8012A9BC. */
     void *x14;
     /* GNU C trailing payload: count relocation records follow the 0x18-byte header. */
     Pair entries[0];

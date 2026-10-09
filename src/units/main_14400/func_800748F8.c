@@ -58,7 +58,7 @@ extern SlotSet D_801A7320[];
 ActorInfo *func_80074784(s32, s32);
 s32 func_80042734(s32);
 s32 func_80074500(Actor *, s32, s32, s32, s32);
-s16 func_80076C34(s32, s32, s32);
+s32 func_80076C34(s32, s32, s32);
 void func_8007482C(s32, s32);
 s32 func_80076044(s32, s32, s32, s32, s32);
 void func_80075E5C(s32, s32);

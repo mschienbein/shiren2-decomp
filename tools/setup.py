@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Install pinned project-local MIPS binutils, assemblers and historical GCC compilers."""
+"""Install pinned project-local MIPS binutils, assemblers and historical GCC compilers (with
+the 2.8.1 cc1plus), plus the pinned clang used only by the C++ interface gate."""
 from __future__ import annotations
 
 import hashlib
@@ -54,7 +55,7 @@ def download(spec: dict, name: str) -> Path:
 
 
 def install_prebuilt_compiler(spec: dict, archive_name: str) -> Path:
-    """Extract a pinned prebuilt GCC archive once, then verify its driver/cpp/cc1 pins."""
+    """Extract a pinned GCC archive once, then verify every pinned pass (including cc1plus)."""
     directory = PROJECT / spec["install_directory"]
     if not (directory / "gcc").exists():
         archive = download(spec, archive_name)
@@ -67,10 +68,39 @@ def install_prebuilt_compiler(spec: dict, archive_name: str) -> Path:
     return directory
 
 
+def gas_source_patch(spec: dict) -> bytes | None:
+    """Read an optional backend patch only after checking its separate lock pin."""
+    patch = spec.get("source_patch")
+    if patch is None:
+        return None
+    data = (PROJECT / patch["path"]).read_bytes()
+    if hashlib.sha256(data).hexdigest() != patch["sha256"]:
+        raise ValueError(f"Source patch hash mismatch: {patch['path']}")
+    return data
+
+
+def apply_gas_source_patch(source: Path, spec: dict) -> None:
+    """Apply a pinned backend change to the exact release file, with no patch fuzz."""
+    data = gas_source_patch(spec)
+    if data is None:
+        return
+    patch = spec["source_patch"]
+    backend = source / patch["source_path"]
+    if sha256(backend) != patch["original_sha256"]:
+        raise ValueError(f"Unexpected original source: {patch['source_path']}")
+    subprocess.run(
+        ["/usr/bin/patch", "--batch", "--forward", "--fuzz=0", "-p1"],
+        input=data, cwd=source, check=True, capture_output=True,
+    )
+    if sha256(backend) != patch["modified_sha256"]:
+        raise ValueError(f"Patched source differs from the lock: {patch['source_path']}")
+
+
 def install_gnu_gas(spec: dict, make: str) -> Path:
-    """Build GNU gas 2.9.1 natively from the pinned release with recorded host-only patches."""
+    """Build pinned GNU gas with verified host edits and an optional pinned backend patch."""
     directory = PROJECT / spec["install_directory"]
     assembler = directory / "as"
+    gas_source_patch(spec)  # Verify the patch pin even when reusing an installed binary.
     if not assembler.is_file():
         if platform.machine() != "arm64":
             raise SystemExit("The binutils 2.9.1 host patches are recorded for arm64 Darwin only")
@@ -98,6 +128,7 @@ def install_gnu_gas(spec: dict, make: str) -> Path:
             path.write_text(text, encoding="latin-1")
             if sha256(path) != patches[relative]["modified_sha256"]:
                 raise ValueError(f"Patched source differs from the lock: {relative}")
+        apply_gas_source_patch(source, spec)
         build.mkdir()
         env = {key: value for key, value in os.environ.items() if key not in {"CFLAGS", "CPPFLAGS", "LDFLAGS", "CPATH", "C_INCLUDE_PATH", "LIBRARY_PATH", "GCC_EXEC_PREFIX", "COMPILER_PATH", "VR4300MUL", "N64ALIGN"}}
         env.update(CC="/usr/bin/clang", CXX="/usr/bin/clang++", AR="/usr/bin/ar", RANLIB="/usr/bin/ranlib", CFLAGS=spec["cflags"], LC_ALL="C", MAKE=make)
@@ -116,6 +147,21 @@ def install_gnu_gas(spec: dict, make: str) -> Path:
     if sha256(assembler) != spec["assembler_sha256"]:
         raise ValueError(f"Installed {spec['install_directory']}/as differs from the lock file; remove it and rerun setup")
     return assembler
+
+
+def install_clang_ast(spec: dict) -> Path:
+    """Copy the host Command Line Tools clang once for tools/interfaces.py's C++ AST; the lock pins it."""
+    directory = PROJECT / spec["install_directory"]
+    clang = directory / "clang"
+    if not clang.is_file():
+        host = Path(subprocess.check_output(["xcrun", "-f", "clang"], text=True).strip())
+        if sha256(host) != spec["binary_sha256"]:
+            raise ValueError(f"Host clang {host} differs from the clang_ast lock pin; review it and re-pin toolchain.lock.json")
+        directory.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(host, clang)
+    if sha256(clang) != spec["binary_sha256"]:
+        raise ValueError(f"Installed {spec['install_directory']}/clang differs from the lock file; remove it and rerun setup")
+    return clang
 
 
 def main() -> None:
@@ -151,7 +197,9 @@ def main() -> None:
     if sha256(kmc_dir / "as") != lock["binutils_kmc"]["assembler_sha256"]:
         raise ValueError("Existing KMC assembler differs from the lock file")
     gas291 = install_gnu_gas(lock["binutils_gnu291"], make)
-    for tool in [prefix / "bin/mips64-elf-as", prefix / "bin/mips64-elf-ld", gcc_dir / "gcc", pm281_dir / "gcc", kmc_dir / "as", gas291]:
+    gas291_fp32 = install_gnu_gas(lock["binutils_gnu291_fp32"], lock["binutils_gnu291_fp32"]["make_executable"])
+    clang = install_clang_ast(lock["clang_ast"])
+    for tool in [prefix / "bin/mips64-elf-as", prefix / "bin/mips64-elf-ld", gcc_dir / "gcc", pm281_dir / "gcc", kmc_dir / "as", gas291, gas291_fp32, clang]:
         print(subprocess.check_output([str(tool), "--version"], text=True, stderr=subprocess.STDOUT).splitlines()[0])
     print("Ready. Python packages are pinned separately in uv.lock.")
 

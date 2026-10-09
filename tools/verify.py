@@ -14,7 +14,7 @@ from typing import Any
 import yaml
 
 from certification import REQUIRED_ARTIFACTS, REQUIRED_RECEIPT_FIELDS, build_graph, c_attributions, check_elf, check_elf_rom, checked_path, compiler_environment, expected_commands, file_inventory, intermediate_keys, object_commands, read_json, sha256, splat_options, tool_profile, runtime_fingerprint, image_evidence, image_matches, reproduce_c_objects_and_link, linked_image_records, retained_trial
-from evidence import require_inventory, validate_attributions, validate_matches
+from evidence import COMPILED_KINDS, require_inventory, validate_attributions, validate_matches
 from rom import CANONICAL_ROM, EXPECTED_SHA256, PROJECT, attest
 from workspace import verify_manifest
 
@@ -70,13 +70,13 @@ def verify_receipt(path: Path, document: dict[str, Any] | None = None, *, requir
         raise ValueError("Changed or omitted generated input inventory")
     if receipt["compiled"] != file_inventory(directory / "compiled"):
         raise ValueError("Changed or omitted compiled evidence inventory")
-    c_sources = {item["source"] for item in graph.values() if item["source_kind"] == "c"}
+    c_sources = {item["source"] for item in graph.values() if item["source_kind"] in COMPILED_KINDS}
     require_inventory(receipt["dependencies"], c_sources, "C dependencies")
     from build import dependency_inputs
     for source in c_sources:
         dependency = directory / "compiled" / Path(source).with_suffix(".d")
         recorded = dependency_inputs(directory, dependency, manifest, source)
-        name = next(name for name, item in graph.items() if item["source_kind"] == "c" and item["source"] == source)
+        name = next(name for name, item in graph.items() if item["source_kind"] in COMPILED_KINDS and item["source"] == source)
         with retained_trial(directory, "dependencies") as temporary:
             regenerated = Path(temporary) / "source.d"
             operation = object_commands(name, graph[name], profile)[0]
@@ -94,7 +94,9 @@ def verify_receipt(path: Path, document: dict[str, Any] | None = None, *, requir
             raise ValueError("C dependency closure disagrees with compiler evidence")
     if receipt["commands"] != expected_commands(graph, profile):
         raise ValueError("Compiler/build commands disagree with declared graph")
-    if receipt["c_matches"] != matches or any(type(receipt["coverage"].get(key)) is not int or receipt["coverage"].get(key) != value for key, value in counts.items()):
+    # Exact counter keys: C-only manifests carry only the C counters; C++ counters cannot be forged.
+    if (receipt["c_matches"] != matches or set(receipt["coverage"]) - {"description"} != set(counts)
+            or any(type(receipt["coverage"].get(key)) is not int or receipt["coverage"].get(key) != value for key, value in counts.items())):
         raise ValueError("C coverage disagrees with the accepted match manifest")
     reproduction = reproduce_c_objects_and_link(directory, graph, profile, reference)
     if receipt["reproduction"] != reproduction:
@@ -169,7 +171,9 @@ def main() -> None:
         parser.exit(1, f"{error}\n")
     counts = receipt["coverage"]
     scope = "frozen snapshot" if args.snapshot_only else "current source"
-    print(f"PASS: exact ROM, image ownership, fresh C objects and full linker reproduction ({scope}); {counts['matched_c_functions']} C function(s), {counts['matched_c_bytes']} C bytes")
+    cpp = (f"; {counts['matched_cpp_functions']} C++ function(s), {counts['matched_cpp_bytes']} C++ bytes"
+           if "matched_cpp_functions" in counts else "")
+    print(f"PASS: exact ROM, image ownership, fresh C objects and full linker reproduction ({scope}); {counts['matched_c_functions']} C function(s), {counts['matched_c_bytes']} C bytes{cpp}")
 
 
 if __name__ == "__main__":

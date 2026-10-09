@@ -6,8 +6,8 @@ typedef short s16;
 typedef signed char s8;
 typedef float f32;
 
-s32 func_80114794(u8 *obj);
-s32 func_800ACBB8(u8 *obj) {
+char *func_80114794(u8 *obj);
+char *func_800ACBB8(u8 *obj) {
     if (*obj == 9) {
         return func_80114794(obj);
     }

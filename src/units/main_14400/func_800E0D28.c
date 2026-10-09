@@ -8,7 +8,7 @@ typedef struct { char pad[0x68]; VEntry getMax; VEntry getCur; } VTable;
 typedef struct { Vec pos; char pad8[0x1C]; VTable *vtbl; char pad28[4]; u16 v2C; u16 v2E; } Obj;
 extern s32 func_800A99D0(void);
 extern s32 func_800E0AB4(void *, s32);
-extern void func_800E0BD0(Obj *, short);
+extern short func_800E0BD0(Obj *, s32);
 extern s32 func_80049CB4(s32, ...);
 extern char *func_800A3B20(void *);
 extern void func_800497F0(s32, ...);

@@ -1,4 +1,6 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -12,7 +14,7 @@ typedef struct { s32 w[2]; } ListIter800AC6F8;
 typedef struct { u8 value; } Dir;
 typedef struct { Pos800AC6F8 pos; Dir dir; } Move800AC6F8;
 typedef struct { u8 kind; u8 subkind; s8 flags; u8 pad3[2]; s8 owner; } Item800AC6F8;
-extern u8 D_80142F20;
+
 /* Whole RNG object (state pointers plus backing words); only its base is passed here. */
 extern u8 D_80147620[];
 void *func_800B07F0(ListIter800AC6F8 *li);
@@ -21,7 +23,7 @@ Item800AC6F8 *func_800B0864(ListIter800AC6F8 *li);
 void *func_800A3610(Pos800AC6F8 *out, Iter800AC6F8 *it);
 Item800AC6F8 *func_800B4D80(Pos800AC6F8 *pos);
 u32 func_800B1C6C(Pos800AC6F8 *pos);
-u8 func_800C57CC(void *rng, u8 range);
+u8 func_800C57CC(void *rng, s32 range);
 void *func_800A2594(Pos800AC6F8 *out, Pos800AC6F8 *from, Dir dir);
 s32 func_800AD714(Item800AC6F8 *item, Pos800AC6F8 *dest);
 s32 func_800AD8AC(Item800AC6F8 *item, Pos800AC6F8 *dest);
@@ -44,7 +46,7 @@ void func_800AC6F8(Rect800AC6F8 *rect, s32 allowSpecial) {
     pos.y = rect->min.y;
     it.start = pos;
     it.cur = it.start;
-    inDungeon = (D_80142F20 & 0xE0) == 0x20;
+    inDungeon = (D_80142F18.mode & 0xE0) == 0x20;
     pos.x = rect->max.x;
     pos.y = rect->max.y;
     it.end = pos;

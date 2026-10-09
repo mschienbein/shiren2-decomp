@@ -12,7 +12,7 @@ u16 func_800E08B0(Unit *u);
 u16 func_800E08F0(Unit *u);
 Unit *func_800FD4B4(Unit *u);
 s32 func_800A23E8(Pos *a, Pos *b);
-s32 func_800A5D2C(void *u, void *p, u16 flag);
+s32 func_800A5D2C(void *u, void *p, s32 flag);
 s32 func_80049CB4(s32 id, ...);
 void func_800A58FC(Unit *u, Pos *p);
 s32 func_800A251C(Pos *a, Pos *b);

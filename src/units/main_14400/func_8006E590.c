@@ -8,7 +8,8 @@ extern void func_8006A840(void),func_8006BFD0(s32),func_8006AEB0(s32,void *,void
 extern s32 func_80054DF0(u32);
 extern s32 func_8006A8A0(void),func_80058A20(s32);
 extern char *func_80048480(u16);
-void func_8006E590(void) {
+/* Boot forwards its thread argument at 0x80025D98; the game does not use it. */
+void func_8006E590(void *argument) {
     unsigned short buttons;
     func_8006A840();
     D_8013D444=1;

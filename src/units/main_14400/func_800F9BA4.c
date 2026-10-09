@@ -1,4 +1,6 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -74,8 +76,10 @@ typedef struct {
     s32 unk4;
 } Pos800F9BA4;
 
-extern u8 D_80142F20;
-extern u16 D_8015690E;
+
+/* Whole 4-byte roll clamp at D_8015690C (next object D_80156910); +2 is the maximum. */
+typedef struct { u16 min; u16 max; } RollBounds;
+extern RollBounds D_8015690C;
 extern u32 D_80159F54[];
 extern char D_80143094[];
 extern u32 D_8013960C;
@@ -126,7 +130,7 @@ s32 func_800F9BA4(Actor800F9BA4 *self, Target800F9BA4 *target) {
     s32 message;
     Pair800F9BA4 *pair;
 
-    locked = D_80142F20 == 0x4F;
+    locked = D_80142F18.mode == 0x4F;
     if (locked) {
         func_80049CB4(0x104B, self);
         return 1;
@@ -163,8 +167,8 @@ fail:
         return 0;
     }
     amount = func_800AB044() * 3;
-    if (amount > D_8015690E) {
-        amount = D_8015690E;
+    if (amount > D_8015690C.max) {
+        amount = D_8015690C.max;
     }
     limited = func_800F9BA4_flag(target->flags) || func_800F9504(self) >= D_80159F54[(u8)func_800E0F40(self) - 1];
     if (limited) {
@@ -175,8 +179,8 @@ fail:
         }
         func_800EB744(target, -amount);
     } else if (target->unk72 & 8) {
-        if (amount > D_8015690E) {
-            amount = D_8015690E;
+        if (amount > D_8015690C.max) {
+            amount = D_8015690C.max;
         }
         target->unk72 &= ~8;
         func_800E20F0(target);

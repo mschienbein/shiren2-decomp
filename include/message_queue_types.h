@@ -37,12 +37,18 @@ typedef char p38_short16[(sizeof(unsigned short) == 2) ? 1 : -1];
 typedef char p38_queue_layout[(sizeof(ProbeMessageQueue) == 24 &&
                               __alignof__(ProbeMessageQueue) == 4) ? 1 : -1];
 
-/* Existing initialized word views, with no new definition, BSS or COMMON.
- * D_80037330 is ONLY the tail's first next-pointer word, initialized to zero.
- * Its address is cast to the partial thread view solely for next+0; the retained
- * tail prefix is 16 bytes and does not justify a state+0x10 field or full object.
+/* Existing initialized views, with no new definition, BSS or COMMON.
+ * D_80037330 is the complete 8-byte queue tail sentinel {next = 0, priority = -1}
+ * (.data 0x80037330..0x80037337; D_80037338/D_8003733C hold its address). The enqueue
+ * routine func_8002A794 reads +4 of every queue element (0x8002A7A0, 0x8002A7B8), including
+ * this sentinel, so it is never only its first pointer word. Its address is cast to the
+ * partial thread view solely for next+0.
  */
-extern struct ProbeThread *D_80037330;
+typedef struct {
+    struct ProbeThread *next;
+    s32 priority;
+} ProbeThreadTail;
+extern ProbeThreadTail D_80037330;
 extern struct ProbeThread *D_80037340;
 
 /* Call-site and original-body views. Pop's pointer and disable's mask are

@@ -1,0 +1,8 @@
+#include "common.h"
+typedef struct { s32 field_0, field_4; const void *field_8; } Object;
+extern const s32 D_80153AA0[];
+extern void func_800AC68C(Object *);
+void func_80117458(Object *object, s32 flags) {
+    object->field_8 = &D_80153AA0;
+    if (flags & 1) func_800AC68C(object);
+}

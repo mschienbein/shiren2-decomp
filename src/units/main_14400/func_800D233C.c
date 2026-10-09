@@ -1,5 +1,6 @@
 #include "common.h"
-typedef struct { s32 field_0; void *field_4; } Object;
+/* Region record (D_80143330): owner byte +0 plus 3 padding bytes, area pointer +4. */
+typedef struct { signed char owner_0; unsigned char pad_1[3]; void *field_4; } Object;
 extern s32 func_800B68B0(void *);
 extern void *func_800B6A98(void *out, void *room, s32 index);
 extern void func_800D2260(Object *,s32 *);

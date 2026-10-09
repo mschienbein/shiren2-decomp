@@ -18,11 +18,14 @@ typedef struct {
     u8 palTag;
     u8 pad29[3];
 } CacheEntry;
+/* Whole 0x2C-byte sprite cache at D_801A7190: func_800718CC fills capacity +0x0, stride +0x4,
+ * palette stride +0x8 and the allocated data +0xC, palette +0x10 and bank +0x14/+0x18 buffers. */
 typedef struct {
     u8 capacity;
-    u8 pad1[7];
+    u8 pad01[3];
+    s32 stride;
     u32 palStride;
-    u32 pad0C;
+    u8 *data;
     u8 *palBase;
     CacheEntry *banks[2];
     u8 bank;
@@ -74,6 +77,10 @@ s32 func_80071CCC(SpriteReq *req, void **outData, void **outPal, SpriteHeader **
     u32 size;
     u32 palOff;
     u32 palCount;
+    /* ODD_C: groups the resident, cache and pool paths; each failure breaks out with ret = -1,
+     * completed resident/cache paths break to the shared output stores; successful pool loading
+     * falls through. Also shapes scheduling: the goto-done form is 1928 vs 1908 bytes, 465 words
+     * differ. */
     do {
         if (D_8013D514 == 0) {
             ret = -1;

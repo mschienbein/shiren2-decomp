@@ -12,7 +12,7 @@ s32 func_800A65B8(Actor*, Actor*);
 void *func_800A65E4(Pos*, Actor*, Actor*);
 s32 func_800A4754(Actor*, Actor*, Pos*);
 s32 func_8010BEC4(Item*, u8);
-void func_800E44EC(Actor*);
+s32 func_800E44EC(Actor*);
 char *func_800A3B20(Actor*);
 void func_800498E4(s32, ...);
 s32 func_80049CB4(s32, ...);

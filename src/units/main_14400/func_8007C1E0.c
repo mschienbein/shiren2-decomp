@@ -15,7 +15,9 @@ typedef struct {
 
 extern Unit D_801DEAB4[];
 
-s32 func_8007C1E0(s32 index, s16 value)
+/* The only caller (func_8007C324) passes the direction un-narrowed; only the
+ * halfword is stored. */
+s32 func_8007C1E0(s32 index, s32 value)
 {
     if (D_801DEAB4[index].kind != -1) {
         D_801DEAB4[index].field_4A = value;

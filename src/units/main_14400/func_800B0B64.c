@@ -2,15 +2,16 @@
 
 typedef unsigned char u8;
 typedef struct { u8 bits[5]; } BitSet;
-typedef struct { s32 data[2]; } Iter;
+/* 8-byte pool iterator (func_800B07E0/0808/0864): collection pointer at +0, cursor at +4. */
+typedef struct { void *collection; unsigned short cursor; unsigned short pad6; } Iter;
 typedef struct { u8 kind; char pad1[0x28]; u8 unk29; } Thing;
 extern u8 *D_8015380C[];
 extern u8 D_80153734[];
-extern u8 D_8015488C[];
-extern u8 D_80154894[];
-extern s32 D_80143094;
+extern const u8 D_8015488C[8];
+extern const u8 D_80154894[8];
+extern u8 D_80143094[];
 extern u8 D_8014313C[];
-void func_800B07E0(Iter *, s32 *);
+Iter *func_800B07E0(Iter *, void *);
 s32 func_800B0808(Iter *);
 Thing *func_800B0864(Iter *);
 static inline void BitSet_init(BitSet *set) {
@@ -54,7 +55,7 @@ void func_800B0B64(void) {
             }
         }
     }
-    func_800B07E0(&iter, &D_80143094);
+    func_800B07E0(&iter, D_80143094);
     while (func_800B0808(&iter)) {
         Thing *thing = func_800B0864(&iter);
         if (thing->kind == 9) {

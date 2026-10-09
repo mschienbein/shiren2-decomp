@@ -59,7 +59,7 @@ s32 func_80109CC0(Obj *obj) {
             if (target != 0 && func_800A44F4(obj, target) == 2) {
                 func_800A65E4(&dest, obj, target);
                 func_800A665C(obj, &dest);
-                return ((s32 (*)(void *, s32))obj->vtable[26].func)((u8 *)obj + obj->vtable[26].delta, 0);
+                return ((s32 (*)(void *, void *))obj->vtable[26].func)((u8 *)obj + obj->vtable[26].delta, 0);
             }
         }
     }

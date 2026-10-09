@@ -7,11 +7,15 @@ typedef struct { u8 field_0[0x10]; short field_10,field_12; s32 (*field_14)(void
 typedef struct { u8 field_0[9]; u8 field_9; u8 field_A[0x12]; u16 field_1C; u8 field_1E; u8 field_1F[5]; EntityVTable *field_24; } Entity;
 typedef struct { u8 value; } Kind;
 typedef struct { s32 field_0; u8 field_4[8]; Kind field_C; u8 field_D[3]; Position field_10; u8 field_18[8]; } Message;
-typedef struct { u8 field_0[0x38]; short field_38,field_3A; void (*field_3C)(void *,Message *); } ItemVTable;
+/* Item table at item+8, slot +0x38/+0x3C: message handler s32 (void *receiver, void *event)
+ * (decided message-handler contract); the result is not needed here. */
+typedef struct { u8 field_0[0x38]; short field_38,field_3A; s32 (*field_3C)(void *receiver,void *event); } ItemVTable;
 typedef struct { u8 field_0,field_1,field_2,field_3; s32 field_4; ItemVTable *field_8; } Item;
 typedef struct { u8 field_0[0xC]; short field_C; u8 field_E[0xA]; } Damage;
 typedef struct { void *field_0; s32 field_4; s8 field_8; } Request;
-extern s8 D_801428F0[],D_801428F1[],D_80142910;
+typedef struct { s8 x; s8 y; } Offset;
+extern const Offset D_801428F0[9];
+extern s8 D_80142910;
 extern Request D_80142904;
 extern s32 func_800C94D8(void),func_80049CB4(s32,...),func_800A58B8(Entity *);
 extern u32 func_800B1C6C(void *pos);
@@ -58,7 +62,7 @@ void func_800A00C4(Position *origin,u8 percentage,void *attacker,s32 kind) {
             u8 *flag;
             Position *p;
             if(--i==-1) break;
-            p=offset_position(&position,origin,D_801428F0[i*2],D_801428F1[i*2]);
+            p=offset_position(&position,origin,D_801428F0[i].x,D_801428F0[i].y);
             flag=&flags[i];
             *flag=0;
             item=func_800B4D80(p);
@@ -96,7 +100,7 @@ void func_800A00C4(Position *origin,u8 percentage,void *attacker,s32 kind) {
                 u8 *flag;
                 Position *p;
                 if(--i==-1) break;
-                p=offset_position(&position,origin,D_801428F0[i*2],D_801428F1[i*2]);
+                p=offset_position(&position,origin,D_801428F0[i].x,D_801428F0[i].y);
                 flag=&flags[i];
                 entity=func_800B4928(p);
                 if(entity && !entity->field_24->field_14((char *)entity+entity->field_24->field_10) && priority==(*flag&3)) {
@@ -123,7 +127,7 @@ void func_800A00C4(Position *origin,u8 percentage,void *attacker,s32 kind) {
             for(;;) {
                 Item *item;
                 if(--i==-1) break;
-                item=func_800B4D80(offset_position(&position,origin,D_801428F0[i*2],D_801428F1[i*2]));
+                item=func_800B4D80(offset_position(&position,origin,D_801428F0[i].x,D_801428F0[i].y));
                 if((flags[i]&0x10) && item) {
                     Kind *selected=set_kind(&kindTag,2);
                     message.field_0=0x15;

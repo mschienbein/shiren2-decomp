@@ -1,5 +1,6 @@
 #include "common.h"
-typedef struct { s32 field_0[3]; } Entry;
+/* 12-byte fade record: only its address is used here. */
+typedef struct { s32 field_0; unsigned char pad4[8]; } Entry;
 extern Entry D_801616D0[], D_801616E8;
 extern unsigned char D_801398A0;
 extern unsigned char func_800535C8(Entry *);

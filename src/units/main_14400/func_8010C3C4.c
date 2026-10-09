@@ -1,6 +1,6 @@
 #include "common.h"
 typedef struct Obj Obj;
-typedef struct { short delta; short index; void (*fn)(); } VtEntry;
+typedef struct { short delta; short index; void (*fn)(void *, s32, void *); } VtEntry;
 typedef struct { char pad[0x18]; VtEntry *vt; } Target;
 extern char D_8015CECC[];
 void func_800AF11C(void *, Target *);

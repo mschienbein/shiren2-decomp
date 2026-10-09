@@ -1,7 +1,7 @@
 #include "common.h"
 typedef struct { char pad[0x24]; void *vtbl; } Obj;
 extern char D_80158C98[];
-extern void func_800A3850(Obj *);
+extern Obj *func_800A3850(Obj *);
 extern s32 func_800A3934(Obj *);
 extern void func_800E01F0(Obj *);
 Obj *func_800E0120(Obj *p) {

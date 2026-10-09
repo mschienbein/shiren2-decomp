@@ -40,7 +40,7 @@ typedef struct {
 } Obj80070398;
 
 s32 func_80071CCC(TextureSelector80070398 *arg0, void **texture, void **palette, Header80070398 **header, Info80070398 **info);
-Gfx *func_80060230(Gfx *gfx, void *texture, s32 format, u8 arg3, s32 arg4, s32 x, s32 y, f32 scaleX, f32 scaleY);
+Gfx *func_80060230(Gfx *gfx, const void *texture, s32 format, u32 width, u32 height, s32 x, s32 y, f32 scaleX, f32 scaleY);
 
 /* The renderer interface passes render_state; this sprite path does not inspect it. */
 Gfx *func_80070398(Gfx *gfx, void *render_state, Obj80070398 *obj) {

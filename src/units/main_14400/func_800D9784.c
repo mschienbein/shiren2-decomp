@@ -10,7 +10,7 @@ typedef struct {
 } Obj800D9784;
 
 extern u8 D_80158068[];
-extern void func_800DDAD0(Obj800D9784 *obj, s32 arg1);
+extern void *func_800DDAD0(Obj800D9784 *obj, s32 arg1);
 extern void func_800DDC0C(Obj800D9784 *obj, u8 *data, s32 length);
 
 Obj800D9784 *func_800D9784(Obj800D9784 *obj, u8 *data) {

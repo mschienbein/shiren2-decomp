@@ -6,7 +6,7 @@ typedef struct { void *table; char pad4[4]; signed char mode; } S;
 extern void *D_80154824;
 extern s32 func_800D4A10(S *);
 extern void *func_800D4A60(void *owner, s32 key);
-extern void func_800D4B60(Buf *, S *, s32);
+extern Buf *func_800D4B60(Buf *, S *, s32);
 extern void func_800AD7E0(Item *, Buf *, s32);
 void func_800D4CE4(S *p, signed char mode) {
     s32 i;

@@ -1,0 +1,10 @@
+   1:/Users/mooki/Code/n64-experiments/projects/shiren2/src/units/main_14400/func_800413E0.c **** /* Address-based names preserve the unresolved original API identity.
+   2:/Users/mooki/Code/n64-experiments/projects/shiren2/src/units/main_14400/func_800413E0.c ****  * The callee forwards to func_80074140, which consumes no incoming arguments
+   3:/Users/mooki/Code/n64-experiments/projects/shiren2/src/units/main_14400/func_800413E0.c ****  * and produces a signed status: 0 when its global gate permits the reset,
+   4:/Users/mooki/Code/n64-experiments/projects/shiren2/src/units/main_14400/func_800413E0.c ****  * otherwise -1. Both wrappers leave that return value intact.
+   5:/Users/mooki/Code/n64-experiments/projects/shiren2/src/units/main_14400/func_800413E0.c ****  */
+   6:/Users/mooki/Code/n64-experiments/projects/shiren2/src/units/main_14400/func_800413E0.c **** extern int func_8005EF80(void);
+   7:/Users/mooki/Code/n64-experiments/projects/shiren2/src/units/main_14400/func_800413E0.c ****
+   8:/Users/mooki/Code/n64-experiments/projects/shiren2/src/units/main_14400/func_800413E0.c **** int func_800413E0(void)
+   9:/Users/mooki/Code/n64-experiments/projects/shiren2/src/units/main_14400/func_800413E0.c **** {
+  10:/Users/mooki/Code/n64-experiments/projects/shiren2/src/units/main_14400/func_800413E0.c ****     return func_8005EF80();

@@ -6,10 +6,10 @@ typedef unsigned short u16;
 typedef void *OSMesg;
 typedef struct OSMesgQueue OSMesgQueue;
 
-typedef struct {
+typedef struct ResidentPifRam {
     u32 ramarray[15];
     u32 pifstatus;
-} OSPifRam;
+} ResidentPifRam;
 
 typedef struct {
     u16 type;
@@ -28,7 +28,7 @@ typedef struct {
     u8 dummy1;
 } __OSContRequesFormat;
 
-extern OSPifRam D_80041350; /* __osPfsPifRam */
+extern ResidentPifRam D_80041350; /* __osPfsPifRam */
 extern u8 D_80039008; /* __osMaxControllers */
 extern u8 D_80039018; /* __osContLastCmd */
 

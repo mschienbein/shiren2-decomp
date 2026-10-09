@@ -30,7 +30,9 @@ typedef struct {
 
 Item800F0440 *func_800F0314(Obj800F0440 *self);
 Obj800F0440 *func_801217DC(Item800F0440 *item);
-void func_80121B8C(Item800F0440 *item);
+/* Produces explicit success/failure (0x80121C4C, 0x80121D58, 0x80121D64); this caller
+ * intentionally discards it and returns its own 1. */
+s32 func_80121B8C(Item800F0440 *item);
 
 s32 func_800F0440(Obj800F0440 *self) {
     s32 ready;

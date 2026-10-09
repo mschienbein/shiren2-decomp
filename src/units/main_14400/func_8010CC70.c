@@ -11,7 +11,7 @@ typedef struct {
 } Object;
 extern s32 D_8015D1E0[];
 extern u8 D_8015699F;
-extern void func_8010B8D0(Object *, s32, s32);
+extern Object *func_8010B8D0(Object *, s32, s32);
 extern void func_8010CCD0(Object *);
 
 Object *func_8010CC70(Object *object, s32 value) {

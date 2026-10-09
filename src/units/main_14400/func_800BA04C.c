@@ -7,8 +7,11 @@ typedef struct { Point start; Point end; } Rect;
 typedef struct { u8 kind; u8 attr; u8 pad2[2]; } Cell;
 typedef struct {
     u8 pad0[0x13];
-    Cell cells[7][8];
-    u8 pad[0x2DC - 0x13 - 7 * 8 * 4];
+    /* Same complete +0x13 grid as func_800B8628, including its border. */
+    Cell cells[11][8];
+    u8 pad173;
+    s32 available[11][8];
+    u8 pad2D4[8];
     Rect rects[16];
     s32 rectCount;
 } Board;

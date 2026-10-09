@@ -5,7 +5,7 @@ typedef unsigned short u16;
 
 typedef struct {
     u8 pad0[0x24];
-    void *field_24;
+    const void *field_24;
     u8 pad28[0x9A - 0x28];
     u16 field_9A;
     u8 pad9C[0xA0 - 0x9C];
@@ -14,7 +14,7 @@ typedef struct {
     s32 field_A8;
 } Obj_80107000;
 
-extern u8 D_8015C208[];
+extern const unsigned char D_8015C208[192];
 extern void *func_800EFC70(Obj_80107000 *obj, s32 kind, u8 mode);
 extern u8 func_801E9F70(s32 flag);
 

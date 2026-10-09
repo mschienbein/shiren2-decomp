@@ -1,4 +1,5 @@
 #include "common.h"
 
-typedef struct { char pad[0x10]; s32 x10; } S;
-s32 func_8012A9C4(S *s) { return s->x10; }
+/* Same channel-record pointer as the setter and active-bank consumers. */
+typedef struct { char pad[0x10]; void *x10; } S;
+void *func_8012A9C4(S *s) { return s->x10; }

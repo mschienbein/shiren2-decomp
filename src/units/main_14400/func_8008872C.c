@@ -11,7 +11,7 @@ typedef struct {
     s32 unk2C;
 } Obj;
 
-extern void func_80077C4C(s32 arg0, s32 arg1, s32 arg2);
+extern s32 func_80077C4C(s32 arg0, s32 arg1, s32 arg2); /* returns the model index or -1; unused here */
 
 void func_8008872C(Obj *obj) {
     func_80077C4C(obj->unk24, obj->unk28, obj->unk2C);

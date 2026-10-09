@@ -3,7 +3,8 @@
 typedef struct { unsigned char id; unsigned char weight; } Pick;
 extern char D_80147620[];
 extern unsigned short func_800C58DC(void *, unsigned short);
-s32 func_800AB2B0(Pick *table) {
+/* Callers supply the mode ABI slot; this chooser does not use it. */
+s32 func_800AB2B0(Pick *table, s32 mode) {
     Pick *p;
     unsigned short total;
     unsigned short roll;

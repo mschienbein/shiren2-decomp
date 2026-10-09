@@ -21,7 +21,7 @@ typedef struct {
 Item80047184 *func_800980F0(Obj80047184 *self, s32 arg);
 s32 func_80099FFC(Obj80047184 *self, s32 arg);
 s32 func_800ACEB4(Item80047184 *item);
-s32 func_800ACAEC(Item80047184 *item);
+char *func_800ACAEC(Item80047184 *item);
 
 s32 func_80047184(Obj80047184 *self, s32 arg) {
     Item80047184 *item = func_800980F0(self, arg);

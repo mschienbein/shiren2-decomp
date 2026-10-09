@@ -1,4 +1,6 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -14,8 +16,8 @@ typedef struct Unit800F13A0 {
     u8 pad9[0x4F];
     struct Unit800F13A0 *target;
 } Unit800F13A0;
-typedef struct { u8 mode; } Game800F13A0;
-extern Game800F13A0 D_80142F20;
+
+
 void *func_800B5A18(Pos800F13A0 *out, Pos800F13A0 *pos, Dir dir, s32 range, u16 flags);
 s32 func_800E20CC(Unit800F13A0 *unit);
 Pos800F13A0 *func_800F1B28(Pos800F13A0 *out, Unit800F13A0 *unit, s32 range, s32 arg3, s32 arg4);
@@ -37,7 +39,7 @@ Pos800F13A0 *func_800F13A0(Pos800F13A0 *ret, Unit800F13A0 *unit, s32 range) {
     fp = &from;
     fp->x = unit->pos.x;
     fp->y = unit->pos.y;
-    special = D_80142F20.mode == 0x4F;
+    special = D_80142F18.mode == 0x4F;
     if (special) {
         Dir dir;
         dest.x = fp->x;

@@ -33,7 +33,7 @@ s32 func_800E04D0(Unit *u);
 void func_8004839C(void);
 void func_800498E4(s32 v, ...);
 void func_800C8194(void);
-void func_800B60E0(void);
+s32 func_800B60E0(void);
 s32 func_800C81E4(Unit *u);
 void func_800C92F8(Unit *u);
 void func_800C9500(void);

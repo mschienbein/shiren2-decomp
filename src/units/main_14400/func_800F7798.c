@@ -14,11 +14,11 @@ extern u8 D_801531A0[];
 s32 func_800F438C(Pos *actor, Obj *event);
 void *func_800C5280(Iter *it, Pos *pos, u16 flags);
 s32 func_800C559C(Iter *it);
-void func_800C532C(Pos *pos, Iter *it);
+void *func_800C532C(Pos *pos, Iter *it);
 s32 func_800B56F0(Pos *pos);
 void *func_800AC244(u8 id);
 s32 func_800AD8AC(void *o, Pos *pos);
-void func_800D3E28(s32 a, s32 b);
+void func_800D3E28(s32 kind, void *unit);
 void func_800F7798(Pos *pos, Obj *obj) {
     Info *info;
     func_800F438C(pos, obj);

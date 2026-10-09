@@ -9,7 +9,7 @@ typedef struct {
 } Obj;
 
 extern u8 D_80158958[];
-void func_800DDAD0(Obj *obj, s32 kind);
+Obj *func_800DDAD0(Obj *obj, s32 kind);
 
 Obj *func_800DE130(Obj *obj) {
     func_800DDAD0(obj, 0x29);

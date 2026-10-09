@@ -5,7 +5,8 @@ typedef struct { unsigned char opaque[0x30]; void *vtable; } Sub801F2AC0;
 typedef struct { unsigned char pad0[0x1E]; unsigned char field_1E; unsigned char pad1F[5]; void *vtable_24; unsigned char pad28[0x5C]; Sub801F2AC0 sub_84; } Obj800EE3C0;
 extern unsigned char D_80159130[];
 extern unsigned char D_80159150[];
-void func_800E8730(Obj800EE3C0 *obj);
+/* Constructor: explicitly returns its receiver (0x800E8764, 0x800E8770); result discarded here. */
+Obj800EE3C0 *func_800E8730(Obj800EE3C0 *obj);
 void func_801F2AC0(Sub801F2AC0 *sub);
 s32 func_800A3934(Obj800EE3C0 *obj);
 void func_800EE448(Obj800EE3C0 *obj, s32 a, unsigned char b);

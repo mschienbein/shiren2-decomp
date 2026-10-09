@@ -47,7 +47,7 @@ typedef struct {
 
 typedef struct {
     u8 pad0[0x4C];
-    void *vtable;
+    const void *vtable;
     u8 pad50[0x68 - 0x50];
     s32 unk68;
     void *unk6C;
@@ -67,9 +67,9 @@ typedef struct {
 extern Shop800F8060 *D_801476B8;
 extern List800F8060 D_801404E0;
 extern u8 D_80138FF8[];
-extern u8 D_80152AE8[];
+extern const unsigned char D_80152AE8[144];
 extern u8 D_80151EC8[];
-extern u8 D_80151E38[];
+extern const unsigned char D_80151E38[144];
 extern u8 D_8014AB2C[];
 extern u8 D_8014AB3C[];
 s32 func_8009A3A4(void *item);
@@ -84,7 +84,7 @@ s32 func_800957C0(void *menu, Result800F8060 *result, s32 a, void *b, s32 c);
 void func_80097B90(List800F8060 *list, Inv800F8060 *inv, void *a, s32 b, void *c, s32 d);
 void func_80099E50(List800F8060 *list);
 s32 func_8009A038(List800F8060 *list);
-void *func_8009A054(void *out, List800F8060 *list, s32 index);
+Slot800F8060 func_8009A054(List800F8060 *list, s32 index);
 void func_8009D610(Menu800F8060 *menu, char *buf, void *a, void *b);
 char *func_800A3B20(void *self);
 char *func_800AE674(void *item);
@@ -147,7 +147,7 @@ retry:
             if (i < 0) {
                 break;
             }
-            func_8009A054(&slot, &D_801404E0, i);
+            slot = func_8009A054(&D_801404E0, i);
             owner = slot.owner;
             failed = owner->vtable->remove((u8 *)owner + owner->vtable->removeDelta, slot.item, 1) != 1;
             if (failed) {
@@ -163,7 +163,7 @@ retry:
         } else {
             void *item;
 
-            func_8009A054(&slot, &D_801404E0, 0);
+            slot = func_8009A054(&D_801404E0, 0);
             item = slot.item;
             func_8005EF08(buf, func_80048480(0x1E3), func_800AE674(item), total);
         }

@@ -4,9 +4,9 @@ typedef struct { s32 x0; s32 y0; s32 x1; s32 y1; } Rect;
 Rect *func_800A324C(Rect *rect, const Rect *arg1, const Rect *arg2);
 void func_800A3180(Rect *rect);
 void func_800A3500(Rect *rect);
-void func_800B7A4C(s32 arg0, Rect *rect, s32 flip);
-void func_800B7C88(s32 arg0, const Rect *arg1, const Rect *arg2);
-void func_800B7E9C(s32 arg0, const Rect *arg1, const Rect *arg2) {
+void func_800B7A4C(void *arg0, Rect *rect, s32 flip);
+void func_800B7C88(void *arg0, const Rect *arg1, const Rect *arg2);
+void func_800B7E9C(void *arg0, const Rect *arg1, const Rect *arg2) {
     Rect rect;
     Rect *r;
     s32 flags;

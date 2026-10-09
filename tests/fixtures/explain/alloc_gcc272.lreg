@@ -1,0 +1,50 @@
+
+;; Function func_8008C6B8
+
+81 registers.
+
+Register 73 used 5 times across 35 insns; crosses 7 calls; GR_REGS or none.
+
+Register 74 used 7 times across 33 insns; crosses 6 calls; GR_REGS or none; pointer.
+
+Register 76 used 2 times across 4 insns in block 0; 1 bytes; GR_REGS or none.
+
+Register 77 used 4 times across 4 insns; GR_REGS or none.
+
+Register 79 used 4 times across 4 insns; GR_REGS or none.
+
+8 basic blocks.
+
+Basic block 0: first insn 4, last 48.
+
+Registers live at start: 4 29 30
+
+Basic block 1: first insn 52, last 54.
+
+Registers live at start: 29 30 74
+
+Basic block 2: first insn 56, last 79.
+
+Registers live at start: 29 30 73 74 77
+
+Basic block 3: first insn 83, last 85.
+
+Registers live at start: 29 30 74
+
+Basic block 4: first insn 87, last 97.
+
+Registers live at start: 29 30 73 74 79
+
+Basic block 5: first insn 101, last 104.
+
+Registers live at start: 29 30 73 74
+
+Basic block 6: first insn 108, last 110.
+
+Registers live at start: 29 30 73 74
+
+Basic block 7: first insn 112, last 116.
+
+Registers live at start: 29 30 73
+
+;; Register 76 in 2.

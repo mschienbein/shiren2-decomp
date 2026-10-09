@@ -6,12 +6,12 @@ typedef short s16;
 /* 16-byte spawn-script row of the 112-entry table D_80139B4C, defined
  * (initialized) in func_800560EC.c: wait is the frame delay after spawning
  * the row, -1 in the terminator row. */
-typedef struct { u16 id; u16 variant; s16 x; s16 y; s16 z; s16 wait; s16 f0C; s16 f0E; } Spawn;
+typedef struct { u16 id; u16 variant; s16 x; s16 y; s16 z; s16 wait; u16 f0C; s16 f0E; } Spawn;
 
 extern s32 D_80139B30;
 s32 D_80139B34 = 0;
 s32 D_80139B38 = 0;
-extern Spawn D_80139B4C[];
+extern Spawn D_80139B4C[112];
 
 void func_800560EC(s32 index);
 

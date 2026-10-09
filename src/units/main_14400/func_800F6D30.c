@@ -1,19 +1,23 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
+typedef struct { unsigned char index, count, previous, field_03, masks[2], field_06, previous_count, field_08; signed char result; unsigned char field_0A; } SelectionSave;
+extern SelectionSave D_80142F24;
 typedef struct { unsigned char pad_00[8]; short offset_08; short pad_0A; s32 (*method_0C)(void *); unsigned char pad_10[8]; short offset_18; short pad_1A; void (*method_1C)(void *, s32); short offset_20; short pad_22; s32 (*method_24)(void *); } Methods;
 typedef struct { s32 field_00; Methods *field_04; } Collection;
 typedef struct { unsigned char pad_00[8]; short offset_08; short pad_0A; void (*method_0C)(void *, s32); } ChildMethods;
 typedef struct { unsigned char pad_00[8]; ChildMethods *field_08; } Child;
 typedef struct { unsigned char pad_00[0x60]; short offset_60; short pad_62; void (*method_64)(void *); } ObjectMethods;
-typedef struct { unsigned char pad_00[0x1C]; unsigned short field_1C; unsigned char pad_1E[6]; ObjectMethods *field_24; unsigned char pad_28[0x50]; u32 field_78; unsigned char pad_7C[0x10]; Collection field_8C; unsigned char pad_94[0x10]; s32 field_A4; volatile s32 field_A8; unsigned char field_AC; } Object;
-extern unsigned char D_80156A53, D_80156A55, D_80142F1B;
-extern volatile unsigned char D_80142F24;
+typedef struct { unsigned char pad_00[0x1C]; unsigned short field_1C; unsigned char pad_1E[6]; ObjectMethods *field_24; unsigned char pad_28[0x50]; u32 field_78; unsigned char pad_7C[0x10]; Collection field_8C; unsigned char pad_94[0x10]; s32 field_A4; s32 field_A8; unsigned char field_AC; } Object;
+extern unsigned char D_80156A53, D_80156A55;
+
 extern unsigned char D_80147620[];
 extern s32 func_800C5844(void *object, unsigned char a, unsigned char b);
 extern Child *func_800AAE50(s32 value);
 extern s32 func_800CD4C4(Collection *collection, Child *child);
 extern s32 func_800CD538(Collection *collection, Child *child);
-static inline s32 special_mode(void) { return D_80142F24 == 20; }
-static inline s32 second_flag(void) { return (D_80142F1B >> 2) & 1; }
+static inline s32 special_mode(void) { return D_80142F24.index == 20; }
+static inline s32 second_flag(void) { return (D_80142F18.flags >> 2) & 1; }
 static inline Collection *reset_collection(Collection *collection) {
     s32 value = collection->field_04->method_0C((unsigned char *)collection + collection->field_04->offset_08);
     collection->field_04->method_1C((unsigned char *)collection + collection->field_04->offset_18, value);

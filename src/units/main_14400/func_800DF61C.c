@@ -27,7 +27,8 @@ typedef struct {
     Link linkA;
 } Obj;
 
-void func_800DF61C(s32 arg0, Obj *obj, Point *pos) {
+/* The caller supplies its action receiver even though this operation does not use it. */
+void func_800DF61C(void *arg0, Obj *obj, Point *pos) {
     s32 linked = 0;
 
     if (((obj->flags1E >> 3) & 1)

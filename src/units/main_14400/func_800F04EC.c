@@ -15,7 +15,9 @@ typedef struct {
 extern u32 D_8013960C;
 s32 func_800E07A8(Obj800F04EC *obj, s32 amount);
 s32 func_800E0534(Obj800F04EC *obj, s32 amount);
-void func_800E0BD0(Obj800F04EC *obj, s16 amount);
+/* Signed-word amount and explicit signed-halfword result (0x800E0BE8, 0x800E0C20); the
+ * short amountB keeps its own narrowing before the call (0x800F05A8). */
+short func_800E0BD0(Obj800F04EC *obj, s32 amount);
 s32 func_800E0AB4(Obj800F04EC *obj, s32 amount);
 
 void func_800F04EC(Obj800F04EC *obj, s16 delta) {

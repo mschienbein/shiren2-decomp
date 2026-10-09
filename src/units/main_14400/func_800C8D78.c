@@ -9,7 +9,8 @@ extern u16 D_8014767C;
 s32 func_80046240(void);
 void func_800A7BA4(Obj800C8D78 *obj, s32 value);
 
-void func_800C8D78(Obj800C8D78 *obj) {
+/* Original callers supply signed-short turns; this implementation ignores it. */
+void func_800C8D78(Obj800C8D78 *obj, short turns) {
     s32 blocked = 0;
 
     if (func_80046240() != 0 || ((D_8014767C >> 6) & 1)) {

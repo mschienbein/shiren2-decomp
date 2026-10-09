@@ -1,10 +1,10 @@
 #include "common.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
-typedef struct { char pad0[0x4C]; void *vtbl; char pad50[0x78 - 0x50]; } Window;
+typedef struct { char pad0[0x4C]; const void *vtbl; char pad50[0x78 - 0x50]; } Window;
 typedef struct { char data[0x20]; } Rect;
 extern s32 D_801528D0[];
-extern s32 D_80151E38[];
+extern const unsigned char D_80151E38[144];
 extern char D_80138D10[];
 extern char D_80138D20[];
 Window *func_800953C0(Window *);

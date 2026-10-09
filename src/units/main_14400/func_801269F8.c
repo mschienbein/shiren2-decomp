@@ -6,7 +6,7 @@ typedef signed short s16;
 typedef struct {
     s16 delta;
     s16 pad2;
-    void (*func)();
+    void (*func)(void *, s32, void *);
 } VtblEntry;
 extern u8 D_80160474[];
 void func_801163B0(u8 *, u8 *);

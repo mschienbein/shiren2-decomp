@@ -10,6 +10,8 @@ extern void func_80054DE0(s32);
 extern s32 func_80054DF0(u32 mode);
 s32 func_80056E64(s32 a) {
     s32 result;
+    /* ODD_C: early-exit group; a bad mode or failed allocation breaks out with result -1. Also shapes
+     * scheduling: nested if/else and goto-done forms are 344 vs 340 bytes, 68 words differ. */
     do {
     if ((u32)a >= 4) { result = -1; break; }
     D_801630D0 = a;

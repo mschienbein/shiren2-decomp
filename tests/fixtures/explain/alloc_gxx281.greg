@@ -1,0 +1,39 @@
+
+;; Function void func_800BFEA0(struct Floor *)
+
+;; 13 regs to allocate: 168 117 169 80 167 91 96 93 126 97 94 113 107
+;; 80 conflicts: 80 91 93 94 96 97 107 113 117 126 167 168 169 2 4 5 6 7 16 29
+;; 91 conflicts: 80 91 93 94 96 97 107 113 2 4 5 6 7 29
+;; 93 conflicts: 80 91 93 94 96 97 107 113 2 4 5 6 7 29
+;; 94 conflicts: 80 91 93 94 96 97 107 113 2 4 5 6 7 29
+;; 96 conflicts: 80 91 93 94 96 97 107 113 2 4 5 6 7 29
+;; 97 conflicts: 80 91 93 94 96 97 107 113 2 4 5 6 7 29
+;; 107 conflicts: 80 91 93 94 96 97 107 113 2 4 5 6 7 29
+;; 113 conflicts: 80 91 93 94 96 97 107 113 2 4 5 6 7 29
+;; 117 conflicts: 80 117 126 167 168 169 2 4 5 6 16 29
+;; 126 conflicts: 80 117 126 167 168 169 2 4 5 6 16 29
+;; 167 conflicts: 80 117 126 167 168 169 2 4 5 6 16 29
+;; 168 conflicts: 80 117 126 167 168 169 2 4 5 6 16 29
+;; 169 conflicts: 80 117 126 167 168 169 2 4 5 6 16 29
+
+;; Need 4 regs of class GR_REGS (for insn 24).
+;; Need 4 regs of class ALL_REGS (for insn 24).
+Spilling reg 3.
+Spilling reg 8.
+Spilling reg 9.
+Spilling reg 10.
+;; Need 4 regs of class GR_REGS (for insn 24).
+;; Need 4 regs of class ALL_REGS (for insn 24).
+Spilling reg 3.
+Spilling reg 8.
+Spilling reg 9.
+Spilling reg 10.
+;; Register dispositions:
+80 in 20  87 in 2  91 in 16  92 in 2  93 in 18  94 in 21  
+96 in 17  97 in 19  99 in 2  101 in 5  102 in 5  103 in 5  
+104 in 5  107 in 23  109 in 2  110 in 2  112 in 2  113 in 22  
+114 in 2  115 in 2  117 in 18  118 in 2  119 in 2  125 in 16  
+126 in 22  163 in 2  167 in 21  168 in 17  169 in 19  
+
+;; Hard regs used:  2 3 4 5 6 7 8 9 10 16 17 18 19 20 21 22 23 29 31
+

@@ -16,7 +16,7 @@ extern char D_80147620[];
 extern u8 D_80143392;
 s32 func_80066AD0(s32 index);
 MenuState *func_80066B20(void);
-u8 func_800C57CC(void *rng, u8 limit);
+u8 func_800C57CC(void *rng, s32 limit);
 void func_80042EC0(Menu *menu, s8 first, s8 second, s8 initial, s8 skip) {
     s8 lo = first;
     s8 hi = second;

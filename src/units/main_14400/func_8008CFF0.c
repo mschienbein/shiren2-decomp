@@ -1,7 +1,7 @@
 #include "common.h"
 typedef struct { unsigned char pad[0x4C0]; s32 field4C0; } Object;
 extern s32 func_8008C908(void *);
-extern void func_8008CA60(void *);
+extern s32 func_8008CA60(void *);
 void func_8008CFF0(Object *p) {
     u32 i = 0;
     unsigned char *entry = (unsigned char *)p;

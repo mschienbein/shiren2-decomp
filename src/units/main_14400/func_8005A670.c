@@ -2,6 +2,8 @@
 typedef float f32;
 typedef struct { f32 x, y, z; } Vec3;
 typedef struct { Vec3 eye; Vec3 at; f32 fov; f32 roll; } CamSave;
+/* The saved view is +0xC in the whole 0x2C-byte camera copied by func_8005ADAC. */
+typedef struct { Vec3 field_00; CamSave view; } SavedCamera;
 typedef struct { s32 unk0[3]; Vec3 eye; Vec3 at; f32 fov; f32 roll; } CamKey;
 typedef struct { Vec3 at; f32 fov; f32 roll; } CamDefault;
 /* Whole 0x20-byte camera block D_80165364 (see func_80058EF0/func_8005935C); the default
@@ -18,7 +20,7 @@ extern Vec3 D_8016530C;
 extern Vec3 D_80165324;
 extern f32 D_8016533C;
 extern f32 D_80165340;
-extern CamSave D_80165418;
+extern SavedCamera D_8016540C;
 extern CamKey D_801653A0;
 extern CamKey D_801653CC;
 extern CamBlock D_80165364;
@@ -43,7 +45,7 @@ void func_8005A670(s32 mode, s32 save, s32 instant) {
     }
     func_80059590(2);
     if (save && D_80165394 == 1) {
-        CamSave *s = &D_80165418;
+        CamSave *s = &D_8016540C.view;
         D_80165408 = D_80165394;
         s->eye = D_8016530C;
         s->at = D_80165324;

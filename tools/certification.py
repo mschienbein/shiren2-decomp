@@ -21,17 +21,21 @@ import yaml
 
 from rom import CANONICAL_ROM, attest
 from images import ImageInventory, image_for_segment, image_for_source, load_inventory, policy_records, require_cpu_range
-from evidence import validate_matches
+from evidence import COMPILED_KINDS, COMPILED_SUFFIXES, LANGUAGE_LABELS, compiled_kind, validate_matches
 
 COMPILER_FLAGS = ["-O2", "-mips3", "-mgp32", "-mfp32", "-G", "0", "-mno-abicalls", "-fno-PIC", "-fno-builtin", "-funsigned-char", "-nostdinc", "-I", "source/include"]
 ASSEMBLER_FLAGS = ["-march=vr4300", "-mabi=32", "-mfp32", "-EB", "-G", "0", "-I", "source/include"]
-PROFILE_ID = "scoped-tu-toolchains-v3"
+PROFILE_ID = "scoped-tu-toolchains-v4"
 # Per-TU toolchain registries: key -> toolchain.lock.json entry, which records
 # the project-local install directory and the pinned binary hashes.
 DEFAULT_COMPILER = "gcc272"
 COMPILERS = {"gcc272": "gcc_candidate", "gcc281pm": "gcc_pm281"}
-PINNED_ASSEMBLERS = {"as_kmc26": "binutils_kmc", "as_gnu291": "binutils_gnu291"}
+PINNED_ASSEMBLERS = {"as_kmc26": "binutils_kmc", "as_gnu291": "binutils_gnu291", "as_gnu291_fp32": "binutils_gnu291_fp32"}
 ASSEMBLERS = {"as", *PINNED_ASSEMBLERS}
+# Profile language -> compiled source kind. The suffix selects the front end (the 2.8.1
+# driver runs cc1plus for `.cpp`), so profile flags may not select a language with `-x`.
+LANGUAGES = {"c": "c", "c++": "cpp"}
+CXX_REQUIRED_FLAGS = ("-fno-exceptions", "-fno-rtti")
 REQUIRED_ARTIFACTS = {"shiren2.elf", "shiren2.z64", "shiren2.map", "shiren2.ld", "splat.override.yaml", "input-manifest.json"}
 REQUIRED_RECEIPT_FIELDS = {"schema_version", "status", "created_at", "target_sha256", "rom", "input_manifest", "profile", "runtime", "compiler_environment", "coverage", "c_matches", "c_attributions", "graph", "dependencies", "artifacts", "generated", "compiled", "objects", "commands", "reproduction", "image_inventory", "limitations"}
 
@@ -131,13 +135,60 @@ def retained_trial(directory: Path, label: str):
         (trial / "lifecycle.json").write_text(json.dumps(status, indent=2) + "\n")
 
 
+class CommandLog:
+    """``commands.json`` kept byte-identical to ``json.dumps(records, indent=2) + "\\n"`` after every write.
+
+    That serialization is ``"[\\n" + ",\\n".join(chunk(r)) + "\\n]\\n"``, where ``chunk(r)`` is
+    ``json.dumps(r, indent=2)`` with every line prefixed by two spaces (strings escape
+    newlines, so every literal newline is structural). The byte offset where each chunk
+    ends is kept, so ``rewrite_from(k)`` truncates the file after chunk ``k - 1`` and writes
+    only chunks ``k..n`` and the closing bracket. Appending or completing the last record
+    therefore costs one record, not the whole log, while every write still leaves exactly
+    the file a full re-encoding would. Nothing is buffered or deferred, so evidence on disk
+    after a sudden process death is the same as before. Nothing is written while
+    ``records`` is empty.
+    """
+
+    def __init__(self, path: Path) -> None:
+        self.path, self.records, self.ends = path, [], []
+
+    @staticmethod
+    def chunk(record: Any) -> bytes:
+        return ("  " + json.dumps(record, indent=2).replace("\n", "\n  ")).encode()
+
+    def rewrite_from(self, index: int) -> None:
+        """Make the file current after ``records[index:]`` were appended or changed."""
+        if not self.records:
+            return
+        index = min(index, len(self.ends))
+        del self.ends[index:]
+        position = self.ends[-1] if self.ends else 2
+        parts = []
+        for record in self.records[index:]:
+            part = (b",\n" if self.ends else b"") + self.chunk(record)
+            parts.append(part)
+            position += len(part)
+            self.ends.append(position)
+        tail = b"".join(parts) + b"\n]\n"
+        if index == 0:
+            self.path.write_bytes(b"[\n" + tail)
+            return
+        with self.path.open("r+b") as stream:
+            stream.seek(self.ends[index - 1])
+            stream.truncate()
+            stream.write(tail)
+
+
+
 _C_COMMENT_OR_LITERAL = re.compile(r'/\*.*?\*/|//[^\n]*|"(?:\\.|[^"\\\n])*"|\'(?:\\.|[^\'\\\n])*\'', re.DOTALL)
 _C_ASSEMBLY_TOKEN = re.compile(r"\b(?:asm|__asm|__asm__|INCLUDE_ASM|GLOBAL_ASM)\b")
+# C++ TUs build with -fno-exceptions -fno-rtti; these constructs have no place in them.
+CXX_FORBIDDEN_TOKEN = re.compile(r"\b(?:try|catch|throw|typeid|dynamic_cast)\b")
 _C_INCLUDE = re.compile(r"^[ \t]*(?:#|%:)[ \t]*(?:include|include_next|import)\b[ \t]*(.*)$", re.MULTILINE)
 
 
 def source_policy_violations(root: Path) -> list[str]:
-    """Return C source-policy violations for every ``.c``/``.h`` under ``root/src`` and ``root/include``.
+    """Return source-policy violations for every ``.c``/``.cpp``/``.h`` under ``root/src`` and ``root/include``.
 
     ``root`` is a source tree root (the project, or a build's frozen ``source``).
     After splicing backslash-newlines and ignoring comments and string/char
@@ -146,19 +197,21 @@ def source_policy_violations(root: Path) -> list[str]:
     ``##`` token-paste operator (or its ``%:%:`` digraph), or an include
     directive that is not a literal ``"x.h"``/``<x.h>`` path, is absolute or
     contains ``..``. Non-header includes (e.g. ``.inc``) are rejected because
-    only ``.c``/``.h`` files are scanned. This is a conservative token check;
+    only ``.c``/``.cpp``/``.h`` files are scanned. A ``.cpp`` file additionally may
+    not use exception or RTTI constructs (``try``, ``catch``, ``throw``,
+    ``typeid``, ``dynamic_cast``). This is a conservative token check;
     semantic or raw-byte misuse still needs review. An empty list means pass.
     """
     violations = []
     for directory in ("src", "include"):
         for path in sorted((root / directory).rglob("*")):
-            if path.suffix in {".c", ".h"} and path.is_file():
+            if path.suffix in {".c", ".cpp", ".h"} and path.is_file():
                 violations.extend(source_file_violations(path, path.relative_to(root).as_posix()))
     return violations
 
 
 def source_file_violations(path: Path, name: str) -> list[str]:
-    """Policy violations of one C/H file; see ``source_policy_violations``."""
+    """Policy violations of one C/C++/H file; see ``source_policy_violations``."""
     violations = []
     text = path.read_text().replace("\\\r\n", "").replace("\\\n", "")
     without_comments = _C_COMMENT_OR_LITERAL.sub(lambda match: match[0] if match[0][0] in "\"'" else " ", text)
@@ -167,6 +220,8 @@ def source_file_violations(path: Path, name: str) -> list[str]:
         violations.append(f"{name}: inline assembly token")
     if "##" in code or "%:%:" in code:
         violations.append(f"{name}: token-paste operator")
+    if path.suffix == ".cpp" and CXX_FORBIDDEN_TOKEN.search(code):
+        violations.append(f"{name}: exception/RTTI construct ({CXX_FORBIDDEN_TOKEN.search(code)[0]})")
     for include in _C_INCLUDE.finditer(without_comments):
         literal = re.fullmatch(r'"([^"]*)"|<([^>]*)>', include[1].strip())
         target = (literal[1] if literal[1] is not None else literal[2]) if literal else None
@@ -196,7 +251,13 @@ def record_observed_output(command: list[str], output: str | bytes | None, retur
 
 
 def tool_profile(tool_root: Path, source_root: Path | None = None) -> dict[str, Any]:
-    """Measure fixed tool locations and source-declared translation-unit profiles."""
+    """Measure fixed tool locations and source-declared translation-unit profiles.
+
+    A profile's optional ``language`` is ``c`` (default) or ``c++``. A C++ profile must
+    disable exceptions and RTTI; its TUs are ``.cpp`` (C TUs ``.c``), and the driver selects
+    the front end from that suffix. ``cc1plus`` is measured against its lock pin only when a
+    declared C++ profile selects that compiler, so C-only declarations keep their profile.
+    """
     source_root = source_root if source_root is not None else tool_root
     declaration = read_json(source_root / "config/compiler_profiles.json")
     if set(declaration) != {"schema_version", "profiles", "tu_profiles", "compiler_environment"} or type(declaration["schema_version"]) is not int or declaration["schema_version"] != 1:
@@ -205,7 +266,7 @@ def tool_profile(tool_root: Path, source_root: Path | None = None) -> dict[str, 
         raise ValueError("Undeclared compiler environment override")
     profile_fields = {"assembler", "compiler_flags", "assembler_flags", "scope"}
     for key, item in declaration["profiles"].items():
-        if not isinstance(key, str) or not isinstance(item, dict) or not profile_fields <= set(item) <= profile_fields | {"compiler"}:
+        if not isinstance(key, str) or not isinstance(item, dict) or not profile_fields <= set(item) <= profile_fields | {"compiler", "language"}:
             raise ValueError("Invalid translation-unit profile")
         if item["assembler"] not in ASSEMBLERS or not isinstance(item["scope"], str):
             raise ValueError("Unsupported translation-unit assembler")
@@ -219,9 +280,16 @@ def tool_profile(tool_root: Path, source_root: Path | None = None) -> dict[str, 
                 raise ValueError("Profile flags may not override build operations")
         if any(flag.startswith("-B") for flag in item["compiler_flags"]):
             raise ValueError("Profile flags may not override compiler pass selection")
+        if any(flag.startswith("-x") for flag in item["compiler_flags"]):
+            raise ValueError("Profile flags may not override language selection")
+        if item.get("language", "c") not in LANGUAGES:
+            raise ValueError("Unsupported translation-unit language")
+        if item.get("language") == "c++" and not set(CXX_REQUIRED_FLAGS) <= set(item["compiler_flags"]):
+            raise ValueError("C++ profiles must disable exceptions and RTTI")
     for source, key in declaration["tu_profiles"].items():
         relative = Path(source)
-        if relative.is_absolute() or ".." in relative.parts or relative.parts[0] != "src" or relative.suffix != ".c" or key not in declaration["profiles"]:
+        if (relative.is_absolute() or ".." in relative.parts or relative.parts[0] != "src" or key not in declaration["profiles"]
+                or relative.suffix != COMPILED_SUFFIXES[LANGUAGES[declaration["profiles"][key].get("language", "c")]]):
             raise ValueError("Invalid translation-unit profile assignment")
     lock = read_json(source_root / "toolchain.lock.json")
 
@@ -245,11 +313,13 @@ def tool_profile(tool_root: Path, source_root: Path | None = None) -> dict[str, 
             raise ValueError(f"Missing or changed pinned assembler {name}; run setup first")
         tools[name] = {"path": str(path.resolve()), "sha256": sha256(path)}
     compilers = {}
+    cxx_compilers = {item.get("compiler", DEFAULT_COMPILER) for item in declaration["profiles"].values() if item.get("language") == "c++"}
     for key in sorted({DEFAULT_COMPILER} | {item.get("compiler", DEFAULT_COMPILER) for item in declaration["profiles"].values()}):
         entry = COMPILERS[key]
         compilers[key] = {}
-        for name, path in installed(entry, "gcc", "cc1", "cpp").items():
-            if not path.is_file() or sha256(path) != lock[entry]["binaries_sha256"][name]:
+        passes = ("gcc", "cc1", "cpp", "cc1plus") if key in cxx_compilers else ("gcc", "cc1", "cpp")
+        for name, path in installed(entry, *passes).items():
+            if not path.is_file() or sha256(path) != lock[entry]["binaries_sha256"].get(name):
                 raise ValueError(f"Missing or changed pinned compiler {key}: {name}; run setup first")
             compilers[key][name] = {"path": str(path.resolve()), "sha256": sha256(path)}
     diagnostic = [tools["ld"]["path"], "-V"]
@@ -278,6 +348,11 @@ def profile_toolchain(profile: dict[str, Any], profile_id: str) -> tuple[list[st
     gcc = profile["compilers"][key]["gcc"]["path"]
     driver = [gcc] if key == DEFAULT_COMPILER else [gcc, f"-B{Path(gcc).parent}/"]
     return driver, profile["tools"][assigned["assembler"]]["path"]
+
+
+def profile_kind(profile: dict[str, Any], profile_id: str) -> str:
+    """Compiled source kind (`c` or `cpp`) a declared profile compiles."""
+    return LANGUAGES[profile["profiles"][profile_id].get("language", "c")]
 
 
 def runtime_fingerprint() -> dict[str, Any]:
@@ -525,6 +600,7 @@ def splat_bindings(source_root: Path, inventory: ImageInventory) -> tuple[dict[s
     config = yaml.safe_load((source_root / "config/shiren2.jp.yaml").read_text())
     sections: dict[str, str] = {}
     sources: dict[str, str] = {}
+    stems: set[str] = set()
     segments = config["segments"]
     for index, segment in enumerate(segments[:-1]):
         if isinstance(segment, list) or (isinstance(segment, dict) and opaque_storage_segment(segment)):
@@ -558,11 +634,13 @@ def splat_bindings(source_root: Path, inventory: ImageInventory) -> tuple[dict[s
                 raise ValueError("Unsupported B binary-only Splat layout or alignment override")
         sections[name] = sections[f"{name}_bss"] = image.image_id
         for part in segment["subsegments"]:
-            if isinstance(part, list) and len(part) >= 3 and part[1] == "c":
-                source = f"src/{part[2]}.c"
-                if source in sources or image_for_source(source, inventory) != image:
-                    raise ValueError("C translation-unit image declaration is missing or ambiguous")
+            if isinstance(part, list) and len(part) >= 3 and part[1] in COMPILED_KINDS:
+                source = f"src/{part[2]}{COMPILED_SUFFIXES[part[1]]}"
+                stem = f"src/{part[2]}"
+                if stem in stems or image_for_source(source, inventory) != image:
+                    raise ValueError(f"{LANGUAGE_LABELS[part[1]]} translation-unit image declaration is missing or ambiguous")
                 sources[source] = image.image_id
+                stems.add(stem)
     for image in inventory.images.values():
         if image.split_status == "active" and any(name not in sections for name in image.splat_segments):
             raise ValueError(f"Active image has an omitted splat segment: {image.image_id}")
@@ -570,13 +648,18 @@ def splat_bindings(source_root: Path, inventory: ImageInventory) -> tuple[dict[s
 
 
 def build_graph(directory: Path) -> dict[str, dict[str, str]]:
-    """Derive declared object/source kinds from the private linker script."""
+    """Derive declared object/source kinds from the private linker script.
+
+    splat names every compiled object `obj/source/src/<unit>.o` (`o_as_suffix`), so the
+    frozen YAML subsegment type (`c` or `cpp`) decides the source file and kind.
+    """
     text = (directory / "shiren2.ld").read_text()
     names = sorted(set(re.findall(r"([A-Za-z0-9_./-]+\.o)\(", text)))
     if not names:
         raise ValueError("Splat linker script contains no input objects")
     inventory = load_inventory(directory / "source/config/images.json")
     section_images, c_sources = splat_bindings(directory / "source", inventory)
+    compiled_by_stem = {Path(source).with_suffix("").as_posix(): source for source in c_sources}
     ownership: dict[str, set[str]] = {}
     for block in re.finditer(r"^\s+\.([A-Za-z0-9_]+)[^\n]*\n\s*\{\n(.*?)^\s+\}", text, re.MULTILINE | re.DOTALL):
         if block[1] not in section_images:
@@ -591,9 +674,9 @@ def build_graph(directory: Path) -> dict[str, dict[str, str]]:
             raise ValueError(f"Object is outside private object root: {name}")
         base = Path(*path.parts[1:]).with_suffix("")
         if base.parts[:2] == ("source", "src"):
-            source = str(base) + ".c"
-            source_kind = "c"
-            canonical = Path(source).relative_to("source").as_posix()
+            canonical = compiled_by_stem.get(Path(*base.parts[1:]).as_posix(), Path(*base.parts[1:]).as_posix() + ".c")
+            source = f"source/{canonical}"
+            source_kind = compiled_kind(canonical)
         elif base.parts[:2] == ("generated", "asm"):
             source = str(base) + ".s"
             source_kind = "asm"
@@ -610,11 +693,11 @@ def build_graph(directory: Path) -> dict[str, dict[str, str]]:
         if len(owners) != 1:
             raise ValueError(f"Object has no unique original image/storage owner: {name}")
         owner = next(iter(owners))
-        if source_kind == "c" and c_sources.get(canonical) != owner:
-            raise ValueError("C object disagrees with frozen image/source declaration")
+        if source_kind in COMPILED_KINDS and c_sources.get(canonical) != owner:
+            raise ValueError(f"{LANGUAGE_LABELS[source_kind]} object disagrees with frozen image/source declaration")
         graph[name] = {"source": canonical, "input": source, "source_kind": source_kind, "image_id": owner}
-    if {item["source"] for item in graph.values() if item["source_kind"] == "c"} != set(c_sources):
-        raise ValueError("Declared C translation unit is absent from object graph")
+    if {item["source"] for item in graph.values() if item["source_kind"] in COMPILED_KINDS} != set(c_sources):
+        raise ValueError("Declared C/C++ translation unit is absent from object graph")
     b_objects = {name: item for name, item in graph.items() if item["image_id"] == "overlay_136dc0"}
     if b_objects and (len(b_objects) != 1 or next(iter(b_objects)) != "obj/generated/assets/overlay_136dc0_initialized_opaque.o" or next(iter(b_objects.values()))["source_kind"] != "binary"):
         raise ValueError("Active B graph must contain only its one complete binary storage input")
@@ -640,7 +723,7 @@ def intermediate_keys(graph: dict[str, dict[str, str]], matches: list[dict[str, 
                       observed: Any = ()) -> tuple[set[str], set[str]]:
     """Expected private split/compiler evidence for the current splat policy.
 
-    For a C unit that owns a `.rodata` subsegment, splat also writes one
+    For a C/C++ unit that owns a `.rodata` subsegment, splat also writes one
     `asm/nonmatchings/<unit>/<symbol>.s` per rodata symbol; their names come from the
     split itself, so `observed` keys under that prefix are accepted (the fresh-split
     replay independently reproduces the whole generated inventory and its hashes).
@@ -648,7 +731,7 @@ def intermediate_keys(graph: dict[str, dict[str, str]], matches: list[dict[str, 
     generated = {"undefined_funcs_auto.txt", "undefined_syms_auto.txt"}
     compiled: set[str] = set()
     for item in graph.values():
-        if item["source_kind"] == "c":
+        if item["source_kind"] in COMPILED_KINDS:
             base = Path(item["source"])
             compiled.update({base.with_suffix(".s").as_posix(), base.with_suffix(".d").as_posix()})
         else:
@@ -658,7 +741,7 @@ def intermediate_keys(graph: dict[str, dict[str, str]], matches: list[dict[str, 
         generated.add((Path("asm/matchings") / unit / f"{match['symbol']}.s").as_posix())
     if source_root is not None:
         config = yaml.safe_load((source_root / "config/shiren2.jp.yaml").read_text())
-        c_units = {Path(item["source"]).relative_to("src").with_suffix("").as_posix() for item in graph.values() if item["source_kind"] == "c"}
+        c_units = {Path(item["source"]).relative_to("src").with_suffix("").as_posix() for item in graph.values() if item["source_kind"] in COMPILED_KINDS}
         for segment in config["segments"]:
             if isinstance(segment, dict) and not opaque_storage_segment(segment):
                 for part in segment["subsegments"]:
@@ -684,7 +767,9 @@ def object_commands(name: str, item: dict[str, str], profile: dict[str, Any]) ->
         return [[tools["as"]["path"], *ASSEMBLER_FLAGS, "-o", name, source]]
     key = profile["tu_profiles"].get(item["source"])
     if key is None:
-        raise ValueError(f"No measured profile assigned to C translation unit: {item['source']}")
+        raise ValueError(f"No measured profile assigned to {LANGUAGE_LABELS[item['source_kind']]} translation unit: {item['source']}")
+    if profile_kind(profile, key) != item["source_kind"]:
+        raise ValueError(f"Profile {key} does not compile {LANGUAGE_LABELS[item['source_kind']]}: {item['source']}")
     assigned = profile["profiles"][key]
     driver, assembler = profile_toolchain(profile, key)
     compiled = str(Path("compiled") / Path(item["source"]).with_suffix(".s"))
@@ -795,16 +880,18 @@ def reproduce_c_objects_and_link(directory: Path, graph: dict[str, dict[str, str
     reproduce exactly. Private verification outputs never modify the build.
     Replaying the split also binds every code/data/BSS placement to frozen YAML.
     ASM and binary objects retain zero C credit even when they reproduce exactly.
+    C++ (`.cpp`) objects take the same compiled-TU path as C objects.
     """
     from workspace import verify_manifest
     manifest = read_json(directory / "input-manifest.json")
-    sources = {item["source"] for item in graph.values() if item["source_kind"] == "c"}
+    sources = {item["source"] for item in graph.values() if item["source_kind"] in COMPILED_KINDS}
     if set(profile["tu_profiles"]) != sources:
         raise ValueError("C graph and translation-unit profile assignments disagree")
     evidence: dict[str, Any] = {"c_objects": {}, "objects": {}, "split": {}, "linked": {}, "method": "fresh frozen-source split, all-object reproduction and full pinned-linker replay"}
     with retained_trial(directory, "full-link") as temporary:
         trial = Path(temporary)
-        replay_commands = []
+        command_log = CommandLog(trial / "command-evidence" / "commands.json")
+        replay_commands = command_log.records
 
         def run_replay(command: list[str]) -> None:
             number = len(replay_commands) + 1
@@ -813,12 +900,12 @@ def reproduce_c_objects_and_link(directory: Path, graph: dict[str, dict[str, str
             replay_commands.append(record)
             log = trial / "command-evidence"
             log.mkdir(exist_ok=True)
-            (log / "commands.json").write_text(json.dumps(replay_commands, indent=2) + "\n")
+            command_log.rewrite_from(len(replay_commands) - 1)
             completed = subprocess.run(command, cwd=trial, env=environment, capture_output=True)
             (log / f"{number:03d}.stdout").write_bytes(completed.stdout)
             (log / f"{number:03d}.stderr").write_bytes(completed.stderr)
             record["returncode"] = completed.returncode
-            (log / "commands.json").write_text(json.dumps(replay_commands, indent=2) + "\n")
+            command_log.rewrite_from(len(replay_commands) - 1)
             completed.check_returncode()
 
         shutil.copytree(directory / "source", trial / "source", ignore=shutil.ignore_patterns("__pycache__"))
@@ -837,18 +924,18 @@ def reproduce_c_objects_and_link(directory: Path, graph: dict[str, dict[str, str
             destination = checked_path(trial, name)
             destination.parent.mkdir(parents=True, exist_ok=True)
             operations = object_commands(name, item, profile)
-            if item["source_kind"] == "c":
+            if item["source_kind"] in COMPILED_KINDS:
                 compiled = Path("compiled") / Path(item["source"]).with_suffix(".s")
                 (trial / compiled).parent.mkdir(parents=True, exist_ok=True)
                 operations = operations[1:]
             for operation in operations:
                 run_replay(operation)
-            if item["source_kind"] == "c" and (trial / compiled).read_bytes() != (directory / compiled).read_bytes():
-                raise ValueError(f"C compiler assembly does not reproduce from frozen source: {item['source']}")
+            if item["source_kind"] in COMPILED_KINDS and (trial / compiled).read_bytes() != (directory / compiled).read_bytes():
+                raise ValueError(f"{LANGUAGE_LABELS[item['source_kind']]} compiler assembly does not reproduce from frozen source: {item['source']}")
             if destination.read_bytes() != checked_path(directory, name).read_bytes():
-                raise ValueError(f"{'C' if item['source_kind'] == 'c' else 'Non-C'} object instruction bytes disagree with fresh frozen-source assembly: {name}")
+                raise ValueError(f"{LANGUAGE_LABELS.get(item['source_kind'], 'Non-C')} object instruction bytes disagree with fresh frozen-source assembly: {name}")
             evidence["objects"][name] = {"source_kind": item["source_kind"], "sha256": sha256(destination)}
-            if item["source_kind"] == "c":
+            if item["source_kind"] in COMPILED_KINDS:
                 evidence["c_objects"][name] = {"source": item["source"], "profile_id": profile["tu_profiles"][item["source"]], "compiler_assembly_sha256": sha256(trial / compiled), "object_sha256": sha256(destination)}
         for operation in expected_commands(graph, profile)[-2:]:
             run_replay(operation)
@@ -896,20 +983,60 @@ def text_relocations(path: Path) -> list[dict[str, Any]]:
     return result
 
 
+# g++ 2.8.1 (pre-ABI-3) C++-linkage names: constructors `__<n>Class...`, methods and free C++
+# functions `name__<n>Class...`/`name__F...`/`name__C<n>...`/`__Q...`/templates `__t<n>`/`__H<n>`,
+# and compiler data with `.`/`$` (`_vt.3Obj`, destructors `_$_3Obj`, static members, `_GLOBAL_.`).
+GXX_MANGLED = re.compile(r"__(?:[0-9]|F|C[0-9]|Q[0-9_]|t[0-9]|H[0-9])|[.$]|^__t[fi]")
+
+
+def global_symbol_names(path: Path) -> list[str]:
+    """Every global/weak symbol an ELF32 object defines or references, from its symbol tables."""
+    data = path.read_bytes()
+    if data[:6] != b"\x7fELF\x01\x02":
+        raise ValueError("Symbol evidence must be ELF32 big-endian")
+    try:
+        shoff, = struct.unpack_from(">I", data, 0x20)
+        shentsize, shnum = struct.unpack_from(">HH", data, 0x2E)
+        headers = [struct.unpack_from(">10I", data, shoff + i * shentsize) for i in range(shnum)]
+        names = []
+        for header in headers:
+            if header[1] != 2:  # SHT_SYMTAB
+                continue
+            strings = headers[header[6]]
+            for offset in range(header[4], header[4] + header[5], 16):
+                name_offset, _value, _size, info, _other, _section = struct.unpack_from(">IIIBBH", data, offset)
+                if info >> 4 in {1, 2} and name_offset:
+                    start = strings[4] + name_offset
+                    names.append(data[start:data.index(b"\0", start)].decode("latin-1"))
+        return sorted(set(names))
+    except (IndexError, ValueError, struct.error) as error:
+        raise ValueError(f"Invalid ELF symbol table: {path.name}") from error
+
+
 def c_attributions(directory: Path, matches: list[dict[str, Any]], graph: dict[str, dict[str, str]], profile: dict[str, Any], reference: bytes, *, reproduction: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    """Bind every accepted C/C++ function to its object, map contribution and original bytes.
+
+    A C++ object may define and reference only extern "C" names: any g++ C++-linkage
+    symbol (mangled function, vtable, typeinfo) forbids credit for the whole object.
+    """
     attest(reference)
     actual = (directory / "shiren2.z64").read_bytes()
     linked = symbol_table(directory / "shiren2.elf", profile)
     sections = {}
     for line in (directory / "shiren2.map").read_text().splitlines():
         match = re.fullmatch(r"\s+\.text\s+(0x[0-9a-fA-F]+)\s+(0x[0-9a-fA-F]+)\s+(\S+)\s*", line)
-        if match and match[3] in graph and graph[match[3]]["source_kind"] == "c":
+        if match and match[3] in graph and graph[match[3]]["source_kind"] in COMPILED_KINDS:
             if match[3] in sections:
                 raise ValueError("Ambiguous C object map section")
             sections[match[3]] = (int(match[1], 16) & 0xFFFFFFFF, int(match[2], 16))
-    by_source = {(item["image_id"], item["source"]): name for name, item in graph.items() if item["source_kind"] == "c"}
-    if {match["source"] for match in matches} != {item["source"] for item in graph.values() if item["source_kind"] == "c"}:
+    by_source = {(item["image_id"], item["source"]): name for name, item in graph.items() if item["source_kind"] in COMPILED_KINDS}
+    if {match["source"] for match in matches} != {item["source"] for item in graph.values() if item["source_kind"] in COMPILED_KINDS}:
         raise ValueError("C manifest does not agree with declared C objects")
+    for name, item in graph.items():
+        if item["source_kind"] == "cpp":
+            mangled = [symbol for symbol in global_symbol_names(directory / name) if GXX_MANGLED.search(symbol)]
+            if mangled:
+                raise ValueError(f"C++ object uses C++-linkage symbols (export/import through extern \"C\"): {name}: {mangled}")
     policy = source_policy_violations(directory / "source")
     if policy:
         raise ValueError("Source policy forbids C credit: " + "; ".join(policy))

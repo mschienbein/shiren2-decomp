@@ -1,16 +1,12 @@
 #include "common.h"
 
-typedef struct {
-    s32 field_0;
-    s32 field_4;
-    s32 field_8;
-} State;
+typedef struct { s32 field_0, field_4, field_8, field_C, field_10, field_14, field_18, field_1C; char messages_20[4][0x100]; } Slot;
 
-extern State D_80161724;
+extern Slot D_80161724[1];
 
 void func_80054968(void)
 {
-    State *state = &D_80161724;
+    Slot *state = &D_80161724[0];
 
     if (state->field_8 < 2) {
         state->field_8 = 1;

@@ -1,4 +1,6 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -6,7 +8,7 @@ typedef short s16;
 typedef signed char s8;
 typedef float f32;
 
-typedef struct { u8 pad : 3; u8 bit4 : 1; u8 bit3 : 1; u8 bit2 : 1; u8 low : 2; } Flags800B7078;
+
 typedef struct {
     u8 pad0[0x18];
     s16 this_offset;
@@ -15,7 +17,7 @@ typedef struct {
 } VTable800B7078;
 typedef struct { u8 pad0[0x24]; VTable800B7078 *vtable; } Obj800B7078;
 typedef struct { s32 x; s32 y; } Pos800B7078;
-extern Flags800B7078 D_80142F1B;
+
 s32 func_80046240(void);
 void func_800AA4BC(void);
 s32 func_800AA4D0(void);
@@ -30,11 +32,11 @@ void func_800B7078(void *self /* unused: the slot call contract supplies the rec
     Obj800B7078 *obj;
     s32 blocked = 0;
     if (func_80046240() == 0) {
-        u32 bit2 = D_80142F1B.bit2;
+        u32 bit2 = ((D_80142F18.flags >> 2) & 1);
         if (bit2 != 0) {
             blocked = 1;
         } else {
-            u32 bit4 = D_80142F1B.bit4;
+            u32 bit4 = ((D_80142F18.flags >> 4) & 1);
             if (bit4 != 0) {
                 blocked = 1;
             }

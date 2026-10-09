@@ -5,7 +5,7 @@ typedef struct { Point field_0; unsigned char field_8[0x14]; unsigned short fiel
 extern s32 func_800A7D20(Object *);
 extern void func_800A59A4(Object *);
 extern s32 func_80049CB4(s32, ...);
-extern void func_800A6218(Object *, Point *, s32);
+extern s32 func_800A6218(Object *, Point *, s32);
 static inline void position(Point *out, Object *arg) { out->x = arg->field_0.x; out->y = arg->field_0.y; }
 static inline void set_message_value(s32 *message, s32 value) { message[4] = value; }
 /* Trap apply slot +0x54 supplies five pointers; self, actor and direction

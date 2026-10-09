@@ -1,22 +1,27 @@
 #include "common.h"
 
-typedef struct {
-    s32 unk0;
-    unsigned char unk4;
-    unsigned char unk5;
-    unsigned char pad6[6];
-} Entry;
-
-extern Entry D_801397E4[];
+/* Fifteen 12-byte records; the reset fields start four bytes into each row. */
+typedef struct EntryState {
+    s32 key_04;
+    unsigned char state_08;
+    unsigned char state_09;
+    unsigned short unknown_0A;
+} EntryState;
+typedef struct Entry12 {
+    short id_00;
+    unsigned short unknown_02;
+    EntryState state;
+} Entry12;
+extern Entry12 D_801397E0[15];
 
 void func_80052E90(void) {
     s32 i;
 
     for (i = 0; i < 15; i++) {
-        Entry *entry = &D_801397E4[i];
+        EntryState *entry = &D_801397E0[i].state;
 
-        entry->unk4 = 0;
-        entry->unk5 = 0x80;
-        entry->unk0 = 0;
+        entry->state_08 = 0;
+        entry->state_09 = 0x80;
+        entry->key_04 = 0;
     }
 }

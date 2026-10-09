@@ -1,6 +1,7 @@
 #include "common.h"
 
-typedef struct { char pad0[0x4C]; void *field_4C; } Obj;
+/* Complete 0xF4-byte menu, ending before D_801425C4. */
+typedef struct { char pad0[0x4C]; void *field_4C; char pad50[0xA4]; } Obj;
 
 extern Obj D_801424D0;
 extern char D_80152E00[];

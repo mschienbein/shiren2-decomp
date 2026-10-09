@@ -13,7 +13,7 @@ typedef struct {
 } Object;
 typedef struct {
     u8 field_00[0x4C];
-    void *volatile field_4C;
+    const void *field_4C;
     u8 field_50[0x10];
     s32 field_60;
     void *field_64;
@@ -22,7 +22,7 @@ typedef struct {
 extern s32 D_80152130[];
 extern s32 D_80151EC8[];
 extern s32 D_80152098[];
-extern s32 D_80151E38[];
+extern const unsigned char D_80151E38[144];
 extern u8 D_80142920[];
 extern u8 D_80140118[];
 extern Dialog *func_800953C0(Dialog *);
@@ -32,7 +32,7 @@ extern void func_80096CE4(Dialog *, void *, void *);
 extern void func_80041434(s32);
 extern s32 func_800957C0(Dialog *, void *, s32, void *, s32);
 
-static inline void set_methods(Dialog *dialog, void *methods) {
+static inline void set_methods(Dialog *dialog, const void *methods) {
     dialog->field_4C = methods;
 }
 

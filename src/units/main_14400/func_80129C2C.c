@@ -1,5 +1,5 @@
 #include "common.h"
-typedef struct { s32 field_00, field_04; void *field_08; unsigned short field_0C, field_0E; void *field_10; u32 field_14; void *field_18; s32 field_1C; void *field_20; s32 field_24; unsigned char field_28[0x18]; s32 field_40; } Config;
+typedef struct { s32 field_00, field_04; void *field_08; unsigned short field_0C, field_0E; void *field_10; u32 field_14; void *field_18; void *field_1C; void *field_20; s32 field_24; unsigned char field_28[0x18]; void *field_40; } Config;
 typedef struct { unsigned char field_00[0xC9]; unsigned char field_C9; unsigned char field_CA[0x72]; } Entry;
 typedef struct { unsigned char field_00[0x1C]; } Record;
 typedef struct { unsigned short field_00, field_02; unsigned char field_04; } Params;
@@ -11,7 +11,8 @@ typedef struct Callback {
     s32 field_0C;
     s32 end;
 } Callback;
-extern s32 D_801D2C28, D_801DE978, D_80000300, D_801CA6D4, D_801CA6E4, D_801CA6E8;
+extern void *D_801D2C28;
+extern s32 D_801DE978, D_80000300, D_801CA6D4, D_801CA6E4, D_801CA6E8;
 extern s32 D_801CA704, D_801CA6F0, D_801CA6F4;
 extern struct Record_8012A7C4 *D_801CA6F8;
 extern void *D_801CA6FC, *D_801CA70C, *D_801CA708;
@@ -21,7 +22,7 @@ extern Record *D_801CA6D8;
 extern Callback D_801CA6C0;
 extern void func_8012D800(void *, u32), func_8012D3A0(void *);
 extern void *func_8012D84C(s32);
-extern void func_8012AAC0(s32), func_8012A75C(void *, s32), func_8012A910(void *), func_8012D550(Config *, s32, s32), func_80129EB4(s32, s32), func_8012FDE0(Callback *), func_8012C004(Entry *);
+extern void func_8012AAC0(s32), func_8012A75C(void *, void *), func_8012A910(void *), func_8012D550(Config *, s32, s32), func_80129EB4(s32, s32), func_8012FDE0(Callback *), func_8012C004(Entry *);
 extern s32 func_8012ACC0(Callback *);
 extern s32 func_8012FE30(Record *, Params *);
 extern s32 func_8012D87C(void);

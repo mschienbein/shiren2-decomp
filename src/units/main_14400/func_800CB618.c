@@ -51,7 +51,7 @@ void *func_800A09B0(BitWriter800CB618 *w, void *buf, u32 size);
 void func_800A09C4(BitWriter800CB618 *w, void *buf, u32 size);
 void func_800A09E8(BitWriter800CB618 *w, u32 value, u32 bits);
 void func_800A0A64(BitWriter800CB618 *w, u8 *bytes, s32 count);
-u8 func_800CB5D8(u8 value, s32 table);
+s32 func_800CB5D8(u8 value, s32 table);
 
 void func_800CB618(Save800CB618 *save, void *buf) {
     BitWriter800CB618 writer;
@@ -78,11 +78,11 @@ void func_800CB618(Save800CB618 *save, void *buf) {
     func_800A09E8(w, save->field_67, 4);
     func_800A09E8(w, save->field_68, 0xA);
     func_800A09E8(w, save->field_6C, 0x18);
-    func_800A09E8(w, func_800CB5D8(save->field_70, 0x32), 6);
+    func_800A09E8(w, (u8)func_800CB5D8(save->field_70, 0x32), 6);
     func_800A09E8(w, save->field_71, 8);
     func_800A09E8(w, save->field_72, 5);
     func_800A0A64(w, save->field_73, 0x10);
-    func_800A09E8(w, func_800CB5D8(save->field_83, 0x59), 6);
+    func_800A09E8(w, (u8)func_800CB5D8(save->field_83, 0x59), 6);
     func_800A09E8(w, save->field_84, 8);
     func_800A09E8(w, save->field_85, 5);
     func_800A0A64(w, save->field_86, 0x10);
@@ -94,7 +94,7 @@ void func_800CB618(Save800CB618 *save, void *buf) {
             break;
         }
         pair = &save->pairs[i];
-        func_800A09E8(&writer, func_800CB5D8(pair->id, 0x7B), 5);
+        func_800A09E8(&writer, (u8)func_800CB5D8(pair->id, 0x7B), 5);
         func_800A09E8(&writer, pair->flags & 1, 1);
         func_800A09E8(&writer, (pair->flags >> 1) & 1, 1);
         i++;

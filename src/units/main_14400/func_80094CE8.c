@@ -2,7 +2,7 @@
 
 typedef struct {
     char pad0[0x4C];
-    void *vtable;
+    const void *vtable;
     char pad50[0x18];
     s32 field_68;
     void *field_6C;
@@ -15,14 +15,15 @@ typedef struct {
 
 extern char D_80138FB8[];
 extern char D_80138FC8[];
-extern char D_80152AE8[];
+extern const unsigned char D_80152AE8[144];
 extern char D_80151EC8[];
-extern char D_80151E38[];
+extern const unsigned char D_80151E38[144];
 Obj *func_800953C0(Obj *obj);
 void func_8009D610(Obj *obj, char *text, void *a, void *b);
 s32 func_800957C0(Obj *obj, Result *out, s32 a2, void *a3, s32 a4);
 
-s32 func_80094CE8(s32 unused, char *text) {
+/* Original callers supply a dialog receiver; this implementation uses a local one. */
+s32 func_80094CE8(void *unused_dialog, char *text) {
     Obj local;
     Result result;
     Obj *obj = &local;

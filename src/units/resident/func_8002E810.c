@@ -4,10 +4,10 @@ typedef unsigned char u8;
 typedef unsigned short u16;
 
 /* Serial interface PIF RAM image: 15 command words followed by the status word. */
-typedef struct {
+typedef struct ResidentPifRam {
     u32 ramarray[15];
     u32 pifstatus;
-} PifRam;
+} ResidentPifRam;
 
 /* One 6-byte joybus request/response frame (tx, rx, command, type lo/hi, status). */
 typedef struct {
@@ -26,7 +26,7 @@ typedef struct {
 } DeviceStatus;
 
 extern u8 D_80039018;
-extern PifRam D_80041350;
+extern ResidentPifRam D_80041350;
 
 void func_8002E810(s32 channel, u8 command)
 {

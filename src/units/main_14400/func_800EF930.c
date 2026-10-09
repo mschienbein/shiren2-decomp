@@ -5,7 +5,7 @@ typedef short s16;
 typedef unsigned short u16;
 /* 0x34-byte embedded subobject constructed by overlay func_801F2AC0, which initialises
  * fields at +0x00..+0x2D (opaque here) and its vtable word at +0x30. */
-typedef struct { u8 opaque[0x30]; void *vtable; } Sub801F2AC0;
+typedef struct { u8 opaque[0x30]; const void *vtable; } Sub801F2AC0;
 typedef struct {
     u8 pad0[0xA];
     u8 unkA;
@@ -14,7 +14,7 @@ typedef struct {
     u8 unk1E;
     u8 unk1F;
     u8 pad20[4];
-    void *vtable;
+    const void *vtable;
     s16 unk28;
     s16 unk2A;
     s16 unk2C;
@@ -23,8 +23,8 @@ typedef struct {
     u8 pad32[0x46];
     Sub801F2AC0 unk78;
 } Obj;
-extern u8 D_80159300[];
-extern u8 D_80159320[];
+extern const unsigned char D_80159300[32];
+extern const unsigned char D_80159320[160];
 extern u32 D_8013960C;
 void *func_800E0120(Obj *);
 void func_801F2AC0(Sub801F2AC0 *);

@@ -12,12 +12,13 @@ typedef struct { u8 pad0[0x4]; Vtbl800A1DACb *vtable; } Loader800A1DAC;
 typedef struct { u8 pad0[0x98]; s16 delta; s16 index; Loader800A1DAC *(*fn)(void *self); } Vtbl800A1DACa;
 typedef struct { u8 pad0[0x24]; Vtbl800A1DACa *vtable; } Mgr800A1DAC;
 typedef s32 (*Predicate800A1DAC)(void *object);
-typedef struct { u8 pad0[0x2EC]; Predicate800A1DAC callback; } Ctx800A1DAC;
+/* Whole 0x40C-byte menu; callback is the member at +0x2EC. */
+typedef struct { u8 pad0[0x2EC]; Predicate800A1DAC callback; u8 pad2F0[0x11C]; } Ctx800A1DAC;
 typedef struct { u8 pad0[0xBB]; s8 slots[12]; } Table800A1DAC;
 typedef struct { Res800A1DAC *res; s32 slot; s32 status; } Out800A1DAC;
 extern Mgr800A1DAC *D_801476B8;
 extern Ctx800A1DAC D_801404E0;
-extern s32 D_80139054;
+extern s32 D_80139054[2];
 extern u8 D_80154718[];
 s32 func_8009A354(void *object);
 s32 func_800CE46C(Loader800A1DAC *loader, Predicate800A1DAC cb);
@@ -40,7 +41,7 @@ s32 func_800A1DAC(Out800A1DAC *out) {
     if (failed) {
         return -3;
     }
-    func_80097B90(&D_801404E0, loader, 0, 0x1000, &D_80139054, 0);
+    func_80097B90(&D_801404E0, loader, 0, 0x1000, D_80139054, 0);
     D_801404E0.callback = func_8009A354;
     failed = func_800957C0(&D_801404E0, &handle, 1, 0, 0) != 1;
     if (failed) {

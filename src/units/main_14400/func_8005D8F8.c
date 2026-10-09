@@ -1,5 +1,14 @@
 #include "common.h"
-typedef struct { unsigned char field_00[0x16]; unsigned char field_16; unsigned char field_17; } Object;
-extern Object D_80165960;
-static inline Object *get_object(void) { return &D_80165960; }
-void func_8005D8F8(s32 value) { Object *object = get_object(); object->field_17 = 0; object->field_16 = value; }
+typedef unsigned char u8;
+/* Whole 0x20-byte controller cleared by func_8005DA84. */
+typedef struct {
+    short x0, y0, x1, y1;
+    unsigned short x2, y2;
+    u8 phase, mode;
+    u8 level_c, target_c, level_b, target_b, level_a, target_a;
+    u8 flags, reserved15, period, tick;
+    u8 first, second, selection, reserved1B[5];
+} RampState;
+extern RampState D_80165960;
+static inline RampState *get_object(void) { return &D_80165960; }
+void func_8005D8F8(s32 value) { RampState *object = get_object(); object->tick = 0; object->period = value; }

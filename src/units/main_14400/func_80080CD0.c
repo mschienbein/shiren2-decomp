@@ -12,7 +12,9 @@ extern s16 D_801A9F60;
 extern s16 D_801A9F62;
 s32 func_8008269C(s32 arg0);
 s32 func_80083718(void);
-void func_80080CD0(Gfx **gdl) {
+/* `unused`: the only caller (func_8007F350) passes 2 in a1 (0x8007F5E4); it is
+ * never read. */
+void func_80080CD0(Gfx **gdl, s32 unused) {
     s32 index;
     s32 x;
     s32 y;

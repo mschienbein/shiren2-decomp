@@ -2,8 +2,8 @@
 typedef unsigned char u8;
 /* 8-byte rows of the 8-row range table D_80156CD0 (see func_800AA24C, which returns
  * row i as i + 12); the spawn chance byte is at +6. */
-typedef struct { u8 lo; u8 hi; char pad2[3]; u8 kind; u8 chance; char pad7; } Range;
-extern Range D_80156CD0[8];
+typedef struct { u8 lo, hi, min, max, field_4, kind, chance, field_7; } Range;
+extern const Range D_80156CD0[8];
 extern char D_80147620[];
 extern s32 func_800AA24C(void);
 extern s32 func_800C587C(void *, u8);
@@ -16,7 +16,7 @@ void *func_800AB0C4(void) {
          * stays within the 64-byte table (6..62); the in-bounds member form
          * D_80156CD0[(u8)r - 12].chance does not fold the row bias into the symbol
          * offset under gcc281 (no match, object 4 bytes over the slot). */
-        if (func_800C587C(D_80147620, ((u8 *)D_80156CD0)[(u8)r * sizeof(Range) - 12 * sizeof(Range) + 6])) return func_800AC244(0xCF);
+        if (func_800C587C(D_80147620, ((const u8 *)D_80156CD0)[(u8)r * sizeof(Range) - 12 * sizeof(Range) + 6])) return func_800AC244(0xCF);
         return 0;
     }
     return 0;

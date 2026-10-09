@@ -6,7 +6,7 @@ typedef signed short s16;
 typedef struct {
     s16 delta;
     s16 pad2;
-    void (*func)();
+    s32 (*func)(void *, void *);
 } VtblEntry;
 typedef struct {
     s32 x;

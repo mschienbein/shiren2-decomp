@@ -1,0 +1,117 @@
+
+;; Function void func_800BFEA0(struct Floor *)
+
+173 registers.
+
+Register 80 used 25 times across 154 insns; crosses 7 calls; GR_REGS or none; pointer.
+
+Register 87 used 2 times across 4 insns in block 0; GR_REGS or none.
+
+Register 91 used 7 times across 32 insns; dies in 0 places; crosses 1 call; GR_REGS or none.
+
+Register 92 used 4 times across 2 insns in block 1; GR_REGS or none.
+
+Register 93 used 5 times across 31 insns; dies in 0 places; crosses 1 call; GR_REGS or none.
+
+Register 94 used 5 times across 60 insns; dies in 0 places; crosses 1 call; GR_REGS or none.
+
+Register 96 used 5 times across 29 insns; dies in 0 places; crosses 1 call; GR_REGS or none.
+
+Register 97 used 5 times across 56 insns; dies in 0 places; crosses 1 call; GR_REGS or none.
+
+Register 99 used 6 times across 5 insns in block 2; GR_REGS or none.
+
+Register 101 used 4 times across 2 insns in block 2; GR_REGS or none.
+
+Register 102 used 4 times across 2 insns in block 2; GR_REGS or none.
+
+Register 103 used 4 times across 2 insns in block 2; GR_REGS or none.
+
+Register 104 used 4 times across 2 insns in block 2; GR_REGS or none.
+
+Register 107 used 3 times across 54 insns; dies in 0 places; crosses 1 call; GR_REGS or none.
+
+Register 109 used 4 times across 4 insns in block 3; GR_REGS or none.
+
+Register 110 used 6 times across 3 insns in block 3; GR_REGS or none.
+
+Register 112 used 2 times across 2 insns in block 0; GR_REGS or none.
+
+Register 113 used 3 times across 25 insns; dies in 0 places; crosses 1 call; GR_REGS or none.
+
+Register 114 used 2 times across 6 insns in block 5; GR_REGS or none.
+
+Register 115 used 3 times across 3 insns in block 5; GR_REGS or none.
+
+Register 117 used 8 times across 27 insns; dies in 0 places; crosses 2 calls; GR_REGS or none.
+
+Register 118 used 4 times across 6 insns in block 7; GR_REGS or none.
+
+Register 119 used 4 times across 2 insns in block 7; GR_REGS or none.
+
+Register 125 used 6 times across 6 insns in block 7; crosses 1 call; GR_REGS or none.
+
+Register 126 used 5 times across 46 insns; dies in 0 places; crosses 2 calls; GR_REGS or none; pointer.
+
+Register 163 used 2 times across 6 insns in block 8; 1 bytes; GR_REGS or none.
+
+Register 167 used 7 times across 22 insns; dies in 0 places; crosses 2 calls; GR_REGS or none; pointer.
+
+Register 168 used 11 times across 21 insns; dies in 0 places; crosses 2 calls; GR_REGS or none; pointer.
+
+Register 169 used 7 times across 20 insns; dies in 0 places; crosses 2 calls; GR_REGS or none.
+
+9 basic blocks.
+
+Basic block 0: first insn 5, last 411.
+
+Registers live at start: 4 29 30
+
+Basic block 1: first insn 59, last 63.
+
+Registers live at start: 29 30 80 91 93 94 96 97 107 113
+
+Basic block 2: first insn 78, last 137.
+
+Registers live at start: 29 30 80 91 93 94 96 97 107 113
+
+Basic block 3: first insn 143, last 154.
+
+Registers live at start: 29 30 80 91 93 94 96 97 107 113
+
+Basic block 4: first insn 164, last 168.
+
+Registers live at start: 29 30 80 91 93 94 96 97 107 113
+
+Basic block 5: first insn 171, last 364.
+
+Registers live at start: 29 30 80
+
+Basic block 6: first insn 377, last 401.
+
+Registers live at start: 29 30 80 117
+
+Basic block 7: first insn 208, last 205.
+
+Registers live at start: 29 30 80 117 126 167 168 169
+
+Basic block 8: first insn 324, last 357.
+
+Registers live at start: 29 30 80
+
+;; Register 87 in 2.
+;; Register 92 in 2.
+;; Register 99 in 2.
+;; Register 101 in 5.
+;; Register 102 in 5.
+;; Register 103 in 5.
+;; Register 104 in 5.
+;; Register 109 in 2.
+;; Register 110 in 2.
+;; Register 112 in 2.
+;; Register 114 in 2.
+;; Register 115 in 2.
+;; Register 118 in 2.
+;; Register 119 in 2.
+;; Register 125 in 16.
+;; Register 163 in 2.

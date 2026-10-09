@@ -2,8 +2,8 @@
 typedef struct { s32 a; s32 b; } Pair;
 typedef struct { s32 x; s32 y; } Vec2;
 typedef struct { char pad[0x34]; Pair unk34; char pad3C[0x4C]; s32 unk88; } Obj;
-extern unsigned char D_80152894[], D_801528A0[];
-extern s32 D_801528AC[];
+extern const unsigned char D_80152894[12], D_801528A0[12];
+extern const s32 D_801528AC[4];
 Vec2 func_8009B2B4(Obj *, Pair *);
 void func_800488F0(Obj *, Vec2 *, s32, Vec2 *);
 void func_8009B1D8(Obj *o, Pair *p){

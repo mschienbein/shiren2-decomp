@@ -14,7 +14,7 @@ from typing import Any
 import yaml
 
 from certification import REQUIRED_ARTIFACTS, build_graph, c_attributions, check_elf, compiler_environment, expected_commands, file_inventory, object_commands, python_command, read_json, sha256, splat_options, tool_profile, runtime_fingerprint, image_evidence, image_matches, reproduce_c_objects_and_link, linked_image_records
-from evidence import validate_attributions, validate_matches
+from evidence import COMPILED_KINDS, validate_attributions, validate_matches
 from rom import CANONICAL_ROM, EXPECTED_SHA256, PROJECT, attest
 from workspace import create_snapshot, verify_manifest
 
@@ -87,7 +87,7 @@ def execute_snapshot(directory: Path, tool_root: Path, reference: Path) -> Path:
         for name, item in graph.items():
             (directory / name).parent.mkdir(parents=True, exist_ok=True)
             operations = object_commands(name, item, profile)
-            if item["source_kind"] == "c":
+            if item["source_kind"] in COMPILED_KINDS:
                 compiled = directory / "compiled" / Path(item["source"]).with_suffix(".s")
                 compiled.parent.mkdir(parents=True, exist_ok=True)
                 dependency = compiled.with_suffix(".d")
@@ -120,7 +120,7 @@ def execute_snapshot(directory: Path, tool_root: Path, reference: Path) -> Path:
         "schema_version": 3, "status": "byte-identical", "created_at": datetime.now(timezone.utc).isoformat(),
         "target_sha256": EXPECTED_SHA256, "rom": report, "input_manifest": manifest,
         "profile": profile, "runtime": runtime, "compiler_environment": environment,
-        "coverage": {**coverage, "description": "Reviewed C functions only; whole-game executable denominator is unknown"},
+        "coverage": {**coverage, "description": f"Reviewed {'C and C++' if 'matched_cpp_functions' in coverage else 'C'} functions only; whole-game executable denominator is unknown"},
         "c_matches": matches, "c_attributions": attribution, "graph": graph, "dependencies": dependencies,
         "artifacts": {name: sha256(directory / name) for name in sorted(REQUIRED_ARTIFACTS)},
         "generated": generated_before, "compiled": file_inventory(directory / "compiled"),

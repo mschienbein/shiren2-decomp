@@ -4,10 +4,10 @@ typedef unsigned char u8;
 
 typedef struct {
     u8 pad0[0x24];
-    void *vtable24;
+    const void *vtable24;
 } Obj800F940C;
 
-extern u8 D_80159E98[];
+extern const unsigned char D_80159E98[188];
 extern void func_800EFD28(Obj800F940C *obj, s32 flags);
 extern void func_800A3918(void *ptr);
 

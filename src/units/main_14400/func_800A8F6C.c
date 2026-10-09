@@ -1,7 +1,7 @@
 #include "common.h"
 
 extern unsigned char D_801C51A4[];
-extern unsigned char D_8015488C[];
+extern const unsigned char D_8015488C[8];
 static inline s32 testbit(unsigned char *bits, s32 n) { return (bits[n >> 3] & D_8015488C[n & 7]) != 0; }
 s32 func_800A8F6C(s32 *p) {
     for (;;) {

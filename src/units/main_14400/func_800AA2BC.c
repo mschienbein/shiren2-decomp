@@ -1,15 +1,17 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
 
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef signed char s8;
 typedef short s16;
 
-typedef struct { u8 a; u8 b; u8 c; } Triple800AA2BC;
-extern Triple800AA2BC D_80142F20;
+
+
 
 void func_800AA2BC(u8 a, u8 b, u8 c) {
-    D_80142F20.a = a;
-    D_80142F20.b = b;
-    D_80142F20.c = c;
+    D_80142F18.mode = a;
+    D_80142F18.coordinates[0] = b;
+    D_80142F18.coordinates[1] = c;
 }

@@ -1,0 +1,142 @@
+GAS LISTING candidate.s 			page 1
+
+
+   1              		.file	1 "/Users/mooki/Code/n64-experiments/projects/shiren2/scratch/omp/harness/merge-007/samples/
+   2              		.version	"01.01"
+   3              	gcc2_compiled.:
+   4              		.text
+   5              		.align	2
+   6              		.globl	func_8008C6B8
+   7              		.type	 func_8008C6B8,@function
+   8              		.ent	func_8008C6B8
+   9              	func_8008C6B8:
+  10              		.frame	$sp,32,$31		# vars= 0, regs= 3/0, args= 16, extra= 0
+  11              		.mask	0x80030000,-8
+  12              		.fmask	0x00000000,0
+  13 0000 27BDFFE0 		subu	$sp,$sp,32  # 128 subsi3_internal
+  14 0004 AFB00010 		sw	$16,16($sp)  # 134 movsi_internal2/7
+  15 0008 0080802D 		move	$16,$4  # 4 movsi_internal2/1
+  16 000c AFB10014 		sw	$17,20($sp)  # 132 movsi_internal2/7
+  17 0010 0000882D 		move	$17,$0  # 14 movsi_internal2/3
+  18 0014 0220282D 		move	$5,$17  # 19 movsi_internal2/1
+  19 0018 AFBF0018 		sw	$31,24($sp)  # 130 movsi_internal2/7
+  20              		.set	noreorder
+  21              		.set	nomacro
+  22 001c 0C000000 		jal	func_8006A810  # 23 call_value_internal1
+  23 0020 24060020 		li	$6,32			# 0x00000020  # 21 movsi_internal2/3
+  24              		.set	macro
+  25              		.set	reorder
+  26              	
+  27              		.set	noreorder
+  28              		.set	nomacro
+  29 0024 0C000000 		jal	func_8008D6A0  # 30 call_internal1
+  30 0028 26040010 		addu	$4,$16,16  # 28 addsi3_internal
+  31              		.set	macro
+  32              		.set	reorder
+  33              	
+  34 002c 24040320 		li	$4,800			# 0x00000320  # 38 movsi_internal2/3
+  35 0030 24020001 		li	$2,1			# 0x00000001  # 33 movqi_internal2/2
+  36              		.set	noreorder
+  37              		.set	nomacro
+  38 0034 0C000000 		jal	func_80091450  # 40 call_value_internal1
+  39 0038 A2020000 		sb	$2,0($16)  # 35 movqi_internal2/5
+  40              		.set	macro
+  41              		.set	reorder
+  42              	
+  43              		.set	noreorder
+  44              		.set	nomacro
+  45 003c 10400009 		beq	$2,$0,.L7  # 48 branch_zero
+  46 0040 AE020008 		sw	$2,8($16)  # 46 movsi_internal2/7
+  47              		.set	macro
+  48              		.set	reorder
+  49              	
+  50 0044 0040202D 		move	$4,$2  # 60 movsi_internal2/1
+  51 0048 0000282D 		move	$5,$0  # 62 movsi_internal2/3
+  52              		.set	noreorder
+  53              		.set	nomacro
+  54 004c 0C000000 		jal	func_8006A810  # 66 call_value_internal1
+  55 0050 24060320 		li	$6,800			# 0x00000320  # 64 movsi_internal2/3
+  56              		.set	macro
+  57              		.set	reorder
+GAS LISTING candidate.s 			page 2
+
+
+  58              	
+  59              		.set	noreorder
+  60              		.set	nomacro
+  61 0054 0C000000 		jal	func_80091450  # 71 call_value_internal1
+  62 0058 24040028 		li	$4,40			# 0x00000028  # 69 movsi_internal2/3
+  63              		.set	macro
+  64              		.set	reorder
+  65              	
+  66              		.set	noreorder
+  67              		.set	nomacro
+  68 005c 14400003 		bne	$2,$0,.L4  # 79 branch_zero
+  69 0060 AE02001C 		sw	$2,28($16)  # 77 movsi_internal2/7
+  70              		.set	macro
+  71              		.set	reorder
+  72              	
+  73              	.L7:
+  74              		.set	noreorder
+  75              		.set	nomacro
+  76 0064 0800001F 		j	.L3  # 85 jump
+  77 0068 2411FFFF 		li	$17,-1			# 0xffffffff  # 83 movsi_internal2/3
+  78              		.set	macro
+  79              		.set	reorder
+  80              	
+  81              	.L4:
+  82 006c 0040202D 		move	$4,$2  # 91 movsi_internal2/1
+  83 0070 0000282D 		move	$5,$0  # 93 movsi_internal2/3
+  84              		.set	noreorder
+  85              		.set	nomacro
+  86 0074 0C000000 		jal	func_8006A810  # 97 call_value_internal1
+  87 0078 24060028 		li	$6,40			# 0x00000028  # 95 movsi_internal2/3
+  88              		.set	macro
+  89              		.set	reorder
+  90              	
+  91              	.L3:
+  92              		.set	noreorder
+  93              		.set	nomacro
+  94 007c 12200004 		beq	$17,$0,.L8  # 104 branch_zero
+  95 0080 0220102D 		move	$2,$17  # 115 movsi_internal2/1
+  96              		.set	macro
+  97              		.set	reorder
+  98              	
+  99              		.set	noreorder
+ 100              		.set	nomacro
+ 101 0084 0C000000 		jal	func_8008C75C  # 110 call_internal1
+ 102 0088 0200202D 		move	$4,$16  # 108 movsi_internal2/1
+ 103              		.set	macro
+ 104              		.set	reorder
+ 105              	
+ 106 008c 0220102D 		move	$2,$17  # 115 movsi_internal2/1
+ 107              	.L8:
+ 108 0090 8FBF0018 		lw	$31,24($sp)  # 137 movsi_internal2/5
+ 109 0094 8FB10014 		lw	$17,20($sp)  # 139 movsi_internal2/5
+ 110 0098 8FB00010 		lw	$16,16($sp)  # 141 movsi_internal2/5
+ 111              		#nop
+ 112              		.set	noreorder
+ 113              		.set	nomacro
+ 114 009c 03E00008 		j	$31  # 145 return_internal
+GAS LISTING candidate.s 			page 3
+
+
+ 115 00a0 27BD0020 		addu	$sp,$sp,32  # 144 addsi3_internal
+ 116              		.set	macro
+ 117              		.set	reorder
+ 118              	
+ 119              		.end	func_8008C6B8
+ 120              	.Lfe1:
+ 121              		.size	 func_8008C6B8,.Lfe1-func_8008C6B8
+GAS LISTING candidate.s 			page 4
+
+
+DEFINED SYMBOLS
+         candidate.s:3      .text:0000000000000000 gcc2_compiled.
+         candidate.s:9      .text:0000000000000000 func_8008C6B8
+
+UNDEFINED SYMBOLS
+func_8006A810
+func_8008D6A0
+func_80091450
+func_8008C75C

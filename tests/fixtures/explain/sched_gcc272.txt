@@ -1,0 +1,12 @@
+;; Function func_8008C6B8
+;;	 -- basic block number 1 from 52 to 54 --
+;; ready list initially:
+;; 54 
+
+;; insn[  52]: priority =    1, ref_count =    1
+;; insn[  54]: priority = 2147483565, ref_count =    0
+;; ready list at T-1: 54 (7fffffad), now 54
+;; ready list at T-2: 52 (1), now 52
+;; total time = 2
+;; new basic block head = 52
+;; new basic block end = 54

@@ -1,0 +1,4 @@
+  57 0044 24020001 		li	$2,0x00000001		# 1 		#  32 movsi_internal2/3
+  58 0048 3C010000 		sw	$2,D_80036F80 		#  34 movsi_internal2/8
+  58      0C000000
+  59 0050 AC220000 		jal	func_8002AAB0 		#  37 call_value_internal1

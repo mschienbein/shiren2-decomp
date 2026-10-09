@@ -7,6 +7,6 @@ typedef short s16;
 
 extern void *D_801476B8;
 u16 func_800E08B0(void *obj);
-u16 func_80041BF4(void) {
-    return func_800E08B0(D_801476B8);
+s32 func_80041BF4(void) {
+    return (u16)func_800E08B0(D_801476B8);
 }

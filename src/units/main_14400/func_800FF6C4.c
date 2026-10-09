@@ -1,6 +1,6 @@
 #include "common.h"
-typedef struct { char pad[0x24]; void *vtbl; } Obj800FF6C4;
-extern s32 D_8015AE28[];
+typedef struct { char pad[0x24]; const void *vtbl; } Obj800FF6C4;
+extern const unsigned char D_8015AE28[192];
 void func_800EFD28(Obj800FF6C4 *, s32);
 void func_800A3918(Obj800FF6C4 *);
 /* Unit slot +0xC supplies signed deletion flags. */

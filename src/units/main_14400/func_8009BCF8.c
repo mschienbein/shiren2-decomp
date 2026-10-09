@@ -25,7 +25,7 @@ typedef struct {
 } Menu;
 extern Input D_801527E4;
 extern Input D_801527EC;
-extern s32 D_801528B8;
+extern const s32 D_801528AC[4];
 s32 func_8009BF80(Menu *, s32);
 void func_80045A24(s32);
 u8 *func_8006A810(void *, s32, s32);
@@ -53,7 +53,7 @@ s32 func_8009BCF8(Menu *menu, Input *in) {
                     func_80045A24(0);
                     if (menu->text[menu->length - 1] != 0) {
                         func_8006A810(&msg, 0, sizeof(msg));
-                        msg.value = D_801528B8;
+                        msg.value = D_801528AC[3];
                         menu->vtbl[16].fn.position(VTHIS(menu, 16), &msg);
                     }
                 }
@@ -69,7 +69,7 @@ s32 func_8009BCF8(Menu *menu, Input *in) {
                     menu->cursor++;
                 } else {
                     func_8006A810(&msg, 0, sizeof(msg));
-                    msg.value = D_801528B8;
+                    msg.value = D_801528AC[3];
                     menu->vtbl[16].fn.position(VTHIS(menu, 16), &msg);
                 }
             }

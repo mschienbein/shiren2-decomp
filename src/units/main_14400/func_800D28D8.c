@@ -2,7 +2,8 @@
 
 typedef struct { s32 x; s32 y; } Pair;
 typedef struct { Pair lower; Pair upper; } Bounds;
-typedef struct { s32 field_00; Bounds *field_04; } Object;
+/* Region record (D_80143330): owner byte +0 plus 3 padding bytes, bounds +4. */
+typedef struct { signed char owner_00; unsigned char pad_01[3]; Bounds *field_04; } Object;
 typedef struct {
     unsigned char field_00[0x80];
     Object *field_80;

@@ -7,26 +7,27 @@ typedef struct {
     s32 field_0;
     void *descriptor;
     s32 pad8;
-    void *volatile vtbl;
+    const void *vtbl;
     s32 pad10[5];
     s32 field_24;
     s32 pad28[3];
     s32 field_34;
     s32 pad38[3];
-    void *field_44;
+    const void *field_44;
     s32 pad48[3];
-    void *field_54;
+    const void *field_54;
 } Obj;
 extern s32 D_80151350[];
 extern s32 D_801513B0[];
-extern s32 D_80151480[];
+extern const unsigned char D_80151480[24];
 
 Obj *func_800920C8(Obj *o, void *descriptor) {
+    /* Inlined base construction (base table D_80151350, descriptor), then the derived table. */
     o->vtbl = D_80151350;
+    o->descriptor = descriptor;
     o->vtbl = D_801513B0;
     o->field_24 = -1;
     o->field_34 = -1;
-    o->descriptor = descriptor;
     o->field_44 = D_80151480;
     o->field_54 = D_80151480;
     return o;

@@ -11,7 +11,7 @@ typedef struct { s32 id; void *player; Target *target; s32 pad[5]; } Msg;
 extern void *D_801476B8;
 void func_800498E4(s32, ...);
 void func_800DAD20(Self*, void*);
-void func_800D02AC(Slot*);
+void *func_800D02AC(Slot*);
 void func_800DAD80(Self*);
 s32 func_800DC054(Self *self){
     s32 failed = 0;
@@ -38,7 +38,7 @@ s32 func_800DC054(Self *self){
     pmsg = &msg;
     pmsg->target = target;
     pmsg->player = D_801476B8;
-    if (((s32 (*)(void*, Msg*))actor->vtbl[7].fn)((char*)actor + actor->vtbl[7].offset, pmsg)) {
+    if (((s32 (*)(void*, void*))actor->vtbl[7].fn)((char*)actor + actor->vtbl[7].offset, pmsg)) {
         func_800D02AC(slot);
     }
     func_800DAD80(self);

@@ -3,7 +3,8 @@
 typedef struct { char pad[2]; short kind; char rest[0xAC]; } Ent;
 typedef struct { signed char active; char rest[45]; } Info;
 extern Ent D_801DEAB4[]; extern Info D_801A79E8[];
-void func_8007C410(s32, s32);
+/* Returns -1/0 status; this caller discards it. */
+s32 func_8007C410(s32 kind, s32 mode);
 void func_8007C224(void){
     Ent *p;
     Ent *end;

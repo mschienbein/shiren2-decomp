@@ -1,4 +1,6 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
 typedef short s16;
 typedef struct { s16 delta; s16 index; void *fn; } VtblEntry;
 typedef unsigned char u8;
@@ -22,7 +24,7 @@ typedef struct {
     u8 itemB;
 } Obj800EF404;
 extern void *D_801476B8;
-extern u8 D_80142F1B;
+
 void *func_800A65E4(Tmp800EF404 *, Obj800EF404 *, void *);
 void *func_800A6538(Tmp800EF404 *, Obj800EF404 *, void *);
 void func_800A665C(Obj800EF404 *, Tmp800EF404 *);
@@ -58,7 +60,7 @@ s32 func_800EF404(Obj800EF404 *self, void *arg1) {
         changed = 0;
         message = func_800A3B20(D_801476B8);
         {
-            s32 off = ((D_80142F1B >> 2) & 1) ^ 1;
+            s32 off = ((D_80142F18.flags >> 2) & 1) ^ 1;
             if (off) {
                 u16 hp = func_800E08B0(self);
                 u16 maxHp = func_800E08F0(self);

@@ -3,7 +3,7 @@
 typedef unsigned char u8;
 typedef struct { u32 w0; u32 w1; } Gfx;
 extern s32 D_8013B5F0;
-extern u8 D_801E4E77;
+extern s32 D_801E4E74;
 extern Gfx D_010000D0[];
 extern void func_8006A0AC(u8 *, u8 *, u8 *, u8 *);
 extern s32 func_800627C4(void);
@@ -20,7 +20,8 @@ Gfx *func_8005CA84(Gfx *display) {
             color[3] = 0xC8;
             break;
         case 3:
-            color[3] = D_801E4E77;
+            /* Low byte of the big-endian word stored by func_800688E8. */
+            color[3] = ((u8 *)&D_801E4E74)[3];
             break;
     }
     {

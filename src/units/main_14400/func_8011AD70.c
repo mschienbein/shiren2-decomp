@@ -8,7 +8,8 @@ typedef struct { char pad[0x24]; VEntry *vtbl; } Unit;
 extern u32 D_8013960C;
 extern u32 func_800B1C6C(void *pos);
 extern s32 func_80049CB4(s32 id, ...);
-extern void *func_800B3080(Area *out, Pos *pos);
+/* Returns its rectangle by value through the hidden result pointer. */
+extern Area func_800B3080(Pos *pos);
 extern Iter *func_800A9204(Iter *, Area *, Pos *);
 extern s32 func_800A9284(Iter *, s32);
 extern Unit *func_800A942C(Iter *);
@@ -35,7 +36,7 @@ void func_8011AD70(void *arg0, Pos *center, void *item) {
     D_8013960C *= 2;
     p->y = center->y;
     func_80049CB4(0x76, center, (s32)(func_800B1C6C(p) & 0x1000) > 0);
-    func_800B3080(&area, p);
+    area = func_800B3080(p);
     func_800A9204(&it, &area, center);
     while (func_800A9284(&it, 0x7C)) {
         unit = func_800A942C(&it);

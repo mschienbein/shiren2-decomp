@@ -12,7 +12,7 @@ typedef void (*FnO)(void *, B *);
 extern char D_80153B00[];
 extern char D_80147620[];
 extern PoolRecord *D_80143104;
-extern unsigned char D_8015488C[];
+extern const unsigned char D_8015488C[8];
 void func_800CA4E8(B *, void *);
 void func_800C56D4(void *);
 void func_800C573C(void *);

@@ -10,17 +10,18 @@ typedef struct {
     s32 unk2D0;         /* 0x2D0 */
     signed char unk2D4[0x15]; /* 0x2D4 */
 } Obj;
-extern void func_80098018(void *, Obj *, s32);
+typedef struct { void *container; void *item; } Pair;
+extern Pair func_80098018(Obj *, s32);
 
-void *func_8009A054(void *self, Obj *o, s32 n) {
+/* Struct return: the hidden result pointer is forwarded to func_80098018. */
+Pair func_8009A054(Obj *o, s32 n) {
     if (o->unk2CC != 0 && o->unk2D0 == 0) {
         if (n == 0) {
-            func_80098018(self, o, o->vtbl[15].fn((char *)o + o->vtbl[15].delta, o->unk34));
+            return func_80098018(o, o->vtbl[15].fn((char *)o + o->vtbl[15].delta, o->unk34));
         } else {
-            func_80098018(self, o, -1);
+            return func_80098018(o, -1);
         }
     } else {
-        func_80098018(self, o, o->unk2D4[n]);
+        return func_80098018(o, o->unk2D4[n]);
     }
-    return self;
 }

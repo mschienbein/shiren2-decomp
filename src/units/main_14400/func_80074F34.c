@@ -12,7 +12,9 @@ extern Ctrl D_801DEAB4[];
 extern u32 D_8013D890[];
 extern u32 D_8013D8B4[];
 extern u32 D_8013D8BC[];
-void func_80074F34(s32 pad){
+/* Both original callers supply reset_mode (func_800751B4 passes 1, func_80075410 passes 0);
+ * this body never inspects it. */
+void func_80074F34(s32 pad, s32 reset_mode){
     Ctrl *c = &D_801DEAB4[pad];
     PadRepeat *p = &D_801A7320[pad];
     s32 i;

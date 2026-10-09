@@ -1,6 +1,6 @@
 #include "common.h"
 typedef struct { unsigned short field0; unsigned char field2, field3; } Entry;
-extern short D_80163110[], D_80163118[];
+extern short D_80163110[4];
 extern Entry D_801D2C10[];
 void func_80058990(void) {
     s32 i;
@@ -17,5 +17,5 @@ void func_80058990(void) {
     for (; i < 4; i++, entry++) {
         if (!entry->field3 && (entry->field0 & 0x1F07) == 5) *out++ = i;
     }
-    while (out < D_80163118) *out++ = 0x80;
+    while (out < &D_80163110[4]) *out++ = 0x80;
 }

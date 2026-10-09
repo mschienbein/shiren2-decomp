@@ -5,7 +5,7 @@ typedef struct { s32 a, b; } Id;
 typedef struct { Id id; u8 x8; } Obj;
 typedef struct { u8 pad[0x18]; Id *cur; } Iter;
 typedef union { Iter it; struct { Id out; Id key; } fb; } Scratch;
-extern Id *func_800F1A58(Obj*, s32, s32); extern void func_800C2B40(Iter*, Obj*, u8*, s32); extern s32 func_800C2BBC(Iter*, u8);
+extern Id *func_800F1A58(Obj*, s32, s32); extern Iter *func_800C2B40(Iter*, Obj*, u8*, s32); extern s32 func_800C2BBC(Iter*, u8);
 extern s32 func_800A674C(Obj*, Id*); extern s32 func_800A6E90(Id*); extern void *func_800B5A18(Id*, Id*, Dir, s32, u16);
 static inline s32 id_is_null(Id *p){ return (p->b | p->a) == 0; }
 static inline void id_copy(Id *dst, Id *src){ dst->a = src->a; dst->b = src->b; }

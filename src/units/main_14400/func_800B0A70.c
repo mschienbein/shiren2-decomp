@@ -7,7 +7,7 @@ typedef struct {
 } Name800B0A70;
 
 extern u8 D_8014313C[];
-extern u8 D_8015488C[];
+extern const u8 D_8015488C[8];
 extern Name800B0A70 D_80143144[];
 extern char D_801C91C0[];
 

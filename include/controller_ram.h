@@ -23,9 +23,12 @@ typedef struct {
 
 extern s32 D_80036F70;
 extern u8 D_80039018;
-extern u8 D_80041350[64];
-/* Original final-word alias inside D_80041350; no new storage is defined. */
-extern u32 D_8004138C;
+/* One 64-byte PIF image; its final status word is not a separate object. */
+typedef struct ResidentPifRam {
+    u32 ramarray[15];
+    u32 pifstatus;
+} ResidentPifRam;
+extern ResidentPifRam D_80041350;
 
 extern void func_800322C4(void);
 extern void func_80032330(void);

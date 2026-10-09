@@ -1,5 +1,5 @@
 #include "common.h"
-extern unsigned char D_8015488C[];
+extern const unsigned char D_8015488C[8];
 static inline void set_bit(unsigned char *base, s32 bit) {
     unsigned char *byte = base + (bit >> 3);
     *byte |= D_8015488C[bit & 7];

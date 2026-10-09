@@ -1,6 +1,6 @@
 #include "common.h"
 typedef struct { unsigned char pad0[0x9C]; unsigned char field_9C; } Obj800F0314;
-extern s32 D_80143094;
+extern s32 D_80143094[]; /* Address-only view of the 0x10-byte pool. */
 unsigned char *func_800AFD78(void *table, unsigned char id);
 s32 func_800AC670(unsigned char *p);
 unsigned char *func_800F0314(Obj800F0314 *obj) {

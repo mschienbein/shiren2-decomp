@@ -20,7 +20,9 @@ typedef struct {
 
 void func_80048688(void *arg);
 void func_80048728(Obj *obj);
-s32 func_80081C18(s32 arg0, s32 arg1, s32 y, s32 x, void (*callback)(void *), void *arg);
+/* The window draw callback is generic function-pointer storage (window +0x24); a non-null
+ * context selects the contextual form void (*)(void *) at dispatch (func_800833B8, 0x80083440). */
+s32 func_80081C18(s32 arg0, s32 arg1, s32 y, s32 x, void (*callback)(void), void *arg);
 
 void func_800486A4(Obj *obj, Src *src, void *target) {
     if (obj->handle >= 0) {
@@ -28,5 +30,6 @@ void func_800486A4(Obj *obj, Src *src, void *target) {
     }
     obj->target = target;
     obj->pos = src->pos;
-    obj->handle = func_80081C18(src->field_C, src->field_8, obj->pos.y, obj->pos.x, func_80048688, obj);
+    obj->handle = func_80081C18(src->field_C, src->field_8, obj->pos.y, obj->pos.x,
+                                (void (*)(void))func_80048688, obj);
 }

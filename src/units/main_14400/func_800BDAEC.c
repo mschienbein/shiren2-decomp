@@ -23,28 +23,29 @@ typedef struct {
     u8 pad14[4];
 } BoxIter;
 typedef struct {
-    u8 pad0[0x3DF];
-    u8 roomCount;
+    u8 pad0[0x3DC];
+    s32 roomCount;
     u8 pad3E0[0x578];
     u16 flags;
     u8 pad95A[2];
-    s32 pending[24];
+    s32 pending[16];
+    u8 pad99C[0x20];
     Box box;
 } Floor;
 extern u8 D_80147620[];
 extern RoomDef D_801431F0[];
-u8 func_800C57CC(void *, u8);
+u8 func_800C57CC(void *, s32);
 s32 func_800A3138(RoomDef *);
 s32 func_800A315C(RoomDef *);
 s32 func_800BB22C(Floor *, RoomDef *);
 s32 func_800BAFE4(Floor *, RoomDef *);
-s32 func_800BD6E8(Floor *, Pair *);
+s32 func_800BD6E8(void *floor, Box *bounds);
 void func_800C25F4(BoxIter *, RoomDef *, s32, s32);
 void *func_800C2758(void *out, void *iterator);
 u32 func_800B1C6C(void *pos);
 void *func_800A2594(void *out, void *from, Dir dir);
 void func_800B1BE0(Pair *, s32);
-void func_800B1820(u8);
+void func_800B1820(s32);
 static inline s32 canPlaceX(Floor *self, RoomDef *room) {
     return func_800BB22C(self, room) == 1;
 }
@@ -59,8 +60,9 @@ s32 func_800BDAEC(Floor *self) {
     s32 height;
     s32 result;
     s32 side;
-    Pair pos;
-    Pair next;
+    /* The two corners form one rectangle passed to func_800BD6E8; the side
+       walk below then reuses them as the cursor and its neighbour. */
+    Box corners;
     BoxIter iter;
     Dir dir;
     s32 mark;
@@ -82,7 +84,7 @@ s32 func_800BDAEC(Floor *self) {
         if (tries == -1) {
             break;
         }
-        id = func_800C57CC(D_80147620, self->roomCount - 1);
+        id = func_800C57CC(D_80147620, (u8)(self->roomCount - 1));
         if (self->pending[id] == 0) {
             continue;
         }
@@ -108,13 +110,13 @@ s32 func_800BDAEC(Floor *self) {
         return 0;
     }
     self->box = room->box;
-    pos.x = self->box.min.x;
-    start = &pos;
+    corners.min.x = self->box.min.x;
+    start = &corners.min;
     start->y = self->box.min.y;
-    next.x = self->box.max.x;
-    adj = &next;
+    corners.max.x = self->box.max.x;
+    adj = &corners.max;
     adj->y = self->box.max.y;
-    result = func_800BD6E8(self, start);
+    result = func_800BD6E8(self, &corners);
     side = 0;
     while (1) {
         if (side >= 4) {
@@ -128,14 +130,14 @@ s32 func_800BDAEC(Floor *self) {
             if (iter.index >= iter.count) {
                 break;
             }
-            func_800C2758(&pos, &iter);
+            func_800C2758(&corners.min, &iter);
             mark = 0;
-            cur = &pos;
+            cur = &corners.min;
             if (func_800B1C6C(cur) & 0x800) {
                 pdir = &dir;
                 pdir->value = facing;
-                func_800A2594(&next, cur, *pdir);
-                blocked = func_800B1C6C(&next) & 0x1000;
+                func_800A2594(&corners.max, cur, *pdir);
+                blocked = func_800B1C6C(&corners.max) & 0x1000;
                 mark = blocked == 0;
             }
             if (mark) {

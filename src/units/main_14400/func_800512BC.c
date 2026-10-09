@@ -1,11 +1,13 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef struct { s32 row; s32 col; } Cell;
 typedef struct { s32 x, y, z; } Vec3i;
 typedef struct { Cell cell; u8 b8; u8 b9; char padA[0x15]; u8 b1F; } Unit;
-extern u8 D_80142F1B;
-extern u8 D_80142F20;
+
+
 extern u8 func_800A8C00(Unit *);
 extern void func_80084A68(void);
 extern s32 func_80048EE0(Unit *);
@@ -14,10 +16,10 @@ extern s32 func_800627C4(void);
 extern s32 func_80046240(void);
 extern s32 func_80062554(s32, s32);
 extern s32 func_800A99D0(void);
-extern void *func_80085938(s32 id, s32 track, Vec3i pos, s32 arg4, s32 arg5, u16 flags, s32 arg7);
+extern void *func_80085938(s32 id, s32 track, Vec3i pos, s32 arg4, s32 arg5, s32 flags, s32 arg7);
 static inline s32 isDeepWater(s32 attr) {
     s32 wet = 0;
-    if ((attr & 0x20100000) && func_800627C4() == 3) wet = (D_80142F1B & 3) == 2;
+    if ((attr & 0x20100000) && func_800627C4() == 3) wet = (D_80142F18.flags & 3) == 2;
     return wet;
 }
 void func_800512BC(s32 owner, Unit *u, s32 flags, s32 arg3, s32 arg4) {
@@ -46,7 +48,7 @@ void func_800512BC(s32 owner, Unit *u, s32 flags, s32 arg3, s32 arg4) {
     if (func_80046240()) {
         s32 isO;
         scr.z = func_80062554(cell.col, cell.row);
-        isO = D_80142F20 == 0x4F;
+        isO = D_80142F18.mode == 0x4F;
         if (isO) {
             s32 below = 0;
             if ((u->b9 & 0xF) != 1) below = func_80062554(cell.col, cell.row) < 0;
@@ -57,5 +59,5 @@ void func_800512BC(s32 owner, Unit *u, s32 flags, s32 arg3, s32 arg4) {
     } else {
         scr.z = ((u->b9 & 0xF) == 1) ? -0x20 : 0;
     }
-    func_80085938(owner, kind, scr, arg3, b, flags, 0);
+    func_80085938(owner, kind, scr, arg3, b, (u16)flags, 0);
 }

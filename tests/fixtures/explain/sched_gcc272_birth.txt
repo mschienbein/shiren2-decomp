@@ -1,0 +1,18 @@
+;; Function func_8008C6B8
+;;	 -- basic block number 0 from 4 to 48 --
+;; ready list initially:
+;; 48 
+;; insn[  14]: priority =    1, ref_count =    1
+;; insn[  42]: priority =    1, ref_count =    2
+;; insn[  46]: priority =    1, ref_count =    1
+;; insn[  48]: priority = 2147483565, ref_count =    0
+;; ready list at T-1: 48 (7fffffad), now 48
+;; ready list at T-2: 14 (1) 46 (1), now 46 14
+;; ready list at T-3: 14 (1) 42 (7f000001), now 42 14
+;; total time = 14
+;; new basic block head = 4
+;; new basic block end = 48
+;; register 2 life extended from 3 to 6
+;; register 4 life extended from 14 to 22
+;; register 4 no longer crosses calls
+;; register 29 life shortened from 38 to 17

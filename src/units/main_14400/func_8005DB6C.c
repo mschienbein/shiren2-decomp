@@ -2,19 +2,14 @@
 
 typedef unsigned char u8;
 
-/* Fade/ramp controller: three counters ramp toward their targets per flag bit. */
+/* Whole 0x20-byte controller cleared by func_8005DA84. */
 typedef struct {
-    u8 pad0[0xE];
-    u8 level_c;     /* 0x0E */
-    u8 target_c;    /* 0x0F */
-    u8 level_b;     /* 0x10 */
-    u8 target_b;    /* 0x11 */
-    u8 level_a;     /* 0x12 */
-    u8 target_a;    /* 0x13 */
-    u8 flags;       /* 0x14 */
-    u8 pad15;
-    u8 period;      /* 0x16 */
-    u8 tick;        /* 0x17 */
+    short x0, y0, x1, y1;
+    unsigned short x2, y2;
+    u8 phase, mode;
+    u8 level_c, target_c, level_b, target_b, level_a, target_a;
+    u8 flags, reserved15, period, tick;
+    u8 first, second, selection, reserved1B[5];
 } RampState;
 
 extern RampState D_80165960;

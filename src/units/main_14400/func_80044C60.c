@@ -7,7 +7,9 @@ typedef struct {
 } Flags;
 typedef struct { char pad0[0x20]; Flags flags; } Obj;
 typedef struct { Flags flags; s32 extra; } State;
-typedef struct { s32 field_0; } Target;
+/* Complete 8-byte record (.bss 0x80160AF0..0x80160AF7): both func_8006AC30 calls transfer one
+ * 8-byte record into it (stride 8, count 1); +0 is preserved across the second transfer. */
+typedef struct { s32 field_0; s32 field_4; } Target;
 
 extern Target D_80160AF0;
 extern char D_00194FC0[];

@@ -1,4 +1,6 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef struct { s32 x; s32 y; } Pos;
@@ -9,7 +11,7 @@ typedef struct { char pad[0x1C]; u16 flags1C; u8 state1E; } Unit;
 typedef struct Owner Owner;
 /* 0x10-byte state: func_800D459C stores room at +0 and words at +4/+8/+C. */
 typedef struct { void *room; s32 opaque[3]; } RoomState;
-extern u8 D_80142F20;
+
 extern u32 D_8013960C;
 typedef struct { Pos start; Pos end; } Rect;
 extern Rect D_801429C0;
@@ -71,7 +73,7 @@ s32 func_80126480(Owner *self, void *arg1, Pos *arg2, Pos *arg3, void *arg4, voi
     Item *item;
     Unit *unit;
     s32 i, ok, usable;
-    s32 wrongMode = (D_80142F20 & 0xE0) ^ 0x20;
+    s32 wrongMode = (D_80142F18.mode & 0xE0) ^ 0x20;
     if (wrongMode) {
         func_800498E4(0x223);
         return 1;

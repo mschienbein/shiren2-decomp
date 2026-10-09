@@ -24,8 +24,9 @@ typedef struct {
     s32 unk14;
 } Spawner;
 extern u8 D_80154738[];
-extern s32 D_80147F70;
-extern s32 D_80147F74;
+typedef struct { s32 x, y; } Point;
+extern Point D_80147F70;
+static inline void setPointY(Point *point, s32 value) { point->y = value; }
 s32 func_800ABE50(void);
 void *func_800AADF8(s8 index, u8 value);
 void func_800D233C(Spawner *);
@@ -63,8 +64,8 @@ void func_800D1DBC(Spawner *sp, s8 kind, void *arg)
     sp->unkC = 0;
     sp->unk10 = 0;
     sp->unk14 = 0;
-    D_80147F70 = 0;
-    D_80147F74 = 0;
+    D_80147F70.x = 0;
+    setPointY(&D_80147F70, 0);
     func_800D233C(sp);
     func_800D23AC(sp);
     func_800D248C(sp);

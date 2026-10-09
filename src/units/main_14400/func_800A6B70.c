@@ -5,9 +5,11 @@ typedef signed char s8;
 typedef unsigned short u16;
 typedef short s16;
 
-void func_800A694C(void *, u8 *, u8 *, u8, s32);
+typedef struct { s32 x, y; } Pair;
 
-void *func_800A6B70(void *dst, u8 *src, u8 mode, s32 arg) {
-    func_800A694C(dst, src, src + 0xC, mode, arg);
-    return dst;
+Pair func_800A694C(u8 *center, u8 *bounds, u8 filter, s32 check);
+
+/* Struct-return forwarder: the hidden result pointer is passed through and returned. */
+Pair func_800A6B70(u8 *src, u8 mode, s32 arg) {
+    return func_800A694C(src, src + 0xC, mode, arg);
 }

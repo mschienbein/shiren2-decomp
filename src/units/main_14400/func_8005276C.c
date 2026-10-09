@@ -1,6 +1,9 @@
 #include "common.h"
 
-extern short D_80161650;
+typedef struct { signed char x, y; } Pair;
+typedef struct { s32 handle; Pair position; } Playback;
+typedef struct { short type; Playback playback; } State;
+extern State D_80161650;
 s32 func_8005276C(void) {
-    return D_80161650;
+    return D_80161650.type;
 }

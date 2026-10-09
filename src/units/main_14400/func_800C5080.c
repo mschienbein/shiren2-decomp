@@ -6,7 +6,7 @@ typedef signed short s16;
 typedef struct {
     s16 delta;
     s16 pad2;
-    void (*func)(void *, void *);
+    s32 (*func)(void *, void *);
 } VtblEntry;
 typedef struct {
     s32 x;
@@ -23,7 +23,8 @@ typedef struct {
 u32 func_800B1C6C(Pair *);
 s32 func_80049CB4(s32, ...);
 u8 *func_800B4D80(Pair *);
-void func_800C5080(s32 a0, s32 a1, u8 *dir, Pair *pos) {
+/* The +0x14 contract supplies self and actor even though this override ignores them. */
+void func_800C5080(void *self, void *actor, u8 *dir, Pair *pos) {
     u8 *target;
     Message msg;
     Message *pmsg;

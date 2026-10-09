@@ -3,7 +3,7 @@ typedef struct { char pad[0x72]; unsigned char f72; } Player;
 extern Player *D_801476B8;
 s32 func_80049CB4(s32 id, ...);
 s32 func_8006D44C(s32 a, s32 b);
-s32 func_80046190(void) {
+s32 func_80046190(void *unused_receiver) {
     s32 i = 0;
     s32 r;
     for (;;) {

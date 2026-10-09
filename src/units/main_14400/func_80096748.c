@@ -12,10 +12,14 @@ typedef struct { ItemEntry e[8]; } ItemVTable;
 typedef struct { s32 unk0; ItemVTable *vt; } Holder;
 typedef struct { u8 kind; u8 sub; } Item;
 extern Player *D_801476B8;
-extern s8 D_80140164;
-static inline s32 isFlag80140164One(void) { return D_80140164 == 1; }
-extern u8 D_80140165;
-extern s8 D_80147F98;
+/* Menu-system bytes +4 (signed display mode) and +5 (flags). */
+extern s8 D_80140160[];
+static inline s32 isDisplayModeOne(const s8 *menu) { return menu[4] == 1; }
+/* Pool container at .data 0x80147F90 (pool-record pointer +0, method table +4, signed mode
+ * byte +8; func_800D4D8C reads the mode with lb 8(a0)). The former label D_80147F98 is this
+ * +8 mode byte, not a separate object. */
+typedef struct Pool { void *records; void *methods; s8 mode; } Pool;
+extern Pool D_80147F90;
 extern u8 D_801404E0[];
 extern u8 D_80138D90[];
 Holder *func_800EBA54(Player *);
@@ -44,11 +48,11 @@ void *func_80096748(void) {
         break;
     }
     flag = 0;
-    if (isFlag80140164One()) {
+    if (isDisplayModeOne(D_80140160)) {
         mode = 0x8000;
-    } else if (D_80140165 & 1) {
+    } else if ((u8)D_80140160[5] & 1) {
         mode = 1;
-        if (D_80147F98 >= 0) flag = 1;
+        if (D_80147F90.mode >= 0) flag = 1;
     } else {
         mode = 0x800;
         flag = 1;

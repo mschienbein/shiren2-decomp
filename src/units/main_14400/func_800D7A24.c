@@ -2,10 +2,10 @@
 typedef unsigned char u8;
 extern unsigned char D_80148190[];
 extern unsigned char D_801480DC[];
-extern unsigned char D_8015488C[];
+extern const unsigned char D_8015488C[8];
 extern s32 func_800D7D84(u8 kind, u8 level);
 extern s32 func_800D7860(s32 index);
-extern void *func_800D7B04(s32 x, s32 y);
+extern void *func_800D7B04(u8 kind, u8 level);
 static inline void mark_index(s32 index) {
     unsigned char *bits = &D_801480DC[index >> 3];
     *bits |= D_8015488C[index & 7];

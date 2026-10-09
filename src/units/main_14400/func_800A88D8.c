@@ -7,7 +7,7 @@ typedef struct { char data[0xE4]; } Slot;
 extern s32 D_80142B00;
 extern Slot D_801C36EC[30];
 extern u8 D_801C51A4[];
-extern u8 D_8015488C[];
+extern const u8 D_8015488C[8];
 Slot *func_800A88D8(void) {
     s32 idx = D_80142B00;
     s32 i;

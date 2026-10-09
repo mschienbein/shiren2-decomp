@@ -4,7 +4,9 @@ typedef signed char s8;
 typedef unsigned short u16;
 typedef float f32;
 typedef struct { s32 x; s32 y; } Pos;
-typedef struct { u16 tile; u16 unk2; } TileRef;
+/* Equipment descriptor (4 bytes): +0 model/tile id (lhu), +2 percentage
+ * byte (lbu in func_80077C4C), +3 never accessed. */
+typedef struct { u16 id; u8 percent; u8 unk3; } EquipInfo;
 typedef struct { s32 palette; u8 unk4[4]; u8 color[16]; } Style;
 typedef struct {
     u8 unk0[0xC];
@@ -32,8 +34,8 @@ extern u8 D_801630D8[];
 extern Pos D_8013A374[];
 extern Pos D_8013A4AC[];
 extern Pos D_8013A58C[];
-extern TileRef D_8013F24C[];
-extern TileRef D_8013F2EC[];
+extern EquipInfo D_8013F24C[];
+extern EquipInfo D_8013F2EC[];
 extern u8 D_8013A6C4[];
 extern u8 D_8013A6F0[];
 extern s8 D_8013A6EC[];
@@ -47,7 +49,7 @@ void *func_80057974(void *arg) {
     s32 base;
     s32 n;
     Pos *pos;
-    TileRef *tiles;
+    EquipInfo *tiles;
     s32 selected;
     s32 count;
     s32 pulse;
@@ -134,7 +136,7 @@ void *func_80057974(void *arg) {
         s->scaleX = 1.025f;
         s->scaleY = 1.025f;
         s->priority = 100;
-        s->tile = tiles[j].tile;
+        s->tile = tiles[j].id;
         s->unk4D = 0xFE;
         s->style.color[3] = 3;
         s->style.color[4] = 1;
@@ -163,7 +165,7 @@ void *func_80057974(void *arg) {
         s->x = pos[j].x;
         s->y = pos[j].y;
         s->priority = 200;
-        s->tile = tiles[j].tile;
+        s->tile = tiles[j].id;
         s->unk48 = 8;
         s->unk4C = 0;
         s->unk4D = 0xFE;

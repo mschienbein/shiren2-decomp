@@ -35,7 +35,7 @@ s32 func_800A692C(Obj800E3884 *obj, s32 kind);
 s32 func_800A6FD0(Obj800E3884 *obj);
 s32 func_80049CB4(s32 id, ...);
 void func_800497F0(s32 id, ...);
-void func_800E44EC(Obj800E3884 *obj);
+s32 func_800E44EC(Obj800E3884 *obj);
 s32 func_800E0534(Obj800E3884 *obj, s32 amount);
 void func_800A7B68(Obj800E3884 *obj, Hit800E3884 *hit);
 void func_800E3678(Obj800E3884 *obj, Obj800E3884 *attacker);

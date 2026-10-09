@@ -19,7 +19,12 @@ RESIDENT_IMAGE = {
     "rom_end": 0x12340,
     "vram_start": 0x80025C00,
 }
-SOURCE_KINDS = frozenset({"c", "asm", "binary"})
+SOURCE_KINDS = frozenset({"c", "cpp", "asm", "binary"})
+# Compiled translation-unit kinds and their canonical source suffixes. A `.cpp` TU is
+# compiled by the C++ front end (cc1plus) and exports only extern "C" names.
+COMPILED_SUFFIXES = {"c": ".c", "cpp": ".cpp"}
+COMPILED_KINDS = frozenset(COMPILED_SUFFIXES)
+LANGUAGE_LABELS = {"c": "C", "cpp": "C++"}
 _C_SYMBOL = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
 _MATCH_FIELDS = {"symbol", "source", "rom_start", "vram_start", "size"}
 _ATTRIBUTION_FIELDS = {"symbol", "source", "object", "vram_start", "size"}
@@ -95,7 +100,7 @@ def _symbol(value: object, label: str) -> str:
     return value
 
 
-def _relative_path(value: object, label: str, *, root: str | None = None, suffix: str | None = None) -> str:
+def _relative_path(value: object, label: str, *, root: str | None = None, suffix: str | tuple[str, ...] | None = None) -> str:
     if not isinstance(value, str) or not value or "\\" in value or "\x00" in value:
         raise ValueError(f"{label} must be a canonical relative path")
     path = PurePosixPath(value)
@@ -103,13 +108,23 @@ def _relative_path(value: object, label: str, *, root: str | None = None, suffix
         raise ValueError(f"{label} must be a canonical relative path without escapes")
     if root is not None and (len(path.parts) < 2 or path.parts[0] != root):
         raise ValueError(f"{label} must be under {root}/")
-    if suffix is not None and path.suffix != suffix:
-        raise ValueError(f"{label} must have a {suffix} suffix")
+    suffixes = (suffix,) if isinstance(suffix, str) else suffix
+    if suffixes is not None and path.suffix not in suffixes:
+        raise ValueError(f"{label} must have a {' or '.join(suffixes)} suffix")
     return value
 
 
 def _source(value: object, label: str) -> str:
-    return _relative_path(value, label, root="src", suffix=".c")
+    return _relative_path(value, label, root="src", suffix=tuple(COMPILED_SUFFIXES.values()))
+
+
+def compiled_kind(source: str) -> str:
+    """Source kind (`c` or `cpp`) of a canonical compiled translation-unit path, by suffix."""
+    suffix = PurePosixPath(source).suffix
+    for kind, expected in COMPILED_SUFFIXES.items():
+        if suffix == expected:
+            return kind
+    raise ValueError(f"Compiled translation unit must end in .c or .cpp: {source}")
 
 
 def _extent(start: object, size: object, label: str, limit: int) -> tuple[int, int]:
@@ -180,13 +195,17 @@ def validate_matches(
     matches: list[dict[str, object]],
     image_records: dict[str, dict[str, object]] | None = None,
 ) -> dict[str, int]:
-    """Validate unique C ranges and their authoritative image mappings.
+    """Validate unique C/C++ ranges and their authoritative image mappings.
 
     An omitted image_id means resident. Without image_records the only permitted
     image is resident, ROM [0x1000, 0x12340), with VRAM-ROM delta 0x80024C00.
     Explicit records replace that default inventory. Different images may share
     VRAM; their original ROM ranges and counted function ranges must be disjoint.
     Several distinct functions may belong to the same C source/translation unit.
+
+    `matched_c_*` count `.c` sources only. A manifest with any `.cpp` source adds
+    `matched_cpp_*` and their sum `matched_c_and_cpp_*`; a C-only manifest keeps
+    exactly the two C counters.
     """
     parsed = _matches(matches)
     images = _images(image_records)
@@ -198,7 +217,15 @@ def validate_matches(
             raise ValueError(f"C match exceeds its original image: {match.image_id}/{match.symbol}")
         if match.vram_start != image.vram_start + match.rom_start - image.rom_start:
             raise ValueError(f"C match has inconsistent ROM/VRAM mapping: {match.image_id}/{match.symbol}")
-    return {"matched_c_functions": len(parsed), "matched_c_bytes": sum(match.size for match in parsed)}
+    counts = {"matched_c_functions": 0, "matched_c_bytes": 0}
+    for match in parsed:
+        kind = compiled_kind(match.source)
+        counts[f"matched_{kind}_functions"] = counts.get(f"matched_{kind}_functions", 0) + 1
+        counts[f"matched_{kind}_bytes"] = counts.get(f"matched_{kind}_bytes", 0) + match.size
+    if "matched_cpp_functions" in counts:
+        counts["matched_c_and_cpp_functions"] = len(parsed)
+        counts["matched_c_and_cpp_bytes"] = sum(match.size for match in parsed)
+    return counts
 
 
 def validate_attributions(
@@ -206,11 +233,12 @@ def validate_attributions(
     attributions: list[dict[str, object]],
     graph: dict[str, dict[str, object]],
 ) -> None:
-    """Bind every image/function to its manifest source and declared C object.
+    """Bind every image/function to its manifest source and declared C/C++ object.
 
     graph is independently derived by the live verifier, never accepted solely
     from a receipt. Its keys are run-relative obj/*.o paths; values contain
-    source, source_kind ('c', 'asm', 'binary'), and optional image_id (resident).
+    source, source_kind ('c', 'cpp', 'asm', 'binary'), and optional image_id
+    (resident). A compiled object's source suffix must agree with its kind.
     Attribution records contain symbol, source, object, vram_start, size and
     optional image_id. Extra diagnostic fields are allowed but not certified by
     this pure helper. Call validate_matches with the image inventory separately.
@@ -228,8 +256,9 @@ def validate_attributions(
             raise ValueError(f"Graph object has unsupported source_kind: {object_path}")
         image_id = _identity(record.get("image_id", "resident"), f"Graph object {object_path} image_id")
         source = _relative_path(record["source"], f"Graph object {object_path} source")
-        if kind == "c":
-            source = _source(source, f"Graph C object {object_path} source")
+        if kind in COMPILED_KINDS:
+            source = _relative_path(source, f"Graph {LANGUAGE_LABELS[kind]} object {object_path} source",
+                                    root="src", suffix=COMPILED_SUFFIXES[kind])
             key = image_id, source
             if key in c_objects:
                 raise ValueError(f"Ambiguous declared C objects for {image_id}/{source}")

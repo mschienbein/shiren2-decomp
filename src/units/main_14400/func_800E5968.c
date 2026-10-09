@@ -7,7 +7,7 @@ typedef struct { char pad[0xA]; unsigned char unkA; char padB[0x1E - 0xB]; unsig
 typedef struct { s32 type; Obj *obj; char pad8[0x10]; s32 flags; char pad1C[4]; } Event;
 typedef struct { unsigned char value; } Pick;
 extern char D_80147620[];
-u8 func_800C57CC(void *rng, u8 limit);
+u8 func_800C57CC(void *rng, s32 limit);
 void func_800A665C(Obj *, Pick *);
 s32 func_80049CB4(s32 id, ...);
 static inline s32 testFlag(Bits *b) { return b->flag; }
@@ -35,6 +35,6 @@ void func_800E5968(Obj *o, Msg *m, unsigned short flags) {
     initEvent(&ev, 9, o, flags);
     {
         VEntry *e = &m->vtbl[7];
-        ((void (*)(char *, Event *))e->fn)((char *)m + e->delta, &ev);
+        ((s32 (*)(void *, void *))e->fn)((char *)m + e->delta, &ev);
     }
 }

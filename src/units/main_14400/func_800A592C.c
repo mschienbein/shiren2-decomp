@@ -4,7 +4,7 @@ typedef struct { s32 x0, x4; } P;
 void func_800A59A4(P *);
 s32 func_800A4360(P *, P *);
 void func_800A5A70(P *, u32);
-void func_800B48C0(P *, P *);
+s32 func_800B48C0(P *, P *);
 void func_800A5A04(P *);
 s32 func_80049CB4(s32, ...);
 void func_800A592C(P *a, P *b) {

@@ -8,6 +8,6 @@ typedef float f32;
 
 extern void *D_801476B8;
 s32 func_800EB37C(void *obj);
-u8 func_80041AF4(void) {
+s32 func_80041AF4(void) {
     return (u8)func_800EB37C(D_801476B8);
 }

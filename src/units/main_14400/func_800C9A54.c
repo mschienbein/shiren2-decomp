@@ -9,7 +9,7 @@ extern u8 D_801541C4[];
 extern u8 D_801C9BD8[];
 extern u8 D_80142920[];
 extern u8 D_80142930[];
-extern u8 D_80138C40[];
+extern u8 D_80138C40[16];
 void func_800CA4A4(void *a, void *b);
 void func_800D1C34(void *a, void *b);
 void func_800B02A0(void *a);

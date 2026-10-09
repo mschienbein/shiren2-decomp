@@ -1,6 +1,6 @@
 #include "common.h"
-typedef struct { unsigned char field_00[0x24]; void *field_24; } Object;
-extern char D_8015C148[];
+typedef struct { unsigned char field_00[0x24]; const void *field_24; } Object;
+extern const unsigned char D_8015C148[192];
 extern void *func_800EFC70(Object *, s32, unsigned char);
 extern void func_800E4D88(Object *, s32);
 extern void func_800E4D90(Object *, s32);

@@ -7,25 +7,26 @@ typedef signed char s8;
 
 typedef struct { s32 x; s32 y; } Pos800BCB18;
 typedef struct { Pos800BCB18 tl; Pos800BCB18 br; } Rect800BCB18;
-typedef struct { Rect800BCB18 rect; s32 unk10; } Room800BCB18;
+typedef struct { Rect800BCB18 rect; u8 pad10[4]; } Room800BCB18;
 typedef struct { Pos800BCB18 cur; Pos800BCB18 start; Pos800BCB18 end; } RectIter800BCB18;
 typedef struct { u8 pad0[0xC]; s32 count; s32 index; } EdgeIter800BCB18;
 typedef struct { u8 pad0[0x2]; u8 flags2; u8 pad3[0x9]; u8 flagsC; } Obj800BCB18;
 typedef struct {
-    u8 pad0[0x3DF];
-    u8 roomCount;
+    u8 pad0[0x3DC];
+    s32 roomCount;
     u8 pad3E0[0x22];
     u16 unk402;
     u8 pad404[0x554];
     u16 flags958;
     u8 pad95A[0x2];
-    s32 roomUsable[20];
+    s32 roomUsable[16];
+    u8 pad99C[0x10];
     Rect800BCB18 rect;
 } Floor800BCB18;
 extern Room800BCB18 D_801431F0[];
 extern u8 D_80147620[];
 extern u8 D_80156AD7;
-u8 func_800C57CC(void *rng, u8 limit);
+u8 func_800C57CC(void *rng, s32 limit);
 s32 func_800A3138(Room800BCB18 *room);
 s32 func_800A315C(Room800BCB18 *room);
 s32 func_800BB22C(Floor800BCB18 *floor, Room800BCB18 *room);
@@ -74,7 +75,7 @@ s32 func_800BCB18(Floor800BCB18 *floor) {
         if (--tries == -1) {
             break;
         }
-        r = func_800C57CC(D_80147620, floor->roomCount - 1);
+        r = func_800C57CC(D_80147620, (u8)(floor->roomCount - 1));
         if (floor->roomUsable[r] == 0) {
             continue;
         }

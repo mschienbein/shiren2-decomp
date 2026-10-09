@@ -1,3 +1,3 @@
 #include "common.h"
-extern s32 D_80151480;
-void *func_80092384(void **self) { *self = &D_80151480; return self; }
+extern const unsigned char D_80151480[24];
+void *func_80092384(void **self) { *(const void **)self = D_80151480; return self; }

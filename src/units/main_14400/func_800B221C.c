@@ -1,4 +1,6 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
 typedef unsigned char u8;
 typedef signed char s8;
 typedef unsigned short u16;
@@ -14,12 +16,13 @@ extern u16 D_8014344A;
 extern Entry D_801431F0[];
 extern u8 D_801429C0[16];
 extern u8 D_80147620[];
-extern u8 D_80142F20;
+
 extern Owner800B221C *D_80142B10;
 extern u16 func_800C58DC(void *, u16);
 extern s32 func_800A3214(Entry *);
 extern void *func_800A33DC(void *out, void *rect);
-extern void func_800BAB28(Vec2 *out, Owner800B221C *owner);
+/* Returns `out` (move to v0 at 0x800BAB80); this caller ignores it and reads the buffer. */
+extern Vec2 *func_800BAB28(Vec2 *out, Owner800B221C *owner);
 void *func_800B221C(Vec2 *out){
     s32 i;
     u16 roll;
@@ -43,7 +46,7 @@ void *func_800B221C(Vec2 *out){
     if (i >= D_8014344C) {
         s32 same;
         i = 0;
-        same = (D_80142F20 & 0xE0) == 0x20;
+        same = (D_80142F18.mode & 0xE0) == 0x20;
         if (same) {
             Vec2 v;
             Vec2 *pv;

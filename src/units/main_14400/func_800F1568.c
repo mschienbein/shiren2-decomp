@@ -18,7 +18,9 @@ typedef struct {
 } Obj800F1568;
 
 extern u8 D_80147620[];
-extern u16 D_8015690E;
+/* Whole 4-byte roll clamp at D_8015690C (next object D_80156910); +2 is the maximum. */
+typedef struct { u16 min; u16 max; } RollBounds;
+extern RollBounds D_8015690C;
 s32 func_800C587C(void *table, u8 key);
 Item800F1568 *func_800AACE0(s32 arg);
 Item800F1568 *func_801239D4(void);
@@ -49,8 +51,8 @@ Item800F1568 *func_800F1568(Obj800F1568 *obj, s32 force) {
             if (ok) {
                 u32 count = func_800AB044() * 3;
 
-                if (count > D_8015690E) {
-                    count = D_8015690E;
+                if (count > D_8015690C.max) {
+                    count = D_8015690C.max;
                 }
                 item->count = count;
             } else {

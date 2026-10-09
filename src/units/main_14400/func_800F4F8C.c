@@ -27,22 +27,23 @@ typedef struct {
 } Msg800F4F8C;
 
 /* Vtable entries are {this-adjust delta, index, target}. Only two slots are
- * used here and their targets take different second arguments:
- * slot 1 (+0x08) is the destructor, taking integer deletion flags (e.g.
- * func_80117050 in D_8015DA98 tests flags & 1 before freeing); slot 7 (+0x38)
- * is the message handler, taking a message pointer (e.g. func_80116E1C in
- * D_8015DA98 reads the message kind word). Other slots are opaque here.
+ * used here, with their decided contracts:
+ * slot 1 (+0x08/+0x0C) is the destructor void (void *self, s32 flags) (e.g.
+ * func_80117050 in D_8015DA98 tests flags & 1 before freeing); slot 7 (+0x38/+0x3C)
+ * is the message handler s32 (void *receiver, void *event) (e.g. func_80116E1C in
+ * D_8015DA98 reads the message kind word; its result is not needed here).
+ * Other slots are opaque here.
  */
 typedef struct {
     s16 delta;
     s16 index;
-    void (*func)(Item800F4F8C *self, s32 flags);
+    void (*func)(void *self, s32 flags);
 } DtorEntry800F4F8C;
 
 typedef struct {
     s16 delta;
     s16 index;
-    void (*func)(Item800F4F8C *self, void *msg);
+    s32 (*func)(void *receiver, void *event);
 } MsgEntry800F4F8C;
 
 typedef struct {
@@ -122,12 +123,12 @@ s32 func_800F4F8C(void *self, Event800F4F8C *ev) {
                     msg.fromId = id;
                     msg.fromDir = dir;
                     msg.toId = id;
-                    item->vtable->message.func((Item800F4F8C *)((u8 *)item + item->vtable->message.delta), &msg);
+                    item->vtable->message.func((u8 *)item + item->vtable->message.delta, &msg);
                 }
             }
             func_800D3650(item);
             if (item != 0) {
-                item->vtable->dtor.func((Item800F4F8C *)((u8 *)item + item->vtable->dtor.delta), 3);
+                item->vtable->dtor.func((u8 *)item + item->vtable->dtor.delta, 3);
             }
             return 1;
         }

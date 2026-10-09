@@ -57,12 +57,12 @@ s32 func_800E1CC4(Actor *, s32);
 void *func_800E8A68(Actor *, u8);
 Item *func_800FF77C(Actor *, Actor *);
 s32 func_8010BEC4(void *, u8);
-void func_8010BD3C(Item *, s32);
+s32 func_8010BD3C(Item *, s32);
 char *func_800AE674(void *);
 s32 func_8010BC2C(void *, u8);
 s32 func_800A2D90(u8, u8);
-u8 func_800C57CC(u8 *, u8);
-void func_8010BE60(Item *, u8);
+u8 func_800C57CC(u8 *, s32);
+s32 func_8010BE60(Item *, u8);
 void func_800E3678(Actor *, Actor *);
 s32 func_800A08D8(s32, s32, s32);
 
@@ -177,7 +177,7 @@ s32 func_800FF828(Actor *self, Actor *target) {
         if (misses == 0) {
             break;
         }
-        pick = func_800C57CC(D_80147620, misses - 1);
+        pick = func_800C57CC(D_80147620, (u8)(misses - 1));
         misses = count = 0;
         while (1) {
             slot = count;

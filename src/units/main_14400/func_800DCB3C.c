@@ -41,7 +41,8 @@ typedef struct {
 extern void *D_801476B8;
 void func_800DAD20(Obj800DCB3C *obj, Receiver800DCB3C *receiver);
 void func_800DAD80(Obj800DCB3C *obj);
-void func_800D02AC(Link800DCB3C *link);
+/* Returns the removed item or null; the result is intentionally ignored here. */
+void *func_800D02AC(Link800DCB3C *link);
 
 s32 func_800DCB3C(Obj800DCB3C *obj) {
     Link800DCB3C *link = &obj->link;
@@ -65,7 +66,7 @@ s32 func_800DCB3C(Obj800DCB3C *obj) {
     m->sender = D_801476B8;
     m->arg = arg;
     entry = &receiver->vtable[7];
-    if (((s32 (*)(void *, Msg800DCB3C *))entry->fn)((char *)receiver + entry->delta, m)) {
+    if (((s32 (*)(void *, void *))entry->fn)((char *)receiver + entry->delta, m)) {
         func_800D02AC(link);
     }
     func_800DAD80(obj);

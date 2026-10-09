@@ -7,15 +7,15 @@ typedef short s16;
 
 typedef struct {
     u8 pad0[8];
-    void *field_8;
+    const void *field_8;
 } Obj;
 
-extern s32 D_8015E410;
+extern const unsigned char D_8015E410[80];
 /* Returns the input object through this TU's partial view. */
 Obj *func_80112D20(Obj *, s32);
 
 Obj *func_80119980(Obj *obj) {
     func_80112D20(obj, 0x17);
-    obj->field_8 = &D_8015E410;
+    obj->field_8 = D_8015E410;
     return obj;
 }

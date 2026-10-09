@@ -32,7 +32,7 @@ s32 func_80049CB4(s32, ...);
 char *func_800AE674(void *);
 void func_800498E4(s32, ...);
 void func_800AD868(Pos *);
-Actor *func_800FCE40(s32, s32);
+void *func_800FCE40(u8 variant, void *mem);
 s32 func_800A3934(Actor *);
 void func_800A58FC(Actor *, Pos *);
 void func_800E2124(Actor *);

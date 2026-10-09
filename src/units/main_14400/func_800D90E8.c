@@ -8,7 +8,7 @@ typedef struct {
 extern char D_80157FA8[];
 extern char D_80157FD8[];
 
-Obj *func_800D90E8(Obj *obj) {
+Obj *func_800D90E8(Obj *obj, unsigned char *unused_payload) {
     obj->field_4 = D_80157FA8;
     obj->field_0 = 5;
     obj->field_4 = D_80157FD8;

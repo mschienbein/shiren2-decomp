@@ -5,6 +5,7 @@ typedef unsigned char u8;
 typedef struct {
     u8 pad0[0x4C];
     void *field_4C;
+    u8 pad50[0xC]; /* Complete 0x5C-byte base widget. */
 } Obj8009EEB0;
 
 extern Obj8009EEB0 D_801425F0;

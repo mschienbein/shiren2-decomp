@@ -2,10 +2,11 @@
 typedef unsigned char u8;
 typedef signed char s8;
 typedef unsigned short u16;
-typedef struct { s32 data[5]; } Entry;
+/* 0x14-byte room record: bounds words plus four per-side bytes (unused here). */
+typedef struct { s32 data[4]; u8 pad10[4]; } Entry;
 typedef struct {
-    char pad0[0x3DF];
-    u8 count;
+    char pad0[0x3DC];
+    s32 count;
     char pad3E0[0x958 - 0x3E0];
     u16 flags;
     char pad95A[2];
@@ -14,7 +15,7 @@ typedef struct {
 extern Entry D_801431F0[];
 extern s32 D_80147620[];
 u8 func_800C57A0(void *);
-u8 func_800C57CC(void *, u8);
+u8 func_800C57CC(void *, s32);
 s32 func_800A3138(Entry *);
 s32 func_800A315C(Entry *);
 s32 func_800BB22C(Obj *, Entry *);
@@ -39,7 +40,7 @@ s32 func_800BD56C(Obj *obj) {
         if (--tries == -1) {
             break;
         }
-        idx = func_800C57CC(D_80147620, obj->count - 1);
+        idx = func_800C57CC(D_80147620, (u8)(obj->count - 1));
         if (obj->used[idx] == 0) {
             continue;
         }

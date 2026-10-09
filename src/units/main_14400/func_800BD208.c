@@ -9,18 +9,18 @@ typedef struct { Vec2 min; Vec2 max; } Rect;
 typedef struct { Rect rect; u8 pad[4]; } Room;
 typedef struct { Vec2 cur; Vec2 start; Vec2 end; } Iter;
 typedef struct {
-    u8 pad0[0x3DF];
-    u8 roomCount;
+    u8 pad0[0x3DC];
+    s32 roomCount;
     u8 pad3E0[0x22];
     u16 x402;
     u8 pad404[0x554];
     u16 x958;
     u8 pad95A[2];
-    s32 used[30];
+    s32 used[16];
 } Floor;
 extern u8 D_80147620[];
 extern Room D_801431F0[];
-extern u8 func_800C57CC(void *, u8);
+extern u8 func_800C57CC(void *, s32);
 extern s32 func_800C587C(void *, u8);
 extern void *func_800A3610(void *out, void *it);
 extern s32 func_800B1E80(Vec2 *);
@@ -38,7 +38,7 @@ s32 func_800BD208(Floor *f){
     if (!(f->x958 & 0x40)) return 0;
     if (f->x402 != 0x80) return 0;
     for (n = 99; n != -1; n--) {
-        idx = func_800C57CC(D_80147620, f->roomCount - 1);
+        idx = func_800C57CC(D_80147620, (u8)(f->roomCount - 1));
         if (f->used[idx]) {
             f->used[idx] = 0;
             break;

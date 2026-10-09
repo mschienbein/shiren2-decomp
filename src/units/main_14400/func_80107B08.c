@@ -1,4 +1,6 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef struct { s32 x; s32 y; } Pos;
@@ -11,7 +13,7 @@ typedef struct {
     unsigned short f9A;
 } Unit;
 typedef struct { s32 index; s32 f4; } UnitIter;
-extern unsigned char D_80142F20;
+
 s32 func_800A9070(UnitIter *it, s32 kind);
 Unit *func_800A910C(UnitIter *it);
 s32 func_800A4520(void *self, void *target);
@@ -19,9 +21,9 @@ s32 func_80049CB4(s32 id, ...);
 s32 func_800AA48C(u8 id, u8 sub);
 char *func_800A3B20(Unit *u);
 void func_800497F0(s32 message_id, ...);
-Unit *func_80107760(s32 a, s32 b);
+void *func_80107760(u8 variant, void *mem);
 s32 func_800A3934(Unit *u);
-s32 func_800A5D2C(void *obj, void *position, u16 flags);
+s32 func_800A5D2C(void *obj, void *position, s32 flags);
 s32 func_800A5AE8(Unit *u, Pos *pos);
 void func_800A58FC(Unit *u, Pos *pos);
 static inline void Pos_copy(Pos *dst, Pos *src) {
@@ -53,7 +55,7 @@ s32 func_80107B08(Unit *u, void *b) {
     if (func_800AA48C(0x52, 1) != 0) {
         flag = 1;
     } else {
-        s32 other = D_80142F20 != 0x4F;
+        s32 other = D_80142F18.mode != 0x4F;
         if (!other) {
             flag = 1;
         }

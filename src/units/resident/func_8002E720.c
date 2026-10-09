@@ -12,7 +12,11 @@ typedef struct {
 } OSContStatus;
 
 extern u8 D_80036F64;
-extern u8 D_80041350[];
+typedef struct ResidentPifRam {
+    u32 ramarray[15];
+    u32 pifstatus;
+} ResidentPifRam;
+extern ResidentPifRam D_80041350;
 
 extern void func_8002E810(s32 channel, u8 cmd);
 extern s32 func_80032500(s32 direction, void *dram);
@@ -28,9 +32,9 @@ s32 func_8002E720(void *queue, s32 channel)
 
     D_80036F64 = 250;
     func_8002E810(channel, 0);
-    ret = func_80032500(1, D_80041350);
+    ret = func_80032500(1, &D_80041350);
     func_8002FEA0(queue, &dummy, 1);
-    ret = func_80032500(0, D_80041350);
+    ret = func_80032500(0, &D_80041350);
     func_8002FEA0(queue, &dummy, 1);
     func_8002E8A4(channel, &data);
     if ((data.status & 1) && (data.status & 2)) {

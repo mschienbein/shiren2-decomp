@@ -1,4 +1,8 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
+typedef struct { unsigned char index, count, previous, field_03, masks[2], field_06, previous_count, field_08; signed char result; unsigned char field_0A; } SelectionSave;
+extern SelectionSave D_80142F24;
 
 typedef unsigned char u8;
 
@@ -10,8 +14,8 @@ typedef struct {
 extern u8 D_80156A45;
 extern u8 D_80147620[];
 extern Range D_80156D40[];
-extern u8 D_80142F24[];
-extern u8 D_80142F18;
+
+
 s32 func_800C587C(void *, u8);
 s32 func_800C5844(void *, u8, u8);
 void *func_800AC244(u8);
@@ -45,7 +49,7 @@ u8 *func_800AB9C4(void) {
         byte = &bits[i / 8];
         mask = 1 << (i % 8);
 
-        if (D_80142F24[0] == range->kind && inRange(range, D_80142F18)) {
+        if (D_80142F24.index == range->kind && inRange(range, D_80142F18.kind)) {
             *byte |= mask;
             count++;
         } else {

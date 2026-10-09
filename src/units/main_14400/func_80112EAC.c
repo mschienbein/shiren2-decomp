@@ -9,7 +9,7 @@ typedef struct {
 } Obj_80112EAC;
 
 extern u8 D_80148644[];
-extern u8 D_8015488C[];
+extern const u8 D_8015488C[8];
 
 void func_80112EAC(Obj_80112EAC *obj) {
     s32 index = obj->field_1 - 0x17;

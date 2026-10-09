@@ -8,7 +8,7 @@ typedef struct {
     u8 high[4];
 } BitSets;
 
-extern u8 D_8015488C[];
+extern const u8 D_8015488C[8];
 
 s32 func_800A1630(BitSets *sets, u8 id)
 {

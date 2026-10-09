@@ -25,7 +25,7 @@ typedef struct {
 } Slot8009A0EC;
 
 s32 func_8009A038(Obj8009A0EC *self);
-void *func_8009A054(void *out, void *obj, s32 index);
+Slot8009A0EC func_8009A054(void *obj, s32 index);
 s32 func_8009A1AC(Obj8009A0EC *self, void *item);
 void *func_800980F0(void *c, s32 idx);
 
@@ -46,7 +46,7 @@ s32 func_8009A0EC(Obj8009A0EC *self) {
             if (!(i < count)) {
                 break;
             }
-            func_8009A054(&slot, self, i);
+            slot = func_8009A054(self, i);
             result |= func_8009A1AC(self, slotItem(&slot));
             i++;
         }

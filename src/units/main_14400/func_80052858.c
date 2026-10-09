@@ -2,5 +2,8 @@
 
 typedef unsigned char u8;
 
-extern u8 D_80161658[];
-u8 *func_80052858(void) { return D_80161658; }
+typedef struct { signed char x, y; } Pair;
+typedef struct { s32 handle; Pair position; } Playback;
+typedef struct { short type; Playback playback; } State;
+extern State D_80161650;
+u8 *func_80052858(void) { return (u8 *)&D_80161650.playback.position; }

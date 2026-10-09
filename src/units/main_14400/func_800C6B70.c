@@ -1,4 +1,12 @@
 #include "common.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern SelectionRecord D_80142F18;
+static inline unsigned char selection_flags(const SelectionRecord *record) { return record->flags; }
+
+static inline unsigned char selection_kind(const SelectionRecord *record) { return record->kind; }
+
+static inline unsigned char selection_variant(const SelectionRecord *record) { return record->variant; }
+
 
 typedef unsigned char u8;
 typedef signed char s8;
@@ -29,12 +37,14 @@ extern s16 D_801476BE;
 extern u8 D_801476BD;
 extern s32 D_80147678;
 extern u8 D_80140160[];
-extern u8 D_80142F1B;
-extern u8 D_80142F19;
-extern u8 D_80142F18;
+
+
+
 extern u8 D_80139610;
 extern u8 D_8013960A;
-extern s32 D_801401EC;
+/* +0x8C word of the 0x90-byte menu system D_80140160 (func_80093CDC reads/writes +0x8C through
+ * the object; former label D_801401EC is this field, not a separate object). */
+static inline void menu_system_clear_8C(u8 *system) { *(s32 *)(system + 0x8C) = 0; }
 extern s32 D_80140254;
 extern u8 D_801476BC;
 extern s8 D_801476C2;
@@ -96,14 +106,14 @@ void func_800C6B70(void)
     func_80049CB4(0xA);
     D_80139610 = 0;
     D_8013960A = 1;
-    D_801401EC = 0;
-    func_80094B80(D_80140160, ((D_80142F1B >> 2) & 1) ^ 1);
+    menu_system_clear_8C(D_80140160);
+    func_80094B80(D_80140160, ((selection_flags(&D_80142F18) >> 2) & 1) ^ 1);
     func_80094DA0(D_80140160);
     func_80041450(1);
     D_80140254 = -1;
     func_800C77C8();
     D_801476BC = 0;
-    func_80055B14(D_80142F19, D_80142F18);
+    func_80055B14(selection_variant(&D_80142F18), selection_kind(&D_80142F18));
     if (func_80046240()) {
         if (D_801476C2) {
             func_80046C30(2);
@@ -111,7 +121,7 @@ void func_800C6B70(void)
             func_8007268C();
             return;
         }
-        if ((((D_80142F1B >> 2) & 1) ^ 1) != 0) {
+        if ((((selection_flags(&D_80142F18) >> 2) & 1) ^ 1) != 0) {
             func_800C9800(0);
             if ((func_80094B98(D_80140160) ^ 1) != 0) {
                 func_800C96FC();
@@ -126,7 +136,7 @@ void func_800C6B70(void)
         }
         return;
     }
-    if ((((D_80142F1B >> 2) & 1) ^ 1) != 0 || prev == 0xB) {
+    if ((((selection_flags(&D_80142F18) >> 2) & 1) ^ 1) != 0 || prev == 0xB) {
         func_800C9800(0);
         if ((func_80094B98(D_80140160) ^ 1) != 0) {
             func_800C96FC();

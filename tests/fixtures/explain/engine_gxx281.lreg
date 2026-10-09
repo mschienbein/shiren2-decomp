@@ -1,0 +1,31 @@
+
+;; Function void func_800BFEA0(struct Floor *)
+
+(note/i 23 51 26 ("/Users/mooki/Code/n64-experiments/projects/shiren2/scratch/omp/harness/merge-007/samples/func_800BFEA0.cpp") 51)
+
+(insn/i 26 23 27 (parallel[ 
+            (set (mem/s:BLK (plus:SI (reg/v:SI 80)
+                        (const_int 1028)))
+                (mem/s:BLK (symbol_ref:SI ("D_801C9BB0"))))
+            (clobber (scratch:SI))
+            (clobber (scratch:SI))
+            (clobber (scratch:SI))
+            (clobber (scratch:SI))
+            (use (const_int 8))
+            (use (const_int 4))
+            (use (const_int 0))
+        ] ) 201 {movstrsi_internal} (insn_list 13 (insn_list 5 (nil)))
+    (expr_list:REG_UNUSED (scratch:SI)
+        (expr_list:REG_UNUSED (scratch:SI)
+            (expr_list:REG_UNUSED (scratch:SI)
+                (expr_list:REG_UNUSED (scratch:SI)
+                    (nil))))))
+
+(note 36 30 39 ("/Users/mooki/Code/n64-experiments/projects/shiren2/scratch/omp/harness/merge-007/samples/func_800BFEA0.cpp") 59)
+
+(insn 39 36 41 (set (reg:SI 87)
+        (const_int 1)) 172 {movsi_internal2} (insn_list:REG_DEP_ANTI 13 (nil))
+    (expr_list:REG_EQUIV (mem/s:SI (plus:SI (reg/v:SI 80)
+                (const_int 988)))
+        (expr_list:REG_EQUIV (const_int 1)
+            (nil))))

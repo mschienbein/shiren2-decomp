@@ -5,7 +5,7 @@ typedef short s16;
 typedef unsigned char u8;
 /* 16-byte spawn-script row; wait (+0xA) is the frame delay func_80056044
  * reads after spawning the row, -1 in the terminator row. */
-typedef struct { u16 id; u16 variant; s16 x; s16 y; s16 z; s16 wait; s16 f0C; s16 f0E; } Spawn;
+typedef struct { u16 id; u16 variant; s16 x; s16 y; s16 z; s16 wait; u16 f0C; s16 f0E; } Spawn;
 typedef struct { u8 pad[0x50]; s16 state; s16 pad52; s16 slot; u8 pad56[0xA]; } Obj;
 typedef void (*ObjFunc)(Obj *);
 extern s32 D_80139B30;
@@ -13,6 +13,8 @@ extern Obj D_801D40DC[];
 extern ObjFunc D_8013A24C[];
 s32 func_800554C4(s32, s32, s32, s32);
 
+/* Spawn script table, an ordinary initialized .data object (0x80139B4C): nothing
+ * writes it, but the original placed it in .data, not .rodata. */
 Spawn D_80139B4C[112] = {
     { 0x0173, 0x0000, 32, 304, 0, 24, -64, 0 },
     { 0x0172, 0x0000, 64, 304, 0, 48, -64, 256 },

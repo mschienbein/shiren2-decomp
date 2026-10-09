@@ -1,7 +1,9 @@
 #include "common.h"
 typedef unsigned char u8;
 typedef struct { s32 type; char pad4[0x14]; s32 arg; char pad1C[4]; } Msg;
-typedef struct { short delta; short index; void (*fn)(void *, Msg *); } VEntry;
+/* Target table at +8, entry +0x38/+0x3C: message handler s32 (void *receiver, void *event)
+ * (decided contract); the result is not needed here. */
+typedef struct { short delta; short index; s32 (*fn)(void *receiver, void *event); } VEntry;
 typedef struct { char pad[0x38]; VEntry e; } VTable;
 typedef struct { char pad[8]; VTable *vtbl; } Obj;
 typedef struct { char pad[0xC]; Obj *target; u8 arg; } Self;

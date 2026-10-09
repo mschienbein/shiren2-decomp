@@ -1,0 +1,125 @@
+--- a/gas/config/tc-mips.c
++++ b/gas/config/tc-mips.c
+@@ -174,6 +174,9 @@
+   /* Non-zero if we should not autoextend mips16 instructions.
+      Changed by `.set autoextend' and `.set noautoextend'.  */
+   int noautoextend;
++  /* Non-zero to construct li.d FPR constants using 32-bit FPR pairs,
++     independently of the ISA.  Set by the -mfp32 command line option.  */
++  int fp32;
+ };
+ 
+ /* This is the struct we use to hold the current set of options.  Note
+@@ -181,6 +184,8 @@
+    they have not been initialized.  */
+ 
+ static struct mips_set_options mips_opts = { -1, -1 };
++
++#define HAVE_32BIT_FPRS (mips_opts.fp32 || mips_opts.isa < 3)
+ 
+ /* These variables are filled in with the masks of registers used.
+    The object format code reads them and puts them in the appropriate
+@@ -190,6 +195,9 @@
+ 
+ /* MIPS ISA we are using for this output file.  */
+ static int file_mips_isa;
++
++/* Command-line FPR width, restored by `.set mips0'.  */
++static int file_mips_fp32;
+ 
+ /* The CPU type as a number: 2000, 3000, 4000, 4400, etc.  */
+ static int mips_cpu = -1;
+@@ -959,6 +967,7 @@
+     as_warn ("Could not set architecture and machine");
+ 
+   file_mips_isa = mips_opts.isa;
++  file_mips_fp32 = mips_opts.fp32;
+ 
+   op_hash = hash_new ();
+ 
+@@ -5174,14 +5183,13 @@
+       break;
+ 
+     case M_LI_DD:
+-      /* If we have a constant in IMM_EXPR, then in mips3 mode it is
+-         the entire value, and in mips1 mode it is the high order 32
+-         bits of the value and the low order 32 bits are either zero
+-         or in offset_expr.  */
++      /* With 64-bit FPRs, IMM_EXPR is the entire value.  With 32-bit
++         FPRs, it is the high order 32 bits and the low order 32 bits
++         are either zero or in offset_expr.  */
+       if (imm_expr.X_op == O_constant || imm_expr.X_op == O_big)
+ 	{
+-	  load_register (&icnt, AT, &imm_expr, mips_opts.isa >= 3);
+-	  if (mips_opts.isa >= 3)
++	  load_register (&icnt, AT, &imm_expr, ! HAVE_32BIT_FPRS);
++	  if (! HAVE_32BIT_FPRS)
+ 	    macro_build ((char *) NULL, &icnt, (expressionS *) NULL,
+ 			 "dmtc1", "t,S", AT, treg);
+ 	  else
+@@ -7437,13 +7445,10 @@
+ 			 && ((temp[4] == 0 && temp[5] == 0)
+ 			     || (temp[6] == 0 && temp[7] == 0)))
+ 		  {
+-		    /* The value is simple enough to load with a
+-                       couple of instructions.  In mips1 mode, set
+-                       imm_expr to the high order 32 bits and
+-                       offset_expr to the low order 32 bits.
+-                       Otherwise, set imm_expr to the entire 64 bit
+-                       constant.  */
+-		    if (mips_opts.isa < 3)
++		    /* The value is simple enough to load with a couple of
++                       instructions.  Split it for 32-bit destination
++                       registers; FPR width is independent of the ISA.  */
++		    if (*args == 'L' ? HAVE_32BIT_FPRS : mips_opts.isa < 3)
+ 		      {
+ 			imm_expr.X_op = O_constant;
+ 			offset_expr.X_op = O_constant;
+@@ -8683,6 +8688,8 @@
+   {"m3900", no_argument, NULL, OPTION_M3900},
+ #define OPTION_NO_M3900 (OPTION_MD_BASE + 27)
+   {"no-m3900", no_argument, NULL, OPTION_NO_M3900},
++#define OPTION_FP32 (OPTION_MD_BASE + 28)
++  {"mfp32", no_argument, NULL, OPTION_FP32},
+ 
+ 
+ #define OPTION_CALL_SHARED (OPTION_MD_BASE + 7)
+@@ -8759,6 +8766,10 @@
+ 
+     case OPTION_MIPS4:
+       mips_opts.isa = 4;
++      break;
++
++    case OPTION_FP32:
++      mips_opts.fp32 = 1;
+       break;
+ 
+     case OPTION_MCPU:
+@@ -9035,6 +9046,7 @@
+   fprintf(stream, "\
+ -mips16			generate mips16 instructions\n\
+ -no-mips16		do not generate mips16 instructions\n");
++  fprintf(stream, "-mfp32\t\t\tuse 32-bit FPR pairs for li.d constants\n");
+   fprintf(stream, "\
+ -O0			remove unneeded NOPs, do not swap branches\n\
+ -O			remove unneeded NOPs and swap branches\n\
+@@ -9951,11 +9963,17 @@
+ 	 say, misuse can cause serious problems.  */
+       isa = atoi (name + 4);
+       if (isa == 0)
+-	mips_opts.isa = file_mips_isa;
++	{
++	  mips_opts.isa = file_mips_isa;
++	  mips_opts.fp32 = file_mips_fp32;
++	}
+       else if (isa < 1 || isa > 4)
+ 	as_bad ("unknown ISA level");
+       else
+-	mips_opts.isa = isa;
++	{
++	  mips_opts.isa = isa;
++	  mips_opts.fp32 = isa < 3;
++	}
+     }
+   else if (strcmp (name, "autoextend") == 0)
+     mips_opts.noautoextend = 0;

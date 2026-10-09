@@ -77,7 +77,7 @@ u32 func_80031F90(u32 mask);
 void func_80032890(void *arg);
 void func_80032A9C(void *arg);
 void func_8006CBE8(Sched8006C9B8 *sc, Task8006C9B8 *task);
-void func_8006D184(s32 id, s32 on);
+s32 func_8006D184(u8 id, u8 on);
 void func_8006C9B8(Sched8006C9B8 *sc) {
     Msg8006C9B8 msgs[8];
     Wrap8006C9B8 *msg;

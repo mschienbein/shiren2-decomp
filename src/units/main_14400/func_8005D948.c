@@ -2,19 +2,20 @@
 
 typedef unsigned short u16;
 typedef unsigned char u8;
+/* Whole 0x20-byte controller cleared by func_8005DA84. */
 typedef struct {
-    s32 field_00;
-    s32 field_04;
-    u16 field_08;
-    u16 field_0A;
-    u8 field_0C;
-    u8 field_0D;
-} State;
-extern State D_80165960[];
+    short x0, y0, x1, y1;
+    unsigned short x2, y2;
+    u8 phase, mode;
+    u8 level_c, target_c, level_b, target_b, level_a, target_a;
+    u8 flags, reserved15, period, tick;
+    u8 first, second, selection, reserved1B[5];
+} RampState;
+extern RampState D_80165960;
 void func_8005D948(s32 mode, s32 dx, s32 dy) {
-    State *state = D_80165960;
-    state->field_0D = mode;
-    state->field_0C = 0;
-    state->field_08 += dx;
-    state->field_0A += dy;
+    RampState *state = &D_80165960;
+    state->mode = mode;
+    state->phase = 0;
+    state->x2 += dx;
+    state->y2 += dy;
 }

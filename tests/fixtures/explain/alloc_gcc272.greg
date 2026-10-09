@@ -1,0 +1,16 @@
+
+;; Function func_8008C6B8
+
+;; 4 regs to allocate: 77 79 74 73
+;; 73 conflicts: 73 74 77 79 2 4 5 6 29
+;; 74 conflicts: 73 74 77 79 2 4 5 6 29
+;; 77 conflicts: 73 74 77 29
+;; 77 preferences: 2 4
+;; 79 conflicts: 73 74 79 29
+;; 79 preferences: 2 4
+
+;; Register dispositions:
+73 in 17  74 in 16  76 in 2  77 in 2  79 in 2  
+
+;; Hard regs used:  2 4 5 6 16 17 31
+

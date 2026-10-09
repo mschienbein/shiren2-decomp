@@ -10,7 +10,7 @@ typedef struct {
 } Obj801216D0;
 
 extern u8 D_8015F938[];
-void func_801140C0(Obj801216D0 *obj, s32 kind, s32 arg);
+Obj801216D0 *func_801140C0(Obj801216D0 *obj, s32 kind, s32 arg);
 void func_800ACF34(Obj801216D0 *obj);
 
 Obj801216D0 *func_801216D0(Obj801216D0 *obj) {

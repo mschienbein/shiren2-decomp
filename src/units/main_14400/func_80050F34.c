@@ -2,7 +2,7 @@
 typedef struct { s32 x, y, z; } Vec3i;
 typedef struct { s32 x0; s32 x4; } Pos;
 typedef struct { char pad[0x12]; unsigned short x12; } Obj;
-void *func_80085938(s32 id, s32 track, Vec3i pos, s32 arg4, s32 arg5, unsigned short flags, s32 arg7);
+void *func_80085938(s32 id, s32 track, Vec3i pos, s32 arg4, s32 arg5, s32 flags, s32 arg7);
 void func_80050F34(s32 a, Pos *pos, s32 c, s32 d) {
     Vec3i v;
     Obj *o;

@@ -163,6 +163,37 @@ class ProgressTests(unittest.TestCase):
         self.assertEqual(sum(row["handwritten_annotated_bytes"] for row in audit.values()), 8)
         self.assertIn("Complete-game denominator and percentage: unknown", (self.root / "docs/PROGRESS.md").read_text())
 
+    def test_cpp_numerator_stays_separate_from_c_with_an_exact_sum(self):
+        report = self.record()["report"]
+        accepted = self.accepted()
+        denominator = progress.read_json(self.root / report["denominator"]["path"])
+        cpp = {"image_id": "main_14400", "symbol": "game", "source": "src/game.cpp",
+               "rom_start": 0x2000, "vram_start": 0x800413C0, "size": 16}
+        accepted.document["c_matches"].append(cpp)
+        accepted.document["c_attributions"].append({**cpp, "reference_sha256": hashlib.sha256(self.original[0x2000:0x2010]).hexdigest()})
+        accepted.document["coverage"].update(matched_cpp_functions=1, matched_cpp_bytes=16,
+                                            matched_c_and_cpp_functions=2, matched_c_and_cpp_bytes=24)
+        counts = progress.calculate(accepted, denominator)
+        self.assertEqual((counts["matched_c_functions"], counts["matched_c_instruction_bytes"]), (1, 8))
+        self.assertEqual((counts["matched_cpp_functions"], counts["matched_cpp_instruction_bytes"]), (1, 16))
+        self.assertEqual((counts["matched_c_and_cpp_functions"], counts["matched_c_and_cpp_instruction_bytes"]), (2, 24))
+        self.assertEqual(counts["images"]["resident"]["matched_cpp_instruction_bytes"], 0)
+        self.assertEqual(counts["images"]["main_14400"]["matched_c_instruction_bytes"], 0)
+        self.assertEqual(counts["mapped_catalogue_c_and_cpp_percent"], 100)
+        self.assertIsNone(counts["complete_game_percent"])
+        text = progress.markdown({**report, "coverage": counts})
+        self.assertIn("Accepted C++: 16 instruction bytes across 1 functions", text)
+        self.assertIn("Accepted C + C++: 24 instruction bytes across 2 functions", text)
+        accepted.document["coverage"]["matched_c_and_cpp_bytes"] = 25
+        with self.assertRaisesRegex(ValueError, "inconsistent accepted C\\+C\\+\\+ numerator"):
+            progress.calculate(accepted, denominator)
+
+    def test_c_only_receipt_cannot_forge_cpp_counters(self):
+        self.receipt["coverage"].update(matched_cpp_functions=1, matched_cpp_bytes=16)
+        self.rewrite_receipt_and_pointer()
+        with self.assertRaisesRegex(ValueError, "coverage counter inventory"):
+            self.accepted()
+
     def test_duplicate_record_is_exact_noop_and_show_never_recatalogues(self):
         self.record()
         paths = [self.root / "docs" / name for name in ["progress-history.jsonl", "progress.json", "PROGRESS.md"]]

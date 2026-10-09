@@ -2,7 +2,7 @@
 
 typedef unsigned char u8;
 
-typedef struct { u8 pad0[0x4C]; void *vtable_4C; u8 pad50[0xC]; } Part8009CA0C;
+typedef struct { u8 pad0[0x4C]; const void *vtable_4C; u8 pad50[0xC]; } Part8009CA0C;
 typedef struct {
     Part8009CA0C base_0;
     Part8009CA0C part_5C;
@@ -10,8 +10,8 @@ typedef struct {
     s32 field_C4;
     void *vtable_C8;
 } Obj8009CA0C;
-extern u8 D_80152968[];
-extern u8 D_80152AE8[];
+extern const unsigned char D_80152968[152];
+extern const unsigned char D_80152AE8[144];
 extern u8 D_80151EC8[];
 Part8009CA0C *func_800953C0(Part8009CA0C *part);
 

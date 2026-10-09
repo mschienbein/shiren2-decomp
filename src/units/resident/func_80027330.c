@@ -11,14 +11,14 @@ s32 func_80027330(void *queue, s32 channel, u16 block, u8 *destination)
     func_800322C4();
 
     do {
-        cursor = D_80041350;
+        cursor = (u8 *)&D_80041350;
         if (D_80039018 != 2 || D_80036F70 != channel) {
             D_80039018 = 2;
             D_80036F70 = channel;
             for (i = 0; i < channel; i++) {
                 *cursor++ = 0;
             }
-            D_8004138C = 1;
+            D_80041350.pifstatus = 1;
             ((ResidentControllerRamPacket *)cursor)->dummy = 0xFF;
             ((ResidentControllerRamPacket *)cursor)->transmit_size = 3;
             ((ResidentControllerRamPacket *)cursor)->receive_size = 0x21;
@@ -31,9 +31,9 @@ s32 func_80027330(void *queue, s32 channel, u16 block, u8 *destination)
         ((ResidentControllerRamPacket *)cursor)->address_high = block >> 3;
         ((ResidentControllerRamPacket *)cursor)->address_low = (block << 5) | func_80027DB0(block);
 
-        status = func_80032500(1, D_80041350);
+        status = func_80032500(1, &D_80041350);
         func_8002FEA0(queue, 0, 1);
-        status = func_80032500(0, D_80041350);
+        status = func_80032500(0, &D_80041350);
         func_8002FEA0(queue, 0, 1);
 
         status = (((ResidentControllerRamPacket *)cursor)->receive_size & 0xC0) >> 4;

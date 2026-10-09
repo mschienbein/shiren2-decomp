@@ -29,7 +29,7 @@ typedef struct {
 
 /* The whole eight-byte single-bit mask table, rodata 0x8015488C..0x80154893
  * = 1,2,4,...,0x80 (func_800B0164 indexes it with i & 7). */
-extern u8 D_8015488C[8];
+extern const u8 D_8015488C[8];
 extern void func_800CA0A8(RecordChild *child, s32 value);
 extern void func_800CA4A4(RecordChild *child, const char *name);
 extern void func_800CA4E8(RecordChild *child, const char *name);
