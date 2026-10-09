@@ -16,6 +16,7 @@ the original.
 Accepted checkpoint **omp-b6r**: **6,396 functions** and **978,648 bytes** of matching source,
 91.40% of the provisional mapped CPU catalogue. That is 6,355 C functions (956,860 bytes)
 and 41 C++ functions (21,788 bytes), the latter proven original C++ units.
+Accepted with qualifications (non-blocking review findings and deferred debt): see [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
 Live progress, history and a per-function map: [decomp.dev/mschienbein/shiren2-decomp](https://decomp.dev/mschienbein/shiren2-decomp).
 
 | Image | Matched functions | Matched code bytes | Code % |
