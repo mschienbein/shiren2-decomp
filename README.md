@@ -51,7 +51,9 @@ native, installed-package, authority, source-fault, driver, contributor, I/O and
 review-floor/census reviews retain blocking defects. Two sealed Muse successors
 have returned through GPT-6.1-Sol max supervisors. The installed-distribution
 successor improved several static contracts but failed whole review on ownership
-and release-validation defects; native-record whole review remains pending.
+and release-validation defects. The native successor repaired targeted examples
+but also failed whole review on alias/type-identity closure. New private repair
+assignments remain drafts, not accepted source or exercised controls.
 Real controls and separate execution permissions remain missing. These private
 checkpoints do not update this repository's **omp-b6r** source or matching counters;
 static review and frequent progress publication are not acceptance.
