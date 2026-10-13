@@ -28,12 +28,22 @@ The denominator is a fixed catalogue of 6,517 original CPU functions in the resi
 and main images (`docs/progress-catalogues/`). The two overlays, RSP microcode, assets and the
 complete-game total are not counted yet.
 
-This repository only receives **accepted checkpoints**. A function counts as matching only after all
-of the following:
+Matching source in this repository receives **accepted checkpoints only**.
+A function counts as matching only after all of the following:
 - two fresh full-ROM builds reproduce the original byte for byte;
 - the full test suite passes;
 - independent reviewers have checked the C source rules: no inline asm, no padding blobs standing in
   for code or data, real types for every interface.
+
+Progress publication is continuous: commit and push coherent accepted-source,
+tooling and documentation checkpoints as work advances, and before a handoff,
+rather than waiting for the full decompilation. The private `n64-experiments`
+working/evidence repository is checkpointed alongside this public repository.
+Status documentation may describe unaccepted work, but it must not change the
+published source checkpoint or matching counters without ordinary acceptance.
+Never publish ROMs, extracted assets, credentials, build outputs or incomplete
+live worker writes; never force-push or rewrite history to hide failed work.
+Publication does not replace source review, verification or execution permission.
 
 ## Requirements
 
