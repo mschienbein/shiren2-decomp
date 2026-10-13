@@ -45,9 +45,12 @@ Never publish ROMs, extracted assets, credentials, build outputs or incomplete
 live worker writes; never force-push or rewrite history to hide failed work.
 Publication does not replace source review, verification or execution permission.
 
-As of 2026-10-13, the next private successor is still in verification-integration
-and independent-review work. Unaccepted repairs, prospective controls and private
-progress checkpoints do not update this repository's **omp-b6r** source or counters.
+As of 2026-10-13, the next private successor remains in verification integration.
+The runtime repair passed complete static review with qualifications; native,
+authority and installed-package reviews identified remaining defects. Driver and
+contributor successors are under independent review. Real controls and fresh
+execution permissions remain outstanding. These private progress checkpoints
+do not update this repository's **omp-b6r** source or matching counters.
 
 ## Requirements
 
