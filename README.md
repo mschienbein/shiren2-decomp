@@ -45,6 +45,10 @@ Never publish ROMs, extracted assets, credentials, build outputs or incomplete
 live worker writes; never force-push or rewrite history to hide failed work.
 Publication does not replace source review, verification or execution permission.
 
+As of 2026-10-13, the next private successor is still in verification-integration
+and independent-review work. Unaccepted repairs, prospective controls and private
+progress checkpoints do not update this repository's **omp-b6r** source or counters.
+
 ## Requirements
 
 - macOS (the pinned toolchains in `toolchain.lock.json` are macOS builds), Python 3.12 and
