@@ -56,9 +56,11 @@ subsequently passed independent static review with qualifications; full containi
 package, census, baseline and provenance closure remains blocked.
 
 A thirty-way private Muse wave, supervised by GPT-6.1-Sol max callers, returned
-byte-sealed static case/handler/source maps. Several completion claims were rejected
-for incomplete mapping, and a disclosed process deviation remains qualified.
-All maps require independent semantic review; they are not exercised controls.
+byte-sealed static case/handler/source maps. Complete independent review rejected
+all thirty as complete mappings: exact-source and nested callable/caller/schema
+joins remain unfinished, one map omitted original scalar clauses, and disclosed
+directory-scope violations remain. Valid partial literals/source facts are retained
+separately; successful model transport and byte seals are not acceptance.
 Real control stages and separate execution permissions remain missing. These
 private checkpoints do not update this repository's **omp-b6r** source or matching
 counters. Static review and frequent progress publication are not acceptance.
