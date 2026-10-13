@@ -47,11 +47,14 @@ Publication does not replace source review, verification or execution permission
 
 As of 2026-10-13, the next private successor remains in verification integration.
 Runtime and build repairs passed complete static review with qualifications;
-driver, contributor, I/O and review-floor/census reviews retain blocking defects.
-New bounded native, installed-package and source-fault proposals are under
-independent review. Real controls and fresh execution permissions remain missing.
-These private checkpoints do not update this repository's **omp-b6r** source or
-matching counters; static review and publication are not acceptance.
+native, installed-package, authority, source-fault, driver, contributor, I/O and
+review-floor/census reviews retain blocking defects. Two sealed Muse successors
+have returned through GPT-6.1-Sol max supervisors. The installed-distribution
+successor improved several static contracts but failed whole review on ownership
+and release-validation defects; native-record whole review remains pending.
+Real controls and separate execution permissions remain missing. These private
+checkpoints do not update this repository's **omp-b6r** source or matching counters;
+static review and frequent progress publication are not acceptance.
 
 ## Requirements
 
