@@ -46,17 +46,22 @@ live worker writes; never force-push or rewrite history to hide failed work.
 Publication does not replace source review, verification or execution permission.
 
 As of 2026-10-13, the next private successor remains in verification integration.
-Runtime and build repairs passed complete static review with qualifications;
-native, installed-package, authority, source-fault, driver, contributor, I/O and
-review-floor/census reviews retain blocking defects. Two sealed Muse successors
-have returned through GPT-6.1-Sol max supervisors. The installed-distribution
-successor improved several static contracts but failed whole review on ownership
-and release-validation defects. The native successor repaired targeted examples
-but also failed whole review on alias/type-identity closure. New private repair
-assignments remain drafts, not accepted source or exercised controls.
-Real controls and separate execution permissions remain missing. These private
-checkpoints do not update this repository's **omp-b6r** source or matching counters;
-static review and frequent progress publication are not acceptance.
+Runtime and build repairs passed static review with qualifications. The newest
+native aggregate-array repair also received a qualified complete-source static
+pass, but the whole native/final package remains blocked on genuine fixtures,
+baselines, full caller/census integration and provenance/permission evidence.
+Metadata-graph and seven-view composition reviews found remaining defects.
+The scoped ordered-assertion/parent-cutoff and graph-first retained-reader repairs
+subsequently passed independent static review with qualifications; full containing
+package, census, baseline and provenance closure remains blocked.
+
+A thirty-way private Muse wave, supervised by GPT-6.1-Sol max callers, returned
+byte-sealed static case/handler/source maps. Several completion claims were rejected
+for incomplete mapping, and a disclosed process deviation remains qualified.
+All maps require independent semantic review; they are not exercised controls.
+Real control stages and separate execution permissions remain missing. These
+private checkpoints do not update this repository's **omp-b6r** source or matching
+counters. Static review and frequent progress publication are not acceptance.
 
 ## Requirements
 
