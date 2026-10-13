@@ -61,6 +61,9 @@ all thirty as complete mappings: exact-source and nested callable/caller/schema
 joins remain unfinished, one map omitted original scalar clauses, and disclosed
 directory-scope violations remain. Valid partial literals/source facts are retained
 separately; successful model transport and byte seals are not acceptance.
+The current worker policy uses GPT-6.1-Sol with max reasoning for native authors,
+scouts and reviewers; Muse is reserved for bounded supporting work with review.
+Model routing does not alter historical provenance or existing acceptance gates.
 Real control stages and separate execution permissions remain missing. These
 private checkpoints do not update this repository's **omp-b6r** source or matching
 counters. Static review and frequent progress publication are not acceptance.
