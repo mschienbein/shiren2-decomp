@@ -46,11 +46,12 @@ live worker writes; never force-push or rewrite history to hide failed work.
 Publication does not replace source review, verification or execution permission.
 
 As of 2026-10-13, the next private successor remains in verification integration.
-The runtime repair passed complete static review with qualifications; native,
-authority and installed-package reviews identified remaining defects. Driver and
-contributor successors are under independent review. Real controls and fresh
-execution permissions remain outstanding. These private progress checkpoints
-do not update this repository's **omp-b6r** source or matching counters.
+Runtime and build repairs passed complete static review with qualifications;
+driver, contributor, I/O and review-floor/census reviews retain blocking defects.
+New bounded native, installed-package and source-fault proposals are under
+independent review. Real controls and fresh execution permissions remain missing.
+These private checkpoints do not update this repository's **omp-b6r** source or
+matching counters; static review and publication are not acceptance.
 
 ## Requirements
 
