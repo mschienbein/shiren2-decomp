@@ -63,8 +63,9 @@ directory-scope violations remain. Valid partial literals/source facts are retai
 separately; successful model transport and byte seals are not acceptance.
 The current policy permits **GPT-6.1-Sol with max reasoning only** for orchestration,
 native authors, scouts, reviewers and helper roles. Muse is disabled and is no
-longer used, including supporting work. Ten disjoint native Sol tasks restarted
-the private static work on 2026-10-14; launch is not completion or acceptance.
+longer used, including supporting work. All ten native Sol authors returned
+sealed private static maps on 2026-10-14; exact literal/seal checks passed, while
+independent semantic critique and genuine integration witnesses remain pending.
 Model routing does not alter historical provenance or existing acceptance gates.
 Real control stages and separate execution permissions remain missing. These
 private checkpoints do not update this repository's **omp-b6r** source or matching
