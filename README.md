@@ -68,10 +68,14 @@ sealed private static maps on 2026-10-14; exact literal/seal checks passed.
 Six independent Sol critiques completed with qualified static-packet verdicts,
 retaining one citation-boundary exception and all genuine integration/identity/
 fixture/source/execution witnesses. These results are not accepted-source progress.
-Model routing does not alter historical provenance or existing acceptance gates.
-Real control stages and separate execution permissions remain missing. These
-private checkpoints do not update this repository's **omp-b6r** source or matching
-counters. Static review and frequent progress publication are not acceptance.
+The user subsequently authorized coherent fresh Sol-reviewer gate migration and
+resumption of the gated local workflow. An independently reviewed external tool
+baseline now reads the accepted B7s checkpoint correctly; private source remains
+unaccepted. A new original-backed hypothesis was compiled and rejected without
+altering its target. Router/bootstrap and installed-census repairs are in progress.
+Historical provenance, real source/control gates, two fresh builds, full suite
+and independent review remain mandatory. None of these private checkpoints
+updates this repository's **omp-b6r** source or matching counters.
 
 ## Requirements
 
