@@ -61,9 +61,10 @@ all thirty as complete mappings: exact-source and nested callable/caller/schema
 joins remain unfinished, one map omitted original scalar clauses, and disclosed
 directory-scope violations remain. Valid partial literals/source facts are retained
 separately; successful model transport and byte seals are not acceptance.
-The current policy permits **GPT-6.1-Sol with max reasoning only** for orchestration,
-native authors, scouts, reviewers and helper roles. Muse is disabled and is no
-longer used, including supporting work. All ten native Sol authors returned
+Model roles changed on 2026-10-14: **Claude Opus 5.5 (xhigh)** integrates and
+takes the hardest work — hard-tail and overlay matching, original-ROM evidence and
+deep debugging — while **GPT-6.1-Sol (max)** implements harness code, performs
+independent reviews and scouting. Muse is not used. All ten native Sol authors returned
 sealed private static maps on 2026-10-14; exact literal/seal checks passed.
 Six independent Sol critiques completed with qualified static-packet verdicts,
 retaining one citation-boundary exception and all genuine integration/identity/
