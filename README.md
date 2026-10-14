@@ -74,14 +74,16 @@ resumption of the gated local workflow. An independently reviewed external tool
 baseline now reads the accepted B7s checkpoint correctly; private source remains
 unaccepted. A new original-backed hypothesis was compiled and rejected without
 altering its target. Router/bootstrap and installed-census repairs are in progress.
-In the Opus hardcore wave (2026-10-14), 20 of the 23 remaining frontier functions
-(9,960 bytes) now have exact private forms, including `func_800897AC` (1,056 bytes)
-and the 142-function Creature joint. Independent reviews are in progress. Three functions
-(1,920 bytes) are still unmatched. On 2026-10-14 the user approved a lean acceptance
-contract (ordinary two fresh builds, full suite and independent reviews, plus a
-native C++ layout/ODR check) in place of the remaining private verification harness.
-None of these private checkpoints updates this repository's **omp-b6r** source or
-matching counters.
+In the Opus hardcore wave (2026-10-14), 22 of the 23 remaining frontier functions
+now have exact private forms, including `func_800897AC` (1,056 bytes), `func_80071088`
+(880 bytes) and the 142-function Creature joint. Nearly all of them have passed independent
+review. The last function (820 bytes) is one instruction word from matching. On 2026-10-14 the user
+approved a lean acceptance contract: two fresh builds, the full suite, independent
+reviews and a native C++ layout/ODR check, replacing the remaining private verification
+harness. That contract has passed independent review. A never-compiled predecessor
+successor needed ten source fixes, now made and reviewed. Its exhaustive compile
+sweep is underway. None of these private checkpoints updates this repository's
+**omp-b6r** source or matching counters.
 
 ## Requirements
 
