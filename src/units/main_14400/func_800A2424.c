@@ -1,13 +1,13 @@
-#include "common.h"
+#include "map_rect.h"
 static inline s32 absolute(s32 value)
 {
     if (value < 0) value = -value;
     return value;
 }
-s32 func_800A2424(s32 *arg)
+s32 func_800A2424(MapPos *arg)
 {
-    s32 y = absolute(arg[1]);
-    s32 x = absolute(arg[0]);
+    s32 y = absolute(arg->y);
+    s32 x = absolute(arg->x);
     if (x < y) x = y;
     return x;
 }

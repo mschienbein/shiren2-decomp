@@ -1,32 +1,30 @@
 #include "common.h"
+#include "map_line_iterator.h"
 typedef unsigned char u8;
-typedef struct { s32 x, y; } Position;
-typedef struct { s32 left, top, right, bottom; u8 flags10; u8 pad11[3]; } Room;
-typedef struct { Position position; u8 direction; s32 length, current; } Line;
+/* Foreign room-table view: geometry plus four side-metadata bytes, 20 bytes total. */
+typedef struct { MapRect bounds; u8 flags10, flags11, flags12, flags13; } Room;
 extern Room D_801431F0[];
-extern void func_800C25D0(Line *, Position *, u8 *, s32);
-extern void *func_800C2758(void *, void *);
-extern u32 func_800B1C6C(Position *);
+extern u32 func_800B1C6C(MapPos *);
 extern s32 func_800B5B60(void *);
 extern s32 func_800B2048(void *);
 /* ODD_C: loop-test accessor; it also keeps GCC from duplicating the exit test. */
-static inline s32 has_next(Line *line)
+static inline s32 has_next(MapLineIterator *line)
 {
-    return line->current < line->length;
+    return line->index < line->length;
 }
 s32 func_800B3DF0(u8 first, u8 second)
 {
-    Position start;
-    Line line;
-    Position point;
+    MapPos start;
+    MapLineIterator line;
+    MapPos point;
     u8 directionByte;
-    Position *p;
+    MapPos *p;
     s32 direction = 0;
     s32 length = 0, found = 0, blocked, both;
     Room *a = &D_801431F0[first];
     Room *b = &D_801431F0[second];
-    s32 topA = a->top, leftA = a->left, bottomA = a->bottom, rightA = a->right;
-    s32 topB = b->top, leftB = b->left, bottomB = b->bottom, rightB = b->right;
+    s32 topA = a->bounds.min.y, leftA = a->bounds.min.x, bottomA = a->bounds.max.y, rightA = a->bounds.max.x;
+    s32 topB = b->bounds.min.y, leftB = b->bounds.min.x, bottomB = b->bounds.max.y, rightB = b->bounds.max.x;
     /* Same columns: probe the one-row gap between vertically adjacent rooms (direction 6). */
     if (leftA == leftB && rightA == rightB) {
         start.x = leftA;

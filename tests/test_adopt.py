@@ -96,7 +96,7 @@ class CxxAdoptionTests(unittest.TestCase):
                                      vram_start=0x80041500, size=0x10, slot_end=0x14550)
             matched = SimpleNamespace(status="match", problems=[], participating_files=[{"path": str(candidate)}],
                                       text_bytes=0x10, instruction_bytes=0x10, slot_bytes=0x10,
-                                      data_sections=[], bss_carve=None, source={"sha256": "a" * 64})
+                                      data_sections=[], bss_carve=None, generated_functions=[], source={"sha256": "a" * 64})
             gate = Mock()
             gate.check.return_value = []
             unit = Unit([target.symbol], candidate)
@@ -463,7 +463,7 @@ class InteriorAliasTests(unittest.TestCase):
         known = {"D_80037004": 0x80037004, "D_8003D9F0": 0x8003D9F0, "D_8003DA00": 0x8003DA00}
         with tempfile.TemporaryDirectory() as temporary:
             (Path(temporary) / "candidate.o").write_bytes(b"")
-            result = SimpleNamespace(out_dir=temporary, data_sections=[
+            result = SimpleNamespace(out_dir=temporary, image_id="resident", data_sections=[
                 {"section": ".data", "vram": 0x80037000, "size": 0x10},
                 {"section": ".bss", "vram": 0x8003D9E0, "size": 0x20},
                 {"section": "COMMON", "vram": 0x8003DA00, "size": 4}])
@@ -610,7 +610,7 @@ class SplitDataTests(unittest.TestCase):
     def test_neighbor_labels_remain_absolute_and_half_open(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             (Path(temporary) / "candidate.o").write_bytes(b"fixture")
-            result = SimpleNamespace(out_dir=temporary, data_sections=[
+            result = SimpleNamespace(out_dir=temporary, image_id="main_14400", data_sections=[
                 {"vram": 0x801398B1, "size": 1, "section": ".data"}])
             known = {f"D_{address:X}": address for address in range(0x801398B0, 0x801398B5)}
             elf = SimpleNamespace(symbols=[SimpleNamespace(name="D_801398B1", shndx=1)])
@@ -839,9 +839,9 @@ class DataBssInteractionTests(unittest.TestCase):
                                  vram_start=0x80041400, size=0x10, slot_end=0x14450)
 
         def matched(carve: dict) -> SimpleNamespace:
-            return SimpleNamespace(status="match-with-data", problems=[], participating_files=[{"path": str(root / "candidate.c")}],
+            return SimpleNamespace(status="match-with-data", image_id="main_14400", problems=[], participating_files=[{"path": str(root / "candidate.c")}],
                                    text_bytes=0x10, instruction_bytes=0x10, slot_bytes=0x10, source={"sha256": "a" * 64},
-                                   out_dir=str(root), bss_carve=carve,
+                                   out_dir=str(root), bss_carve=carve, generated_functions=[],
                                    data_sections=[{"section": ".data", "size": 1, "vram": data_start + 0x8002CFC0, "rom_start": data_start},
                                                   {"section": ".bss", "size": 0xC, "vram": plan["vram"]}])
         gate, log = Mock(), []
@@ -971,25 +971,53 @@ class AbsorbTests(unittest.TestCase):
     def adopt(self, root: Path, functions: list[str], text: str, *, absorbs: tuple[str, ...] | list[str] = (),
               data: tuple[tuple[int, int], ...] = (), defined: tuple[str, ...] = (), known: dict[str, int] | None = None,
               text_bytes: int | None = None, final_status: str | None = None, candidate_status: str | None = None,
-              log: list[str] | None = None) -> dict[str, int]:
-        candidate = root / "candidates" / f"{functions[0]}-{len(functions)}.c"
+              log: list[str] | None = None, suffix: str = ".c", generated: dict[str, str] | None = None) -> dict[str, int]:
+        candidate = root / "candidates" / f"{functions[0]}-{len(functions)}{suffix}"
         candidate.parent.mkdir(exist_ok=True)
         candidate.write_text(text)
         targets = [ABSORB_TARGETS[symbol] for symbol in functions]
         slot = targets[-1].slot_end - targets[0].rom_start
         sections = [{"section": ".data", "rom_start": start, "size": size, "vram": start + MAIN_DELTA} for start, size in data]
-        matched = SimpleNamespace(status=candidate_status or ("match-with-data" if sections else "match"), problems=[],
+        matched = SimpleNamespace(status=candidate_status or ("match-with-data" if sections else "match"), image_id="main_14400", problems=[],
                                   participating_files=[{"path": str(candidate)}], text_bytes=slot if text_bytes is None else text_bytes,
                                   instruction_bytes=sum(target.size for target in targets), slot_bytes=slot, data_sections=sections,
-                                  bss_carve=None, source={"sha256": "a" * 64}, out_dir=str(root))
+                                  bss_carve=None, source={"sha256": "a" * 64}, out_dir=str(root),
+                                  generated_functions=[{"symbol": symbol, "generated": compiler, "size": ABSORB_TARGETS[symbol].size}
+                                                       for symbol, compiler in (generated or {}).items()])
         final = SimpleNamespace(**{**vars(matched), "status": final_status or matched.status})
         elf = SimpleNamespace(symbols=[SimpleNamespace(name=name, shndx=1) for name in defined])
         with patch("adopt.PROJECT", root), patch("adopt.resolve_targets", side_effect=lambda symbols: [ABSORB_TARGETS[s] for s in symbols]), \
                 patch("adopt.check", side_effect=[(matched, None), (final, None)]), patch("adopt._assert_main_bss_unchanged"), \
                 patch("adopt.accepted_build", return_value=root), patch("adopt.symbol_addresses", return_value=known or {}), \
                 patch("adopt.Elf", return_value=elf):
-            return adopt(Unit(list(functions), candidate, absorbs=list(absorbs)), rom=bytes(0x14500),
+            return adopt(Unit(list(functions), candidate, profile="gxx281pm-gnu291-O2-unsigned" if suffix == ".cpp" else None, absorbs=list(absorbs)), rom=bytes(0x14500),
                          log=[] if log is None else log, gate=self.gate(root, candidate), index=0)
+
+    def test_joint_absorption_transfers_generated_owner_without_duplicate_credit(self) -> None:
+        from evidence import validate_matches
+        for suffix in (".c", ".cpp"):
+            with self.subTest(previous_owner=suffix):
+                root = self.project()
+                old_generated = {JOINT[-1]: "_GLOBAL_.I.old"} if suffix == ".cpp" else {}
+                self.adopt(root, [JOINT[-1]], f"void {JOINT[-1]}(void) {{}}\n",
+                           suffix=suffix, generated=old_generated)
+                old_path = f"src/units/main_14400/{JOINT[-1]}{suffix}"
+                before = json.loads((root / "config/matches.json").read_text())["functions"]
+                mapping = {JOINT[0]: "__tcf_0", JOINT[-1]: f"_GLOBAL_.I.{JOINT[1]}"}
+                self.adopt(root, JOINT, f"void {JOINT[1]}(void) {{}}\n", absorbs=[JOINT[-1]],
+                           suffix=".cpp", generated=mapping)
+                rows = json.loads((root / "config/matches.json").read_text())["functions"]
+                self.assertEqual(len(rows), 3)
+                self.assertEqual({row["symbol"]: row["generated"] for row in rows if "generated" in row}, mapping)
+                self.assertFalse((root / old_path).exists())
+                self.assertNotIn(old_path, json.loads((root / "config/compiler_profiles.json").read_text())["tu_profiles"])
+                self.assertNotIn(old_path, json.loads((root / "config/images.json").read_text())["source_bindings"])
+                self.assertIn("[0x14440, cpp, units/main_14400/func_80041400]", (root / "config/shiren2.jp.yaml").read_text())
+                counts = validate_matches(rows, {"main_14400": {"rom_start": 0x14400, "rom_end": 0x1339F0, "vram_start": 0x800413C0}})
+                self.assertEqual(counts["matched_cpp_functions"], 3)
+                self.assertEqual(counts["matched_generated_cpp_functions"], 2)
+                self.assertEqual(counts["matched_cpp_bytes"], 0x2C)
+                self.assertEqual({row["symbol"] for row in rows} - {row["symbol"] for row in before}, set(JOINT[:2]))
 
     def test_absorbing_a_middle_text_only_unit_equals_direct_adoption(self) -> None:
         joint = "void func_80041400(void) {}\nvoid func_80041410(int value) {}\nvoid func_80041420(void) {}\n"
@@ -1267,9 +1295,9 @@ class AbsorbTests(unittest.TestCase):
                 (out / "candidate.o").write_bytes(b"fixture")
                 (out / "source").symlink_to(cwd, target_is_directory=True)
                 result = SimpleNamespace(status="mismatch-data" if fail_recheck and final and target.symbol == JOINT[0]
-                                         else "match-with-data", problems=[], participating_files=[{"path": str(source)}],
+                                         else "match-with-data", image_id=target.image_id, problems=[], participating_files=[{"path": str(source)}],
                                          text_bytes=target.slot_end - target.rom_start, instruction_bytes=target.size,
-                                         slot_bytes=target.slot_end - target.rom_start, bss_carve=None,
+                                         slot_bytes=target.slot_end - target.rom_start, bss_carve=None, generated_functions=[],
                                          source={"sha256": "a" * 64}, out_dir=str(out),
                                          data_sections=[{"section": ".data", "rom_start": start, "size": size,
                                                          "vram": start + MAIN_DELTA, "matches_original": True}])

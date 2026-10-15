@@ -1,14 +1,14 @@
 #include "common.h"
+#include "item_records.h"
+#include "map_types.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
 
-/* g++ vtable entry; entry 1 (+0x08) is the destructor, void (receiver, s32 flags). */
-struct VEntry { short delta; short index; void (*destroy)(void *self, s32 flags); };
 struct Unit;
-struct Dir { u8 value; };
-struct Obj { s32 x0; s32 x4; VEntry *vt8; s32 indexC; };
-struct Msg { s32 kind; Unit *source; Unit *target; Dir dir; };
+/* Prefix view of the 0x12/0x13 hit event: kind, source and target units, MapDir at +0xC
+   (the same offsets as Event_800C37B8's base.kind/arg4/arg8/direction). */
+struct Msg_80127274 { s32 kind; Unit *source; Unit *target; MapDir dir; };
 
 extern "C" {
 /* Item parameter table entries (read-only data): range/damage pairs per item level. */
@@ -16,12 +16,12 @@ extern const u16 D_80156AA0, D_80156AA2, D_80156AA4, D_80156AA6, D_80156AA8, D_8
 s32 func_80049CB4(s32 id, ...);
 void func_800A7204(void *target, void *source, void *direction, s32 range, s32 damage, s32 message_kind, s32 stop_on_terrain, s32 notify);
 void func_800D3650(void *arg);
-s32 func_80112B38(void *self, void *msg);
-s32 func_80127274(Obj *o, Msg *m);
+s32 func_80112B38(Item *self, void *msg);
+s32 func_80127274(Item *o, Msg_80127274 *m);
 }
 
 /* Message handler slot: s32 (receiver, event). */
-s32 func_80127274(Obj *o, Msg *m)
+s32 func_80127274(Item *o, Msg_80127274 *m)
 {
     /*
      * Per-level effect values: g++ function-local statics with dynamic
@@ -31,7 +31,7 @@ s32 func_80127274(Obj *o, Msg *m)
      */
     static const short damage_by_level[3] = { D_80156AA2, D_80156AA6, D_80156AAA };
     static const short range_by_level[3] = { D_80156AA0, D_80156AA4, D_80156AA8 };
-    Dir dir;
+    MapDir dir;
     Unit *target, *source;
     s32 level;
 
@@ -42,11 +42,11 @@ s32 func_80127274(Obj *o, Msg *m)
         target = m->target;
         func_80049CB4(0xA1, target);
         source = m->source;
-        level = o->indexC - 1;
+        level = o->payload.level.level0C - 1;
         func_800A7204(target, source, &dir, range_by_level[level], damage_by_level[level], 6, 0, 1);
         if (m->kind == 0x12) {
             func_800D3650(o);
-            if (o != 0) o->vt8[1].destroy((char *)o + o->vt8[1].delta, 3);
+            if (o != 0) o->field08->method0C((char *)o + o->field08->delta08, 3);
         }
         return 1;
     }

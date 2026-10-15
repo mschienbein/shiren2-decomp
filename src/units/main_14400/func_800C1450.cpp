@@ -1,28 +1,10 @@
 #include "common.h"
+#include "map_rect.h"
 
 typedef unsigned char u8;
 
-struct Point {
-    s32 x;
-    s32 y;
-    Point() {}
-    Point(const Point &o) : x(o.x), y(o.y) {}
-};
-
-struct Rect {
-    Point a;
-    Point b;
-    Rect() {}
-    Rect(const Rect &o) : a(o.a), b(o.b) {}
-    Rect &operator=(const Rect &o)
-    {
-        a = o.a;
-        b = o.b;
-        return *this;
-    }
-};
-
-struct Floor {
+/* Borrowed floor-generator prefix; no Floor object is constructed here. */
+struct Floor_800C1450 {
     char pad[0x3DC];
     s32 room_count;
 };
@@ -34,27 +16,33 @@ extern u8 D_80147620[];
 /* Per-room bounds parameters have four-byte rows; rows 0..7 are used. */
 extern const u8 D_80153DD8[][4];
 s32 func_800C5844(void *rng, u8 base, u8 top);
-void func_800B7948(void *self, s32 index, Rect *rect);
-void func_800B7E9C(void *arg0, const Rect *arg1, const Rect *arg2);
 void func_800B17A4(void);
 }
 
-/* func_800B7948 receives its rectangle by value (copy-constructed temporary). */
-static inline void paint_room(Floor *floor, s32 index, Rect bounds)
+/* Keep the original reference-based assignment and its two native corner copies. */
+static inline MapRect &assign_room(MapRect &destination, const MapRect &source)
+{
+    destination.min = source.min;
+    destination.max = source.max;
+    return destination;
+}
+
+/* The painter receives the address of a distinct copy-constructed value. */
+static inline void paint_room(Floor_800C1450 *floor, s32 index, MapRect bounds)
 {
     func_800B7948(floor, index, &bounds);
 }
 
-extern "C" void func_800C1450(Floor *floor)
+extern "C" void func_800C1450(Floor_800C1450 *floor)
 {
-    Rect room;
-    Rect rooms[4];
+    MapRect room;
+    MapRect rooms[4];
     for (s32 i = 0; i < 4; i++) {
-        room.a.y = (u8)func_800C5844(D_80147620, D_80153DD8[0][i], D_80153DD8[1][i]) + 10;
-        room.a.x = (u8)func_800C5844(D_80147620, D_80153DD8[2][i], D_80153DD8[3][i]) + 10;
-        room.b.y = (u8)func_800C5844(D_80147620, D_80153DD8[4][i], D_80153DD8[5][i]) + 10;
-        room.b.x = (u8)func_800C5844(D_80147620, D_80153DD8[6][i], D_80153DD8[7][i]) + 10;
-        rooms[i] = room;
+        room.min.y = (u8)func_800C5844(D_80147620, D_80153DD8[0][i], D_80153DD8[1][i]) + 10;
+        room.min.x = (u8)func_800C5844(D_80147620, D_80153DD8[2][i], D_80153DD8[3][i]) + 10;
+        room.max.y = (u8)func_800C5844(D_80147620, D_80153DD8[4][i], D_80153DD8[5][i]) + 10;
+        room.max.x = (u8)func_800C5844(D_80147620, D_80153DD8[6][i], D_80153DD8[7][i]) + 10;
+        assign_room(rooms[i], room);
         paint_room(floor, i, rooms[i]);
     }
     func_800B7E9C(floor, &rooms[0], &rooms[1]);

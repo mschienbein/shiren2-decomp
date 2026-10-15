@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import os
 import random
+import shutil
 import signal
 import subprocess
 import sys
@@ -108,6 +109,11 @@ class ReplayCommandEvidenceTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         self.directory = Path(temporary.name).resolve() / "run"
         (self.directory / "source/config").mkdir(parents=True)
+        tools = self.directory / "source/tools"
+        tools.mkdir()
+        # Keep the real recipe gate alongside the existing command-evidence mocks.
+        for name in ("assets.py", "rommap.py", "rspaudio.py", "rom.py", "images.py", "evidence.py", "toolchain_library.py", "generated_symbols.py"):
+            shutil.copy2(TOOLS / name, tools / name)
         (self.directory / "input-manifest.json").write_text("{}")
         (self.directory / "shiren2.ld").write_text("frozen linker script\n")
         self.profile = {"tu_profiles": {}, "compiler": {"gcc": {"path": "/pinned/gcc"}}, "compiler_environment": {}}
@@ -148,7 +154,9 @@ class ReplayCommandEvidenceTests(unittest.TestCase):
     def test_check_failure_after_a_successful_command_writes_the_final_state(self) -> None:
         trial = self.replay(subprocess.CompletedProcess([], 0, b"", b""), "different linker script\n")
         self.assertRegex(str(self.error), "Frozen YAML does not reproduce the linker script")
-        self.assertEqual((trial / "command-evidence/commands.json").read_text(), encoded([self.expected_record(trial, 0)]))
+        split = self.expected_record(trial, 0)
+        pack = {**split, "argv": certification.split_commands()[1]}
+        self.assertEqual((trial / "command-evidence/commands.json").read_text(), encoded([split, pack]))
 
 
 # A child replays with a mocked toolchain and receives a real, default SIGTERM during or just
@@ -196,6 +204,10 @@ class AbruptTerminationTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         directory = Path(temporary.name).resolve() / "run"
         (directory / "source/config").mkdir(parents=True)
+        tools = directory / "source/tools"
+        tools.mkdir()
+        for name in ("assets.py", "rommap.py", "rspaudio.py", "rom.py", "images.py", "evidence.py", "toolchain_library.py", "generated_symbols.py"):
+            shutil.copy2(TOOLS / name, tools / name)
         (directory / "generated").mkdir()
         (directory / "obj").mkdir()
         (directory / "obj/control.o").write_bytes(b"expected object")
@@ -214,7 +226,8 @@ class AbruptTerminationTests(unittest.TestCase):
 
     def test_death_during_command_2_keeps_command_1_complete_and_command_2_started(self) -> None:
         log, records = self.killed("during-command-2")
-        self.assertEqual([record["argv"][0] for record in records], ["/synthetic/python", "synthetic-control-command"])
+        with patch.object(certification, "python_command", return_value="/synthetic/python"):
+            self.assertEqual([record["argv"] for record in records], certification.split_commands())
         self.assertEqual(records[0]["returncode"], 0)
         self.assertNotIn("returncode", records[1])
         self.assertEqual(sorted(path.name for path in log.iterdir()), ["001.stderr", "001.stdout", "commands.json"])

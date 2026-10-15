@@ -1,24 +1,23 @@
 #include "common.h"
+#include "map_ray_iterator.h"
 typedef signed char s8;
 typedef unsigned char u8;
 typedef struct ShirenDirection { s8 value; } ShirenDirection;
 typedef struct { unsigned char pad[0x40]; short field40; s32 (*field44)(void *, void *, unsigned char *); } Methods;
 typedef struct { unsigned char pad[8]; unsigned char field8; unsigned char pad9[0x1B]; Methods *field24; } Object;
-typedef struct { s32 words[2]; } Position;
-typedef struct { unsigned char pad[0x1C]; s32 field1C; unsigned char pad20[8]; } Iterator;
-extern void *func_800A39C0(Position *, Object *, unsigned char *, s32);
-extern void *func_800C5150(Iterator *, Position *, ShirenDirection, s32, u32);
-extern void *func_800C51B8(Iterator *);
+extern void *func_800A39C0(MapPos *, Object *, unsigned char *, s32);
+extern void *func_800C5150(MapRayIterator *, MapPos *, ShirenDirection, s32, u32);
+extern void *func_800C51B8(MapRayIterator *);
 extern s32 func_800A674C(Object *, void *);
 extern s32 func_800A65B8(Object *, void *);
 extern u8 func_800A6420(Object *, void *);
 extern void func_800A2F80(unsigned char *, s32);
-static inline s32 iterator_remaining(Iterator *iterator) {
-    return iterator->field1C;
+static inline s32 iterator_remaining(MapRayIterator *iterator) {
+    return iterator->available;
 }
 void *func_800A4B24(Object *p, s32 expected, s32 ranked, s32 checked) {
-    Iterator iterator;
-    Position position;
+    MapRayIterator iterator;
+    MapPos position;
     unsigned char direction;
     ShirenDirection scan_direction;
     unsigned char rank = 0;

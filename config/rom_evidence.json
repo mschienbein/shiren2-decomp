@@ -1,0 +1,479 @@
+{
+  "consumer_catalogue_id": "2daad37d88dc919dacfba86ee939069d34bd213776d16f06f941bd8e87a03088",
+  "schema_version": 1,
+  "target_sha256": "4073a9f6516ef5d15cdd8b259a952a7d07633a2815f2a738fb5d98415d30a458",
+  "rules": {
+    "schema_version": 1,
+    "kind": "shiren2-rom-region-rules",
+    "target_sha256": "4073a9f6516ef5d15cdd8b259a952a7d07633a2815f2a738fb5d98415d30a458",
+    "target_size": 33554432,
+    "ipl3_md5": "e24dd796b2fa16511521139d28c8356b",
+    "tail_start": 1344608,
+    "content_end": 30457540,
+    "tables": [
+      {
+        "id": "T1",
+        "rom_start": 1100032,
+        "rom_end": 1100272,
+        "record_size": 12,
+        "pair_offsets": [
+          0
+        ],
+        "note": "20 records at 0x10C900; first pair is null; +8 is type, not an endpoint"
+      },
+      {
+        "id": "T2",
+        "rom_start": 1108756,
+        "rom_end": 1110212,
+        "record_size": 52,
+        "pair_offsets": [
+          24,
+          32,
+          40
+        ],
+        "note": "28 scene records at 0x10EB14; raw, Yay0 and distinct segment-6 roles"
+      },
+      {
+        "id": "T2_alias",
+        "rom_start": 1110212,
+        "rom_end": 1111044,
+        "record_size": 52,
+        "pair_offsets": [
+          24,
+          32,
+          40
+        ],
+        "note": "16 scene records at 0x10F0C4; aliases retain their separate owner entries"
+      },
+      {
+        "id": "T3",
+        "rom_start": 1111356,
+        "rom_end": 1111968,
+        "record_size": 36,
+        "pair_offsets": [
+          20,
+          28
+        ],
+        "note": "17 model-group records; raw and paired Yay0 fields"
+      },
+      {
+        "id": "T4",
+        "rom_start": 1112128,
+        "rom_end": 1112528,
+        "record_size": 16,
+        "pair_offsets": [
+          0,
+          8
+        ],
+        "note": "25 records: HVQ2 picture and independently consumed RLE mask pair"
+      },
+      {
+        "id": "T6",
+        "rom_start": 1172964,
+        "rom_end": 1173636,
+        "record_size": 8,
+        "pair_offsets": [
+          0
+        ],
+        "note": "84 music-sequence owner records; marker 0x215 is not complete format proof"
+      },
+      {
+        "id": "T6_alias",
+        "rom_start": 1173636,
+        "rom_end": 1173684,
+        "record_size": 8,
+        "pair_offsets": [
+          0
+        ],
+        "note": "6 additional music-sequence records; preserve all aliases"
+      }
+    ],
+    "chains": [
+      {
+        "id": "T5",
+        "rom_start": 1169596,
+        "rom_end": 1169620,
+        "stride": 10240,
+        "note": "Six starts; end is start plus capacity word 0x2800 at ROM 0x12722C, not logical recording length"
+      }
+    ],
+    "immediate_windows": [
+      {
+        "id": "I_raw_157460",
+        "start_site": 205348,
+        "end_site": 205340,
+        "note": "ROM 0x32234 calls func_8006ABC4 with endpoint-minus-start at 0x32238"
+      },
+      {
+        "id": "I_raw_1575c0",
+        "start_site": 336680,
+        "end_site": 336688,
+        "note": "ROM 0x52338 calls func_8006ABC4 with endpoint-minus-start at 0x5233C"
+      },
+      {
+        "id": "I_raw_157840",
+        "start_site": 336716,
+        "end_site": 336724,
+        "note": "func_8007F2D8 passes 0x157840..0x157B80 to func_8006ABC4"
+      },
+      {
+        "id": "I_audio_ptr1",
+        "start_site": 150376,
+        "end_site": 150384,
+        "note": "audio init: 'N64 PtrTablesV2' bank"
+      },
+      {
+        "id": "I_audio_ptr2",
+        "start_site": 150416,
+        "end_site": 150424,
+        "note": "audio init: 'N64 PtrTablesV2' bank"
+      },
+      {
+        "id": "I_audio_e4f660",
+        "start_site": 150448,
+        "end_site": 150456,
+        "note": "audio init window"
+      },
+      {
+        "id": "I_audio_e53b20",
+        "start_site": 150480,
+        "end_site": 150488,
+        "note": "audio init window"
+      },
+      {
+        "id": "I_scene_309cd0",
+        "start_site": 329048,
+        "end_site": 329056,
+        "note": "loader pair"
+      },
+      {
+        "id": "I_scene_30c830",
+        "start_site": 329076,
+        "end_site": 329084,
+        "note": "loader pair"
+      }
+    ],
+    "inferred_windows": [
+      {
+        "id": "N_audio_wave1",
+        "start_site": 150552,
+        "end_rom": 11447808,
+        "end_basis": "I_audio_ptr2",
+        "note": "'N64 WaveTables'; end is the next referenced window start (I_audio_ptr2)"
+      },
+      {
+        "id": "N_audio_wave2",
+        "start_site": 150676,
+        "end_rom": 14085488,
+        "end_basis": "T6",
+        "note": "'N64 WaveTables'; end is the first T6 window start"
+      },
+      {
+        "id": "N_e53db0_block",
+        "start_site": 150488,
+        "end_rom": 15187568,
+        "end_basis": "N_palette_e7be70",
+        "note": "segment base 0xE53DB0 (11 loads); end is the palette immediate 0xE7BE70 (ROM 0x454AC)"
+      },
+      {
+        "id": "N_palette_e7be70",
+        "start_site": 283820,
+        "end_rom": 15187600,
+        "end_basis": "first image-archive Yay0 stream",
+        "note": "16-entry RGBA16 palette preceding the image-archive Yay0 streams"
+      }
+    ],
+    "code_bases": [
+      {
+        "id": "B_157b80",
+        "site": 200056,
+        "note": "func_8005DCEC: ROM 0x30D80 calls PI reader func_8006AAF0 with indexed base"
+      },
+      {
+        "id": "B_175150",
+        "site": 200184,
+        "note": "func_8005DD80: ROM 0x30E08 calls PI reader func_8006AAF0 with indexed base"
+      },
+      {
+        "id": "B_177150",
+        "site": 200320,
+        "note": "func_8005DE08: ROM 0x30E90 calls PI reader func_8006AAF0 with indexed base"
+      },
+      {
+        "id": "B_179560",
+        "site": 111952,
+        "note": "func_80048480 adds D_8014D430 offsets to ROM base, aligns to 8, then calls func_8006AAF0"
+      },
+      {
+        "id": "B_194fc0",
+        "site": 97476,
+        "note": "func_80044C60 passes base to func_8006AC30; that translator masks segment offset and calls func_8006AAF0"
+      },
+      {
+        "id": "B_1c6cb0",
+        "site": 1274388,
+        "note": "ROM 0x137250 adds index to base, aligns at 0x137254, passes it in a1 at 0x137258 to func_8006AAF0 at 0x13726C"
+      },
+      {
+        "id": "B_23e210",
+        "site": 1275864,
+        "note": "ROM 0x1377D8 materializes base in a1; 0x1377F0 calls func_8006AAF0"
+      }
+    ],
+    "iff_archive": {
+      "id": "IFF_efat",
+      "site": 398032,
+      "first_form": 27622632,
+      "note": "'EFAT' directory of (offset, size) pairs relative to the first FORM; FORM/ESFC/EGRP/EGRF/EOM chunks; EGRF chunks wrap Yay0 streams"
+    }
+  },
+  "inputs": {
+    "consumer-traces.json": "c89be62e3e40b63fecfbb04969a68f6d3176bf6bf68bc2f4a965c3e11422e353",
+    "window-bindings.json": "8669b1d81c84e2f64ef279f5c4e6ad71900e47a04d20905f7bdd097a47a9765d",
+    "raw-research.json": "e59737716f2ad3d9dafefa508d09f48b1d047a2914e72a830c71588fffd5adef",
+    "audio-intervals.json": "9cfa2f71c43dde1710946de9ec49a7546d9fd4490e6dab82bc59653b7f42d87d",
+    "efat-evidence.json": "0e9b0443c314f2ce8591a10ee1f9b88df0ed91817936fbda59a92fb67c3a92da",
+    "lineage.json": "5ff6bb96ecb3e33c0da5bd571222b38af941f241d0b6e360d87849a568a7c45b",
+    "yay0-streams.json": "c9b3cc5332c30a1de8b8d6c1c9e5047ab33d23580e0bf9dcca5ccd22a343a02b",
+    "yay0-scan.json": "1606095c9b59923c159599a7544c519118cfc8ca083331c47ff23b2ad77d0ba5",
+    "sprite-palettes.json": "6b710c316b94941fdabdc8f6ee91d6565252dac492eddaa8272d97c28d9a16af",
+    "yay0-roundtrip-all.json": "c0138d59450917fe3e00b1461d3343681dcef4fc6925c3dbdb04db9f07211b28"
+  },
+  "consumers": [
+    {
+      "symbol": "func_80051A60",
+      "rom_start": 150176,
+      "size": 648,
+      "sha256": "63f25862e1cfba3aba0228c60e5f656093d825acf0f80f965aa5d73650793cf0"
+    },
+    {
+      "symbol": "func_80054DF0",
+      "rom_start": 163376,
+      "size": 440,
+      "sha256": "ba349ed664636c74c9d9f806fd603225c15d94c8da86fd562ab15a69def14234"
+    },
+    {
+      "symbol": "func_8007D480",
+      "rom_start": 328896,
+      "size": 268,
+      "sha256": "e36ad4d5541173b5ae509a8713c6dd22417f0d9648bb36a53adafada5cadcf6a"
+    },
+    {
+      "symbol": "func_80044308",
+      "rom_start": 95048,
+      "size": 300,
+      "sha256": "bd010954ab8c7659697cf43b8b71300e74780ae99f7da3abf797be23d1259d7b"
+    },
+    {
+      "symbol": "func_80044C60",
+      "rom_start": 97440,
+      "size": 188,
+      "sha256": "305029d04398c2eab0b93d6fa4fe940da39365a326a1f0d80f84ac48a680465c"
+    },
+    {
+      "symbol": "func_80048480",
+      "rom_start": 111808,
+      "size": 308,
+      "sha256": "0e48cde49bdb6e91618862f3d3c0e5ca497c3ee3d12ae2625d4e00181d68acdb"
+    },
+    {
+      "symbol": "func_80051D94",
+      "rom_start": 150996,
+      "size": 228,
+      "sha256": "58404c717181b23772c45e092720a2cf61da0fd567991b8cdc05540a27b51dfd"
+    },
+    {
+      "symbol": "func_80052914",
+      "rom_start": 153940,
+      "size": 48,
+      "sha256": "51b582cba45c2c33e41dad880f51d703a38a7c3fa307c90a9c55bc89e961df53"
+    },
+    {
+      "symbol": "func_80052944",
+      "rom_start": 153988,
+      "size": 404,
+      "sha256": "d49fb50934cd3a41afe756ae577dcf4277acd56405fc7e984ba024bac3da74f2"
+    },
+    {
+      "symbol": "func_8005DCB0",
+      "rom_start": 199920,
+      "size": 60,
+      "sha256": "276033bd54110200b031d9bce5a37fb21d396f9330f50490387cd8eb8df8b37a"
+    },
+    {
+      "symbol": "func_8005DCEC",
+      "rom_start": 199980,
+      "size": 148,
+      "sha256": "e2cf5843de0af1a516d2bd3b0ab72925d2acb7af6b4fef9d8c9d4143a76f3c53"
+    },
+    {
+      "symbol": "func_8005DD80",
+      "rom_start": 200128,
+      "size": 136,
+      "sha256": "c22a5280ff99bd41242c86f63c0e436771947e6a83f49a73c80ceadcb3a6f179"
+    },
+    {
+      "symbol": "func_8005DE08",
+      "rom_start": 200264,
+      "size": 136,
+      "sha256": "30f64ce2a3e331e208f0cba5b9dd54fd8571ca7000dc9c70fa3cd8a9e76b9841"
+    },
+    {
+      "symbol": "func_8005EFF0",
+      "rom_start": 204848,
+      "size": 192,
+      "sha256": "be48805853ed09b3f49a7ae12e55db9102da25e9aa822956ceba6d0f3554e96f"
+    },
+    {
+      "symbol": "func_8005F1D4",
+      "rom_start": 205332,
+      "size": 60,
+      "sha256": "e0ddf06431500a7d0c7d2356ad7a3b9ae87275ce2184c1a129a32035fa1e30c3"
+    },
+    {
+      "symbol": "func_80064A70",
+      "rom_start": 228016,
+      "size": 748,
+      "sha256": "1c6d36616a3dee600156ed01fe2eb0fb636b85f143f663b873a0dcb00e6640f0"
+    },
+    {
+      "symbol": "func_80064D5C",
+      "rom_start": 228764,
+      "size": 1956,
+      "sha256": "d2b2ea77e2b21fcc96c1b575a29be895b62bc119c50b312bb054c3b1e7d79f6e"
+    },
+    {
+      "symbol": "func_80067628",
+      "rom_start": 239208,
+      "size": 476,
+      "sha256": "5a5fa65f77af4c5aa053816ff638ad32bd3a9ca0f9a9e84d982f7986f7e7f798"
+    },
+    {
+      "symbol": "func_80067804",
+      "rom_start": 239684,
+      "size": 16,
+      "sha256": "731437b51f06b4ad7096ac9d4eef78e1923c620eb77dd89f2f1c82d22b451610"
+    },
+    {
+      "symbol": "func_80068BC8",
+      "rom_start": 244744,
+      "size": 3584,
+      "sha256": "0426f0c7ea558523a4ddf35df29af249f2ca98805f78df5415590b2671a5631d"
+    },
+    {
+      "symbol": "func_80069A68",
+      "rom_start": 248488,
+      "size": 396,
+      "sha256": "a8b5cf4bf5ae6fba8c2a150010728352b9009627f60c98f764013a74c4e813ef"
+    },
+    {
+      "symbol": "func_8006AAF0",
+      "rom_start": 252720,
+      "size": 212,
+      "sha256": "14c4351274b6bac9455f6ad02297bfe97eb928a02c9e883d1f2558698a106022"
+    },
+    {
+      "symbol": "func_8006ABC4",
+      "rom_start": 252932,
+      "size": 108,
+      "sha256": "2cd0cc35bbd167893e97b3b90d1029b15740c3013279c96bf1cc95cc5a8c069d"
+    },
+    {
+      "symbol": "func_8006AC30",
+      "rom_start": 253040,
+      "size": 96,
+      "sha256": "92b497226bcbd6da453294e3ea7b02fd3008549589cbbeacd3162fffc4cbad6a"
+    },
+    {
+      "symbol": "func_80071CCC",
+      "rom_start": 281868,
+      "size": 1908,
+      "sha256": "18678e3776bef2163d3695785e34c1067e83eb2a4b023c5de14b6b6243d3f7ed"
+    },
+    {
+      "symbol": "func_80072440",
+      "rom_start": 283776,
+      "size": 76,
+      "sha256": "eea9e8796c2a8614031888d3a36eddc64e1b85829047bd95f26ddc5f2fdc20c8"
+    },
+    {
+      "symbol": "func_8007248C",
+      "rom_start": 283852,
+      "size": 80,
+      "sha256": "a106bbad2259cb25d8bdfe5edabfa3ae8dacb5af79d5a686aa7b2136b21287c7"
+    },
+    {
+      "symbol": "func_8007CE28",
+      "rom_start": 327272,
+      "size": 812,
+      "sha256": "ebfda1c76a043c2eaa4f4b793e1381486170609a2b22f48ff1114cc4cf987c84"
+    },
+    {
+      "symbol": "func_8007F2D8",
+      "rom_start": 336664,
+      "size": 100,
+      "sha256": "898e6c78b8f228419790b291d7775cbfc727ed346bf9d50c1cd7e7585bb2b604"
+    },
+    {
+      "symbol": "func_8008E264",
+      "rom_start": 397988,
+      "size": 180,
+      "sha256": "c4c8727ee1843547785ca0f01c5c50185313042c259e52ea764c6d3bb0ff9597"
+    },
+    {
+      "symbol": "func_8008E354",
+      "rom_start": 398228,
+      "size": 92,
+      "sha256": "b6c5f27926a1c24a0dce69a33936eca43820feff7d73d407fd179defd4eded18"
+    },
+    {
+      "symbol": "func_800CA118",
+      "rom_start": 643416,
+      "size": 164,
+      "sha256": "752c412f8432efdd47df1781cf68e6c006d2f6c97c7f75f04e144a36a9dab536"
+    },
+    {
+      "symbol": "func_800CAD44",
+      "rom_start": 646532,
+      "size": 120,
+      "sha256": "163686984fc3879697d147653fcef3cb5246977690c2dac2040769d29bc6d56e"
+    },
+    {
+      "symbol": "func_8012A910",
+      "rom_start": 1038672,
+      "size": 116,
+      "sha256": "1c6c2e7c018bfd9e2a6c51d67c8796771bf2cee024f470b4d8cd5db0a69c8ade"
+    },
+    {
+      "symbol": "func_8012AF30",
+      "rom_start": 1040240,
+      "size": 1084,
+      "sha256": "6acbe5b9def6ea2de94446632360b8b6f14731a3d558b29cff770970d0ecaa08"
+    },
+    {
+      "symbol": "func_8012BDD0",
+      "rom_start": 1043984,
+      "size": 412,
+      "sha256": "70831569d9401a7873e234845db78f09dbfc0c7096d08fd3f7aed53578dfc77c"
+    },
+    {
+      "symbol": "func_8012C4B0",
+      "rom_start": 1045744,
+      "size": 480,
+      "sha256": "f09f1d83215d11746e8a70bd7fea97fa0deff0ec3ad0677b6421ee1129b24299"
+    },
+    {
+      "symbol": "func_8012D474",
+      "rom_start": 1049780,
+      "size": 220,
+      "sha256": "8774fc39ec81cd4df0e4e2b9ac45c784e5cc42f9e46e126f4b7cd461ce88d515"
+    },
+    {
+      "symbol": "func_8012D688",
+      "rom_start": 1050312,
+      "size": 372,
+      "sha256": "c668b6434ee7bb22c1ee0e0bb867c008a4853469a0ec05e9a9ab4dade4088e78"
+    }
+  ],
+  "policy": "h21-r2-property-replay-v1; research is not accepted source; unsupported format remains located; handwritten disabled"
+}

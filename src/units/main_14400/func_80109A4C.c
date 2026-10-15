@@ -1,4 +1,5 @@
 #include "common.h"
+#include "map_ray_iterator.h"
 
 typedef signed char s8;
 typedef unsigned char u8;
@@ -7,8 +8,6 @@ typedef unsigned short u16;
 
 typedef struct { u8 v; } Byte;
 typedef struct ShirenDirection { s8 value; } ShirenDirection;
-typedef struct { s32 x; s32 y; } Pt;
-typedef struct { s32 unk[10]; } Iter;
 typedef struct Obj {
     u8 pad0[8];
     u8 unk8;
@@ -24,10 +23,10 @@ s32 func_800EE504(Obj *);
 void func_800A2F80(Byte *, s32);
 void *func_800A7DEC(void *obj);
 s32 func_800A46BC(void *obj, void *pos, void *dir);
-void *func_800A39C0(void *out, void *pos, void *dir, s32 dist);
-void *func_800B4928(Pt *pos);
-void *func_800C5150(void *self, void *position, ShirenDirection direction, s32 limit, u32 mask);
-void *func_800C51B8(void *iterator);
+void *func_800A39C0(MapPos *out, void *pos, void *dir, s32 dist);
+void *func_800B4928(MapPos *pos);
+void *func_800C5150(MapRayIterator *self, MapPos *position, ShirenDirection direction, s32 limit, u32 mask);
+void *func_800C51B8(MapRayIterator *iterator);
 s32 func_800A44F4(void *self, void *target);
 s32 func_800A674C(Obj *, Obj *);
 s32 func_800A650C(Obj *, Obj *);
@@ -36,8 +35,8 @@ Obj *func_800A492C(Obj *, s32, s32, s32);
 s32 func_800E7104(Obj *);
 s32 func_800E776C(void *obj, u8 mode);
 s32 func_80109A4C(Obj *self, u8 mode) {
-    Pt pos;
-    Iter it;
+    MapPos pos;
+    MapRayIterator it;
     Byte dir;
     Byte bestDir;
     ShirenDirection facing;

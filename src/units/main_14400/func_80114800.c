@@ -1,4 +1,5 @@
 #include "common.h"
+#include "collection_iterator.h"
 
 typedef signed char s8;
 typedef unsigned char u8;
@@ -15,15 +16,11 @@ typedef struct {
     u8 pad6[6];
     Part unkC;
 } Obj;
-typedef struct { s32 index; void *collection; s32 position; void *current; } Iter;
 extern u16 D_80157740[];
 extern u8 D_80157788[];
 u8 func_800AE98C(Obj *);
 s32 func_800AC584(u16);
 void *func_8011422C(Obj *);
-Iter *func_800CEB20(Iter *, void *);
-s32 func_800CEBA0(Iter *);
-Obj *func_800CEC68(Iter *);
 s32 func_800AE9AC(Obj *, s32, s32);
 
 /* unk5 is the object's category; -1 means it has none. */
@@ -48,7 +45,7 @@ s32 func_80114800(Obj *self, s32 mode) {
     u8 kind = func_800AE98C(self);
     u32 base = func_800AC584(D_80157740[kind]);
     u32 total;
-    Iter it;
+    CollectionIterator it;
     Obj *obj;
     Part *part;
 

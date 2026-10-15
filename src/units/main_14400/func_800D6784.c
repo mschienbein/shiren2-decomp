@@ -1,23 +1,20 @@
 #include "common.h"
+#include "map_position_iterator.h"
 
 typedef unsigned char u8;
 
-typedef struct { s32 x; s32 y; } Pos800D6784;
-typedef struct { Pos800D6784 cur; Pos800D6784 start; Pos800D6784 end; } Range800D6784;
-typedef struct { Pos800D6784 min; Pos800D6784 max; } Rect800D6784;
 
-extern Rect800D6784 *D_80148080;
-extern u8 D_80148000[];
+extern MapRect *D_80148080;
+extern MapPos D_80148000;
 extern u8 D_80148008[];
-void *func_800A3610(void *out, void *it);
-u32 func_800B1C6C(Pos800D6784 *pos);
-s32 func_800D6AF8(void *map, void *filter, Pos800D6784 *pos);
-s32 func_800D6D04(void *map, Pos800D6784 *pos, Pos800D6784 *best);
+u32 func_800B1C6C(MapPos *pos);
+s32 func_800D6AF8(void *map, void *filter, MapPos *pos);
+s32 func_800D6D04(void *map, MapPos *pos, MapPos *best);
 
-s32 func_800D6784(Pos800D6784 *best, u8 *flag) {
-    Rect800D6784 *rect = D_80148080;
-    Range800D6784 range;
-    Pos800D6784 pos;
+s32 func_800D6784(MapPos *best, u8 *flag) {
+    MapRect *rect = D_80148080;
+    MapPositionIterator range;
+    MapPos pos;
     s32 better;
 
     best->x = 0;
@@ -30,7 +27,7 @@ s32 func_800D6784(Pos800D6784 *best, u8 *flag) {
     pos.y = rect->max.y;
     range.end = pos;
     for (;;) {
-        Range800D6784 *r = &range;
+        MapPositionIterator *r = &range;
         s32 more = r->cur.x <= r->end.x;
 
         if (!more) {
@@ -40,11 +37,11 @@ s32 func_800D6784(Pos800D6784 *best, u8 *flag) {
         if (!(func_800B1C6C(&pos) & 0x800)) {
             continue;
         }
-        if (!func_800D6AF8(D_80148000, D_80148008, &pos)) {
+        if (!func_800D6AF8(&D_80148000, D_80148008, &pos)) {
             continue;
         }
         better = 0;
-        if ((best->y | best->x) == 0 || func_800D6D04(D_80148000, &pos, best)) {
+        if ((best->y | best->x) == 0 || func_800D6D04(&D_80148000, &pos, best)) {
             better = 1;
         }
         if (!better) {

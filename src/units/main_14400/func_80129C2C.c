@@ -1,5 +1,7 @@
 #include "common.h"
-typedef struct { s32 field_00, field_04; void *field_08; unsigned short field_0C, field_0E; void *field_10; u32 field_14; void *field_18; void *field_1C; void *field_20; s32 field_24; unsigned char field_28[0x18]; void *field_40; } Config;
+/* libmus musConfig: +0x0C is the s32 thread priority (sw by func_80051A60, lw by func_8012D550);
+   the per-channel parameter takes its low half, read as lhu +0x0E. */
+typedef struct { s32 field_00, field_04; void *field_08; s32 field_0C; void *field_10; u32 field_14; void *field_18; void *field_1C; void *field_20; s32 field_24; unsigned char field_28[0x18]; void *field_40; } Config;
 typedef struct { unsigned char field_00[0xC9]; unsigned char field_C9; unsigned char field_CA[0x72]; } Entry;
 typedef struct { unsigned char field_00[0x1C]; } Record;
 typedef struct { unsigned short field_00, field_02; unsigned char field_04; } Params;
@@ -44,6 +46,6 @@ void func_80129C2C(Config *config) {
     D_801CA6F0 = 1; D_801CA6F4 = 0x12345678;
     D_801CA6C0.next = 0; D_801CA6C0.update = func_8012ACC0; D_801CA6C0.clientData = &D_801CA6C0;
     func_8012FDE0(&D_801CA6C0);
-    for (i = 0; i < D_801CA6D4; i++) { Params params; D_801CA6DC[i].field_C9 = 0; func_8012C004(&D_801CA6DC[i]); params.field_04 = 0; params.field_00 = config->field_0E; params.field_02 = 0; if (i >= 4) func_8012FE30(&D_801CA6D8[i - 4], &params); }
+    for (i = 0; i < D_801CA6D4; i++) { Params params; D_801CA6DC[i].field_C9 = 0; func_8012C004(&D_801CA6DC[i]); params.field_04 = 0; params.field_00 = (unsigned short)config->field_0C; params.field_02 = 0; if (i >= 4) func_8012FE30(&D_801CA6D8[i - 4], &params); }
     func_8012D87C();
 }

@@ -1,8 +1,9 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef struct { s32 kind_0; } Msg80123190;
 void func_80114404(void *obj, s32 a1, s32 a2, s32 a3, s32 a4);
-s32 func_80114E28(void *obj, Msg80123190 *msg);
+s32 func_80114E28(Item *obj, Msg80123190 *msg);
 
 s32 func_80123190(void *obj, Msg80123190 *msg) {
     if (msg->kind_0 == 0x1E) {

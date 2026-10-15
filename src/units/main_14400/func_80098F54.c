@@ -1,7 +1,8 @@
 #include "common.h"
 
 typedef unsigned char u8;
-typedef struct { u8 pad00[0x20]; s32 field20; u8 pad24[0x390]; s32 starts3B4[8]; s32 counts3D4[3]; } Object;
+/* Each table has three group starts and a fourth end boundary. */
+typedef struct { u8 pad00[0x20]; s32 field20; u8 pad24[0x390]; s32 starts3B4[4]; s32 offsets3C4[4]; s32 counts3D4[4]; } Object;
 typedef Object Obj80098E34;
 extern s32 func_80098DD4(Obj80098E34 *obj, s32 id);
 

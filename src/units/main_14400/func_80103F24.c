@@ -1,20 +1,14 @@
-#include "common.h"
+#include "map_unit_iterator.h"
 typedef struct Object Object;
-struct Object { unsigned char field_00[9]; unsigned char field_09; unsigned char field_0A[0x12]; unsigned short field_1C; unsigned char field_1E[0x7C]; unsigned short field_9A; s32 field_9C; Object *field_A0; };
-typedef struct { s32 words[4]; } Region;
-typedef struct { s32 words[8]; } Iterator;
-extern void *func_800A2FD0(Region *region, Object *obj, unsigned char mode);
-extern Iterator *func_800A9204(Iterator *iterator, Region *region, Object *obj);
-extern s32 func_800A9284(Iterator *iterator, s32 filter);
-extern Object *func_800A942C(Iterator *iterator);
+struct Object { MapPos position; unsigned char field_08; unsigned char field_09; unsigned char field_0A[0x12]; unsigned short field_1C; unsigned char field_1E[0x7C]; unsigned short field_9A; s32 field_9C; Object *field_A0; };
 extern s32 func_800A4520(Object *obj, Object *other);
 extern s32 func_800A455C(Object *obj, Object *other, s32 mode);
 extern s32 func_800E1CC4(Object *obj, s32 mode);
 extern u32 func_800B1C6C(Object *obj);
 s32 func_80103F24(Object *obj)
 {
-    Region region;
-    Iterator iterator;
+    MapRect region;
+    MapUnitIterator iterator;
     Object *other;
     s32 valid;
     func_800A2FD0(&region, obj, 1);

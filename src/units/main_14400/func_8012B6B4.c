@@ -58,6 +58,10 @@ void func_8012B6B4(Env8012B6B4 *env) {
             env->level = env->sustainLevel;
         }
         break;
+    /* ODD_C: audio-envelope sustain holds the level set when decay finishes,
+     * until the release-time check above enters state 4. This label shapes
+     * dispatch: removing it changes 94 overlapping words and shrinks text
+     * from 488 to 480 bytes in this profile. */
     case 3:
         break;
     case 4:

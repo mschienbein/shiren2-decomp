@@ -1,4 +1,5 @@
 #include "common.h"
+#include "rgb_8013E8AC.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -7,12 +8,6 @@ typedef struct {
     u32 w0;
     u32 w1;
 } Gfx;
-
-typedef struct {
-    u8 r;
-    u8 g;
-    u8 b;
-} Color80080558;
 
 /* 0x2C-byte room/sprite entry. */
 typedef struct {
@@ -36,7 +31,6 @@ typedef struct {
 
 extern u16 D_801A906C[];
 extern Entry80080558 D_801A9080[];
-extern Color80080558 D_8013E8AC[];
 extern u8 D_801A8BA0[][40];
 extern const u8 D_6000000[];
 

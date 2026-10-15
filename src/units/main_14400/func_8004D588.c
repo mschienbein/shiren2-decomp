@@ -22,7 +22,7 @@ typedef struct {
 /* Equipment descriptor (4 bytes): +0 model/tile id (lhu), +2 percentage
  * byte (lbu in func_80077C4C), +3 never accessed. */
 typedef struct { u16 id; u8 percent; u8 unk3; } EquipInfo;
-typedef struct { u8 kind, variant, field02, flags, row, field05, field06, field07, mode; s8 coordinates[2], status; } SelectionRecord;
+typedef struct { u8 kind, variant, field02, flags, row, field05; u16 field06; u8 mode; s8 coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 extern s32 D_80139334[], D_8013937C[], D_801393C4[];
 extern u32 D_801393E4[], D_801394B0[];

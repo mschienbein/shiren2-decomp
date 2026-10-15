@@ -1,16 +1,14 @@
-#include "common.h"
-typedef struct { s32 x, y; } Position;
-typedef struct { Position from, to; } Area;
+#include "map_rect.h"
 extern s32 D_80138C40[4];
-s32 func_800464A4(void *self, void *grid, Area *area);
+s32 func_800464A4(void *self, u32 (*grid)[54], MapRect *area);
 void func_80041814(void *grid, s32 y1, s32 x1, s32 y2, s32 x2) {
-    Area area;
-    Area source;
-    source.from.y = y1;
-    source.from.x = x1;
-    source.to.y = y2;
-    source.to.x = x2;
-    area.from = source.from;
-    area.to = source.to;
+    MapRect area;
+    MapRect source;
+    source.min.y = y1;
+    source.min.x = x1;
+    source.max.y = y2;
+    source.max.x = x2;
+    area.min = source.min;
+    area.max = source.max;
     func_800464A4(&D_80138C40, grid, &area);
 }

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "collection_iterator.h"
 typedef unsigned char u8;
 typedef signed char s8;
 typedef unsigned short u16;
@@ -20,15 +21,11 @@ typedef struct { s16 delta; s16 index; s32 (*handle)(void *self, void *msg); } M
 typedef struct { u8 pad0[0x38]; MsgEntry800EA80C msg_38; } ItemVtbl800EA80C;
 typedef struct { u8 pad[8]; ItemVtbl800EA80C *vtbl; } Item;
 typedef struct { s32 type; u8 pad[0x1C]; } Event;
-typedef struct { u8 data[0x10]; } Iter;
 typedef struct { u8 pad[0x10]; s32 x10; } Msg;
 extern u32 D_8013960C;
-extern void *func_800CEB20(Iter *, void *);
-extern s32 func_800CEBA0(Iter *);
-extern Item *func_800CEC68(Iter *);
 void func_800EA80C(Obj *o, Msg *msg){
     Event ev;
-    Iter it;
+    CollectionIterator it;
     void *list = o->vtbl->get_98.get((u8 *)o + o->vtbl->get_98.delta);
     s32 kind;
     if (list == 0) return;

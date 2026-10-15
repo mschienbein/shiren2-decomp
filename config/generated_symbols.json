@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "units": {
+    "func_801EF7A0_1416C0": {
+      "image_id": "overlay_136dc0",
+      "functions": ["func_801EF7A0_1416C0", "func_801EF7F0_141710", "func_801F1508_143428"],
+      "generated": {
+        "__tcf_0": "func_801EF7A0_1416C0",
+        "_GLOBAL_.I.func_801EF7F0_141710": "func_801F1508_143428"
+      },
+      "runtime_names": ["atexit"],
+      "discard_tables": "rom-absent-v1"
+    }
+  },
+  "runtime_bindings": {
+    "atexit": {
+      "image_id": "main_14400",
+      "symbol": "func_800D8F30",
+      "rom_start": 704368,
+      "vram_start": 2148372272,
+      "size": 8,
+      "contract": "int atexit(void (*callback)(void)): ignores callback, returns zero; no-op console runtime",
+      "catalogued_direct_callers": [{"symbol": "func_801EF7F0_141710", "vram": 2149513408, "rom": 1316832}],
+      "sha256": "adaad653172d31a2481c65220b1c56565bff36fb10341defe5b01cd6fb3850be",
+      "evidence": "config/generated-runtime-evidence.json",
+      "evidence_sha256": "4890499c5d68db06afddf668a86193d471033f0255b4cab317bf7bd78fc82388"
+    }
+  }
+}

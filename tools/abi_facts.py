@@ -16,7 +16,7 @@ import json
 import re
 import sys
 import time
-from collections import defaultdict, deque
+from collections import Counter, defaultdict, deque
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -37,6 +37,9 @@ CLOBBERS = sum(1 << REG_NUM[r] for r in
                ("at v0 v1 a0 a1 a2 a3 t0 t1 t2 t3 t4 t5 t6 t7 t8 t9 ra").split())
 CLOBBERS |= sum(1 << i for i in range(32, 52))
 ROW = re.compile(r"^\s*/\*\s*([0-9A-Fa-f]+)\s+([0-9A-Fa-f]+)\s+([0-9A-Fa-f]{8})\s*\*/\s*(.*?)\s*$")
+ROM_COMMENT = re.compile(r"/\*\s*([0-9A-Fa-f]+)\s+[0-9A-Fa-f]{8}\b")
+# resident and main_14400 have unique VRAM and share one instruction word map.
+SHARED_SPACE = "unique_vram"
 LABEL = re.compile(r"^\s*(?:([gdj]label)\s+([\w.$]+)|([\w.$]+):)\s*$")
 REG = re.compile(r"\$([A-Za-z0-9]+)")
 SYMBOL = re.compile(r"%(?:hi|lo)\(([\w.$]+)\)")
@@ -968,24 +971,48 @@ def function_facts(fn: Function, by_symbol: dict[str, Function], consumers: dict
             "warnings": sorted(fn.warnings)}
 
 
-def analyze_assembly(asm: Assembly, catalogue: list[dict[str, Any]]) -> dict[str, Any]:
-    rows = sorted((row for row in catalogue if row["image_id"] in {"main_14400", "resident"}), key=lambda row: (row["image_id"], row["vram_start"]))
-    addresses = sorted(asm.instructions)
+def word_spaces(images: list[dict[str, Any]]) -> dict[str, str]:
+    """Image id -> instruction word-map key.
+
+    Images that share a load slot (the two same-VRAM overlays) each get their own map;
+    every other image has unique VRAM and joins the one shared map.
+    """
+    slots = Counter(image["load_slot"] for image in images)
+    return {image["image_id"]: image["image_id"] if slots[image["load_slot"]] > 1 else SHARED_SPACE for image in images}
+
+
+def analyze_assembly(spaces: dict[str, Assembly], catalogue: list[dict[str, Any]],
+                     space_of: dict[str, str]) -> dict[str, Any]:
+    """Facts for every catalogue row, each read from its own image's word map.
+
+    A direct call resolves to a function of the caller's own map first, then to the
+    shared resident/main map: an overlay may call resident/main, but resident/main
+    calls into the overlay slot stay uncatalogued (which overlay is loaded is unknown).
+    """
+    rows = sorted(catalogue, key=lambda row: (row["image_id"], row["vram_start"]))
+    addresses = {space: sorted(asm.instructions) for space, asm in spaces.items()}
     functions = []
     for row in rows:
-        start = bisect.bisect_left(addresses, row["vram_start"])
-        end = bisect.bisect_left(addresses, row["vram_start"] + row["size"])
-        words = [asm.instructions[address] for address in addresses[start:end]]
+        space = space_of[row["image_id"]]
+        if space not in spaces:
+            raise ValueError(f"No original instructions for image {row['image_id']}")
+        ordered, instructions = addresses[space], spaces[space].instructions
+        start = bisect.bisect_left(ordered, row["vram_start"])
+        end = bisect.bisect_left(ordered, row["vram_start"] + row["size"])
+        words = [instructions[address] for address in ordered[start:end]]
         if len(words) * 4 != row["size"] or not words or words[0].rom != row["rom_start"]:
             raise ValueError(f"Incomplete original instructions for {row['symbol']}: {len(words) * 4}/{row['size']} bytes")
         functions.append(Function(row, words))
-    symbols = {row["vram_start"]: row["symbol"] for row in rows}
+    symbols: dict[str, dict[int, str]] = defaultdict(dict)
+    for row in rows:
+        symbols[space_of[row["image_id"]]][row["vram_start"]] = row["symbol"]
     by_symbol = {fn.row["symbol"]: fn for fn in functions}
     if len(by_symbol) != len(functions):
         raise ValueError("Ambiguous symbols across CPU images")
     input_mask = ARG_MASK | FLOAT_MASK
     for fn in functions:
-        prepare_function(fn, asm, symbols)
+        space = space_of[fn.row["image_id"]]
+        prepare_function(fn, spaces[space], {**symbols[SHARED_SPACE], **symbols[space]})
         for node in fn.nodes:
             input_mask |= node.reads & ~((1 << 64) - 1)
     if input_mask.bit_length() > 68:
@@ -993,7 +1020,7 @@ def analyze_assembly(asm: Assembly, catalogue: list[dict[str, Any]]) -> dict[str
     rounds = infer_inputs(functions, by_symbol, input_mask)
     consumers = infer_consumers(functions, by_symbol)
     facts = [function_facts(fn, by_symbol, consumers) for fn in functions]
-    return {"schema_version": 1, "scope": "original main_14400 and resident CPU instructions; overlays excluded",
+    return {"schema_version": 1, "scope": "original CPU instructions of every catalogued image; each same-VRAM overlay has its own word map",
             "certainty_policy": "live_in aliases proven_live_in; indirect-only argument assumptions are conservative, never hard C-contract proof",
             "argument_home_policy": {
                 "dead_home_spills": "exclude a register's sole instruction uses that store it into its own incoming sp+4*k home, provided the slot is never reloaded and its address cannot escape; unknown pointer transformations and merges retain the spill",
@@ -1023,7 +1050,19 @@ def analyze_assembly(asm: Assembly, catalogue: list[dict[str, Any]]) -> dict[str
 
 def analyze_text(text: str, image_id: str = "main_14400") -> dict[str, Any]:
     asm = parse_assembly(text, image_id=image_id)
-    return analyze_assembly(asm, asm.functions)
+    return analyze_assembly({SHARED_SPACE: asm}, asm.functions, {image_id: SHARED_SPACE})
+
+
+def assembly_image(text: str, images: list[dict[str, Any]]) -> str | None:
+    """The image owning a generated assembly file, from its first `/* ROM VRAM` comment.
+
+    Splat writes each instruction/data file for one image. BSS files have no ROM bytes
+    (their ROM-looking prefix extends past the image) and carry no instructions.
+    """
+    for found in ROM_COMMENT.finditer(text):
+        rom = int(found[1], 16)
+        return next((image["image_id"] for image in images if image["rom_start"] <= rom < image["rom_end"]), None)
+    return None
 
 
 def analyze_project(root: Path, build: Path | None = None) -> dict[str, Any]:
@@ -1036,17 +1075,24 @@ def analyze_project(root: Path, build: Path | None = None) -> dict[str, Any]:
         build = (root / json.loads((root / "build/latest.json").read_text())["receipt"]).parent
     elif not build.is_absolute():
         build = root / build
-    asm = Assembly()
+    images = json.loads((build / "source/config/images.json").read_text())["images"]
+    space_of = word_spaces(images)
+    spaces: dict[str, Assembly] = {}
     for path in sorted((build / "generated/asm").rglob("*.s")):
-        parsed = parse_assembly(path.read_text(), str(path.relative_to(root)))
+        text = path.read_text()
+        image = assembly_image(text, images)
+        if image is None:
+            continue
+        parsed = parse_assembly(text, str(path.relative_to(root)), image_id=image)
+        asm = spaces.setdefault(space_of[image], Assembly())
         for address, ins in parsed.instructions.items():
             old = asm.instructions.get(address)
             if old is not None and (old.rom, old.word) != (ins.rom, ins.word):
-                raise ValueError(f"Conflicting original instructions at {hx(address)}")
+                raise ValueError(f"Conflicting original instructions at {hx(address)} in {image}")
             asm.instructions.setdefault(address, ins)
         asm.labels.update(parsed.labels)
         asm.tables.update(parsed.tables)
-    report = analyze_assembly(asm, catalogue)
+    report = analyze_assembly(spaces, catalogue, space_of)
     report["accepted_build"] = str(build.relative_to(root))
     report["catalogue"] = progress["denominator"]["path"]
     return report

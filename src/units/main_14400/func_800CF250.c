@@ -1,9 +1,9 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef signed short s16;
 
-typedef struct { u8 kind; u8 pad1; u8 flags; } Item;
 /* Item-set method table: +0x24 count s32(self), +0x3C get void *(self, u32). */
 typedef struct {
     u8 pad0[0x20];
@@ -29,8 +29,8 @@ s32 func_800CF250(List *list, Item **out, s32 capacity)
         }
         item = list->vtable->get((u8 *)list + list->vtable->getAdj, index);
         ok = 0;
-        if (item != 0 && item->kind == 6) {
-            ok = (item->flags & 4) >> 2;
+        if (item != 0 && item->field00 == 6) {
+            ok = (item->flags02 & 4) >> 2;
         }
         if (ok) {
             out[found] = item;

@@ -13,8 +13,8 @@ typedef struct {
 
 typedef struct {
     s32 field00;
-    unsigned char pad04[2];
-    unsigned short field06;
+    /* func_800982DC supplies a full word at +4, narrowed by this setter. */
+    s32 field04;
     u32 field08;
     u32 field0C;
 } Params_800954E0;
@@ -35,7 +35,7 @@ void func_800954E0(Record_800954E0 *record, Params_800954E0 *params)
     if (value <= 0) {
         record->field20 = 1;
     }
-    record->field30 = params->field06;
+    record->field30 = (unsigned short)params->field04;
     record->field28 = params->field08;
     record->field2C = params->field0C;
     if (!active) {

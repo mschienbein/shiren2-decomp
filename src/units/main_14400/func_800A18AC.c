@@ -11,7 +11,7 @@ extern Context D_801404E0;
 extern char D_8014AB68[];
 extern s32 func_800A1730(void *);
 extern s32 func_800CE46C(Child *,s32 (*)(void *)),func_800957C0(Context *,Selection *,s32,void *,s32),func_8009A0EC(Context *);
-extern void func_80097B90(Context *,Child *,void *,s32,void *,s32);
+extern void func_80097B90(Context *,Child *,void *,s32,const void *,s32);
 extern void *func_800D0190(Request *output,Child *helper,void *item);
 extern void *func_800D8FB0(u32 size),*func_800DD590(void *,Request *);
 static inline void setContextField2CC(Context *context,s32 value) { context->field2CC=value; }

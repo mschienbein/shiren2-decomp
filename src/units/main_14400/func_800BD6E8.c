@@ -1,10 +1,8 @@
 #include "common.h"
+#include "map_position_iterator.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
-typedef struct { s32 x, y; } Point;
-typedef struct { Point min, max; } Rect;
-typedef struct { Point current, min, max; } Iterator;
 typedef struct Random Random;
 /* Fixed-capacity stack of pending carve coordinates (one axis). */
 typedef struct { s32 at[100]; } Stack;
@@ -12,22 +10,21 @@ extern s32 D_80147570[4];
 extern s32 D_80147580[4];
 extern u8 D_80147590[24][4];
 extern Random D_80147620;
-extern u32 func_800B1C6C(Point *point);
+extern u32 func_800B1C6C(MapPos *point);
 extern u8 func_800C57CC(void *random, s32 limit);
-extern s32 func_800A31C8(Rect *rectangle, Point *point);
-extern void func_800B1AE0(Point *point, u16 value);
-extern Point *func_800A3610(Point *out, Iterator *iterator);
-extern void func_800B1BE0(Point *point, s32 mask);
+extern s32 func_800A31C8(MapRect *rectangle, MapPos *point);
+extern void func_800B1AE0(MapPos *point, u16 value);
+extern void func_800B1BE0(MapPos *point, s32 mask);
 
-/* ODD_C: copying and querying complete Point objects keeps their two
+/* ODD_C: copying and querying complete MapPos objects keeps their two
    coordinate stores grouped without introducing extra address lifetimes. */
-static inline void point_copy(Point *out, Point *point)
+static inline void point_copy(MapPos *out, MapPos *point)
 {
     out->x = point->x;
     out->y = point->y;
 }
 
-static inline u32 point_flags(s32 x, s32 y, Point *point)
+static inline u32 point_flags(s32 x, s32 y, MapPos *point)
 {
     point->x = x;
     point->y = y;
@@ -35,13 +32,13 @@ static inline u32 point_flags(s32 x, s32 y, Point *point)
 }
 
 /* The caller forwards its floor receiver; carving here uses only the bounds. */
-s32 func_800BD6E8(void *floor, Rect *bounds)
+s32 func_800BD6E8(void *floor, MapRect *bounds)
 {
     Stack rows;
     Stack columns;
-    Point probe;
-    Point check;
-    Iterator iterator;
+    MapPos probe;
+    MapPos check;
+    MapPositionIterator iterator;
     u8 count = 0;
     s32 left = bounds->min.x;
     s32 right = bounds->max.x;
@@ -93,7 +90,7 @@ s32 func_800BD6E8(void *floor, Rect *bounds)
        their bases outside the nested random-walk loops. */
     if (count >= 101U) return 0;
     {
-        Point *pending_probe;
+        MapPos *pending_probe;
         Stack *pending_rows = &rows;
         Stack *pending_columns = &columns;
         pending_probe = &probe;
@@ -142,12 +139,12 @@ s32 func_800BD6E8(void *floor, Rect *bounds)
         }
     }
     point_copy(&probe, &bounds->min);
-    iterator.min = probe;
-    iterator.current = iterator.min;
+    iterator.start = probe;
+    iterator.cur = iterator.start;
     point_copy(&probe, &bounds->max);
-    iterator.max = probe;
+    iterator.end = probe;
     for (;;) {
-        s32 remaining = iterator.current.x <= iterator.max.x;
+        s32 remaining = iterator.cur.x <= iterator.end.x;
         if (!remaining) break;
         func_800A3610(&probe, &iterator);
         if (func_800B1C6C(&probe) & 0x1000) {

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef struct { short delta, index; void *(*call)(void *); } GetEntry;
@@ -13,7 +14,7 @@ extern char *func_800A3B20(void *obj);
 extern void func_800498E4(s32 id, ...);
 extern void func_80049BF0(s32 mode);
 extern s32 func_800E2044(void *obj);
-extern u8 *func_800F0314(void *obj);
+extern Item *func_800F0314(void *obj);
 extern s32 func_800CD090(void *collection, void *element);
 extern s32 func_80121940(void *item, void *obj, void *target, s32 mode);
 extern void func_800A6690(void *obj, u8 *value, s32 count);
@@ -38,7 +39,7 @@ s32 func_800F3718(Object *obj, Object *target) {
             attached = ((target->flags_1E >> 2) & 1) &&
                 (obj->flags_9A.bytes.low >> 7) && func_800E2044(obj);
             if (attached) {
-                u8 *item = func_800F0314(obj);
+                Item *item = func_800F0314(obj);
                 if (item) {
                     GetEntry *entry = &target->vtbl_24->get_98;
                     void *collection = entry->call((char *)target + entry->delta);

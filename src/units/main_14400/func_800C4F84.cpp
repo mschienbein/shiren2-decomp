@@ -14,17 +14,29 @@ struct Obj800C4F84 {
 
 struct Buffer800C4F84;
 
+/* E552C writes amount at +2 (VRAM 0x800E5900/0x800E591C), not
+ * merely flags. The caller initializes only flags at VRAM 0x800C5044. */
+struct Outcome800C4F84 {
+    unsigned short flags;
+    unsigned short amount;
+};
+
 extern "C" {
 u32 func_800B1C6C(void *);
 s32 func_800A58B8(Pos800C4F84 *pos);
 s32 func_80049CB4(s32, ...);
 void func_80136910(Buffer800C4F84 *, void *, u32, u32, u32);
-void func_800A7A9C(Pos800C4F84 *pos, Buffer800C4F84 *buf, s16 *out);
+void func_800A7A9C(Pos800C4F84 *pos, Buffer800C4F84 *buf, Outcome800C4F84 *out);
 }
 
-/* 0x18-byte message built by func_80136910. */
+/* 0x14-byte message built by func_80136910. */
 struct Buffer800C4F84 {
-    char data[0x18];
+    void *field_0;
+    u32 field_4;
+    u32 field_8;
+    unsigned short field_C;
+    unsigned short field_E;
+    unsigned char field_10;
     Buffer800C4F84(void *source, u32 value, u32 kind, u32 flag) { func_80136910(this, source, value, kind, flag); }
 };
 
@@ -33,7 +45,6 @@ extern "C" void func_800C4F84(Obj800C4F84 *obj, void *arg1, unsigned char *arg2,
 {
     Pos800C4F84 local;
     Pos800C4F84 *lp = &local;
-    s16 result;
     s32 special;
 
     special = 0;
@@ -50,7 +61,8 @@ extern "C" void func_800C4F84(Obj800C4F84 *obj, void *arg1, unsigned char *arg2,
         func_80049CB4(7);
     }
     Buffer800C4F84 buf(arg1, obj->unk10, 2, 1);
-    result = 0;
+    Outcome800C4F84 result;
+    result.flags = 0;
     func_80049CB4(6);
     func_800A7A9C(pos, &buf, &result);
     func_80049CB4(7);

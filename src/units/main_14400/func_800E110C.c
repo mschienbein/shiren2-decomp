@@ -1,12 +1,12 @@
 #include "common.h"
 
-/* Partial view of the accessed byte; the owner type and full size are unknown. */
+/* +0x40 is the flags halfword written by func_800E10E0; read its low-byte nibble. */
 typedef struct {
-    unsigned char unknown_00[0x41];
-    unsigned char byte_41;
+    unsigned char unknown_00[0x40];
+    unsigned short field_40;
 } Func800E110CView;
 
 u32 func_800E110C(const Func800E110CView *arg0)
 {
-    return arg0->byte_41 >> 4;
+    return (unsigned char)arg0->field_40 >> 4;
 }

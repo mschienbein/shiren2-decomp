@@ -1,5 +1,5 @@
-#include "common.h"
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+#include "map_rect.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 
 typedef unsigned char u8;
@@ -8,13 +8,6 @@ typedef struct {
     s32 x;
     s32 y;
 } Pos;
-
-typedef struct {
-    s32 x0;
-    s32 y0;
-    s32 x1;
-    s32 y1;
-} Rect;
 
 typedef struct {
     u8 v;
@@ -37,8 +30,7 @@ typedef struct Room Room;
 extern s32 func_800A23E8(Pos *origin, Pos *vec);
 extern u32 func_800B1C6C(Pos *pos);
 extern s32 func_800A63FC(void *a, void *b);
-extern void *func_800A2FD0(void *, void *, u8);
-extern s32 func_800A24DC(void *self, Rect *r);
+extern s32 func_800A24DC(void *self, MapRect *r);
 extern void *func_800A27A4(void *out_direction, void *from, void *to);
 extern void func_800A2758(Pos *p, Dir d);
 extern s32 func_800A251C(Pos *x, Pos *y);
@@ -63,7 +55,7 @@ s32 func_800F1CBC(Obj800F1CBC *self, Pos *target)
 {
     Pos pos;
     Pos goal;
-    Rect area;
+    MapRect area;
     Pos *at;
     s32 dist;
     s32 steps;

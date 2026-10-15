@@ -1,12 +1,11 @@
 #include "common.h"
+#include "map_rect.h"
 
 typedef struct {
-    unsigned char data[0x14];
+    MapRect geometry;
+    unsigned char side_counts[4];
 } Entry;
 
-typedef struct {
-    unsigned char data[8];
-} Cell;
 
 typedef struct {
     unsigned char pad0[0x3DC];
@@ -18,16 +17,16 @@ typedef struct {
 extern Entry D_801431F0[];
 extern s32 func_800B68B0(Entry *entry);
 extern s32 func_800BBD08(Obj *obj, Entry *entry, s32 index);
-extern void *func_800B6A98(void *out, void *room, s32 index);
-extern s32 func_800B69F4(Entry *entry, Cell *cell);
-extern void func_800BC2AC(Obj *obj, Cell *cell, unsigned char value);
+extern MapPos *func_800B6A98(MapPos *out, Entry *room, s32 index);
+extern s32 func_800B69F4(MapRect *entry, MapPos *cell);
+extern void func_800BC2AC(Obj *obj, MapPos *cell, unsigned char value);
 
 s32 func_800BC49C(Obj *obj) {
     s32 i;
     s32 j;
     s32 count;
     Entry *entry;
-    Cell cell;
+    MapPos cell;
 
     if (!(obj->unk958 & 0x400)) {
         return 0;
@@ -49,7 +48,7 @@ s32 func_800BC49C(Obj *obj) {
                     unsigned char value;
 
                     func_800B6A98(&cell, entry, j);
-                    value = func_800B69F4(entry, &cell) * 2;
+                    value = func_800B69F4(&entry->geometry, &cell) * 2;
                     func_800BC2AC(obj, &cell, value);
                 }
                 j++;

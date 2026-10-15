@@ -1,5 +1,5 @@
-#include "common.h"
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+#include "map_position_iterator.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 
 typedef unsigned char u8;
@@ -7,12 +7,9 @@ typedef unsigned short u16;
 typedef short s16;
 typedef signed char s8;
 
-typedef struct { s32 x; s32 y; } Pos800AC6F8;
-typedef struct { Pos800AC6F8 min; Pos800AC6F8 max; } Rect800AC6F8;
-typedef struct { Pos800AC6F8 cur; Pos800AC6F8 start; Pos800AC6F8 end; } Iter800AC6F8;
 typedef struct { s32 w[2]; } ListIter800AC6F8;
 typedef struct { u8 value; } Dir;
-typedef struct { Pos800AC6F8 pos; Dir dir; } Move800AC6F8;
+typedef struct { MapPos pos; Dir dir; } Move800AC6F8;
 typedef struct { u8 kind; u8 subkind; s8 flags; u8 pad3[2]; s8 owner; } Item800AC6F8;
 
 /* Whole RNG object (state pointers plus backing words); only its base is passed here. */
@@ -20,19 +17,18 @@ extern u8 D_80147620[];
 void *func_800B07F0(ListIter800AC6F8 *li);
 s32 func_800B0808(ListIter800AC6F8 *li);
 Item800AC6F8 *func_800B0864(ListIter800AC6F8 *li);
-void *func_800A3610(Pos800AC6F8 *out, Iter800AC6F8 *it);
-Item800AC6F8 *func_800B4D80(Pos800AC6F8 *pos);
-u32 func_800B1C6C(Pos800AC6F8 *pos);
+Item800AC6F8 *func_800B4D80(MapPos *pos);
+u32 func_800B1C6C(MapPos *pos);
 u8 func_800C57CC(void *rng, s32 range);
-void *func_800A2594(Pos800AC6F8 *out, Pos800AC6F8 *from, Dir dir);
-s32 func_800AD714(Item800AC6F8 *item, Pos800AC6F8 *dest);
-s32 func_800AD8AC(Item800AC6F8 *item, Pos800AC6F8 *dest);
-void *func_800B4E18(Pos800AC6F8 *pos);
+void *func_800A2594(MapPos *out, MapPos *from, Dir dir);
+s32 func_800AD714(Item800AC6F8 *item, MapPos *dest);
+s32 func_800AD8AC(Item800AC6F8 *item, MapPos *dest);
+void *func_800B4E18(MapPos *pos);
 s32 func_80049CB4(s32 msg, ...);
-void func_800AC6F8(Rect800AC6F8 *rect, s32 allowSpecial) {
+void func_800AC6F8(MapRect *rect, s32 allowSpecial) {
     ListIter800AC6F8 li;
-    Iter800AC6F8 it;
-    Pos800AC6F8 pos;
+    MapPositionIterator it;
+    MapPos pos;
     Move800AC6F8 move;
     Item800AC6F8 *item;
     s32 skip;

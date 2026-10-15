@@ -1,5 +1,6 @@
 #include "common.h"
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+#include "item_records.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 
 typedef unsigned char u8;
@@ -14,10 +15,6 @@ typedef struct {
 typedef struct VTableA800F9BA4 VTableA800F9BA4;
 typedef struct VTableB800F9BA4 VTableB800F9BA4;
 
-typedef struct {
-    char pad0[0xC];
-    u32 unkC;
-} Gauge800F9BA4;
 
 typedef struct {
     char pad0[4];
@@ -30,7 +27,7 @@ struct VTableA800F9BA4 {
     s32 (*func24)(char *self);
     char pad28[0x38 - 0x28];
     short adjust38;
-    Gauge800F9BA4 *(*func3C)(char *self, u32 arg1);
+    Item *(*func3C)(char *self, u32 arg1);
 };
 
 typedef struct {
@@ -65,11 +62,6 @@ typedef struct {
     u32 unk84;
 } Target800F9BA4;
 
-typedef struct {
-    u8 kind;
-    char pad1[2];
-    u8 unk3;
-} Item800F9BA4;
 
 typedef struct {
     s32 unk0;
@@ -81,7 +73,6 @@ typedef struct {
 typedef struct { u16 min; u16 max; } RollBounds;
 extern RollBounds D_8015690C;
 extern u32 D_80159F54[];
-extern char D_80143094[];
 extern u32 D_8013960C;
 
 s32 func_80049CB4(s32 id, ...);
@@ -91,24 +82,22 @@ s32 func_800A58B8(Target800F9BA4 *target);
 u32 func_800B1C6C(void *target);
 s32 func_800E20CC(void *self);
 s32 func_800A4754(Actor800F9BA4 *self, Actor800F9BA4 *other, char *pos);
-Item800F9BA4 *func_800A6D18(Actor800F9BA4 *self);
-char *func_800AE674(void *item);
+void *func_800A6D18(void *self);
 void *func_800A6CC0(void *pos, void *self);
-s32 func_800F9564(Actor800F9BA4 *self, Item800F9BA4 *item, Pos800F9BA4 *pos);
+s32 func_800F9564(Actor800F9BA4 *self, Item *item, Pos800F9BA4 *pos);
 char *func_800A3B20(void *self);
 s32 func_800A529C(void *self, s32 arg1);
 s32 func_800F069C(Actor800F9BA4 *self);
-s32 func_800AF950(char *arg0);
 u16 func_800AB044(void);
 u32 func_800F9504(Actor800F9BA4 *self);
 s32 func_800E0F40(Actor800F9BA4 *self);
 void func_800EB744(Target800F9BA4 *target, s32 amount);
 void func_800E20F0(Target800F9BA4 *target);
-Gauge800F9BA4 *func_801239D4(void);
-s32 func_800AC670(Gauge800F9BA4 *gauge);
+Item *func_801239D4(void);
+s32 func_800AC670(Item *gauge);
 s32 func_800CD5C0(void *sub, void *gauge);
 void func_800E3678(Target800F9BA4 *target, Actor800F9BA4 *self);
-s32 func_8010E05C(Gauge800F9BA4 *gauge, s32 amount);
+s32 func_8010E05C(Item *gauge, s32 amount);
 void func_800E03BC(Actor800F9BA4 *self, s32 arg1);
 
 static inline s32 func_800F9BA4_flag(Flags800F9BA4 flags) {
@@ -125,7 +114,7 @@ s32 func_800F9BA4(Actor800F9BA4 *self, Target800F9BA4 *target) {
     s32 retry;
     u32 amount;
     u32 current;
-    Gauge800F9BA4 *gauge;
+    Item *gauge;
     Pos800F9BA4 pos;
     s32 message;
     Pair800F9BA4 *pair;
@@ -139,10 +128,12 @@ s32 func_800F9BA4(Actor800F9BA4 *self, Target800F9BA4 *target) {
     if (flag) {
         if (func_800E20CC(self)) {
             if (func_800A4754(self, self, self->unk8)) {
-                Item800F9BA4 *item = func_800A6D18(self);
-                s32 usable = item != 0 && item->kind == 0xE && item->unk3 == 2;
+                void *object = func_800A6D18(self);
+                u8 *identity = object;
+                s32 usable = identity != 0 && identity[0] == 0xE && identity[3] == 2;
 
                 if (usable) {
+                    Item *item = object;
                     char *name = func_800AE674(item);
 
                     func_800A6CC0(&pos, self);
@@ -161,7 +152,7 @@ s32 func_800F9BA4(Actor800F9BA4 *self, Target800F9BA4 *target) {
         return target == 0;
     }
 
-    busy = (target->unk1E & 3) || (self->sub->vtbl->func24((char *)self->sub + self->sub->vtbl->adjust20) && func_800F069C(self)) || !func_800AF950(D_80143094);
+    busy = (target->unk1E & 3) || (self->sub->vtbl->func24((char *)self->sub + self->sub->vtbl->adjust20) && func_800F069C(self)) || !func_800AF950(&D_80143094);
     if (busy) {
 fail:
         return 0;
@@ -194,7 +185,7 @@ fail:
         if (func_800AC670(gauge)) {
             amount = 0;
         } else {
-            gauge->unkC = 0;
+            gauge->payload.amount.amount0C = 0;
             func_800CD5C0(self->sub, gauge);
         }
     }
@@ -211,9 +202,9 @@ fail:
 
     message = func_80049CB4(0x104B, self);
     func_8010E05C(gauge, amount);
-    current = gauge->unkC;
+    current = gauge->payload.amount.amount0C;
     if (current > D_80159F54[(u8)func_800E0F40(self) - 1]) {
-        gauge->unkC = D_80159F54[(u8)func_800E0F40(self) - 1];
+        gauge->payload.amount.amount0C = D_80159F54[(u8)func_800E0F40(self) - 1];
     }
     pair = &self->unk64;
     pair->unk0 = 0;

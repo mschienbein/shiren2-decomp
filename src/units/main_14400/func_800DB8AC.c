@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef short s16;
@@ -16,7 +17,7 @@ typedef struct {
 
 typedef struct {
     List *list;
-    void *item;
+    Item *item;
 } Link;
 
 typedef struct {
@@ -25,7 +26,7 @@ typedef struct {
 } Action;
 
 extern void *D_801476B8;
-s32 func_800EC384(void *unit, void *item);
+s32 func_800EC384(void *unit, Item *item);
 /* Original returns the removed item, or null when the list removal fails. */
 void *func_800D02AC(Link *link);
 

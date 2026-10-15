@@ -1,32 +1,11 @@
 #include "common.h"
+#include "item_records.h"
+#include "map_position_iterator.h"
 
 typedef unsigned char u8;
 typedef short s16;
-typedef struct { s32 x, y; } Pair;
-typedef struct { Pair current, first, last; } GridIter;
-typedef struct Table Table;
-typedef struct Item Item;
 typedef struct Unit Unit;
 
-/* Common item-list header (func_800CE620): the slots read the item table at +0,
- * the entry indices through +8 and the entry count at +0xE (func_800CE710,
- * func_800CE7A0 via vtable +0x24/+0x3C). */
-typedef struct {
-    Table *pool;
-    const void *vtable;
-    u8 *entries;
-    u8 stateC, stateD;
-    u8 count;
-    u8 padF;
-} ItemList;
-
-/* Pot contents built by func_800CFF00 at Item+0xC: eight inline entries at
- * +0x10 and the owning pot at +0x18 (0x1C bytes). */
-typedef struct {
-    ItemList list;
-    u8 inlineEntries[8];
-    Item *owner;
-} PotContents;
 
 /* Unit kind 0x5A inventory built by func_800CEC90 at Unit+0x8C (0x18 bytes):
  * owner at +0x10, message id at +0x14; its ten entries live at Unit+0x80. */
@@ -36,26 +15,6 @@ typedef struct {
     unsigned short textId;
     u8 pad16[2];
 } UnitInventory;
-
-typedef struct {
-    u8 pad0[8];
-    s16 destroy_delta, destroy_index;
-    void (*destroy)(void *self, s32 flags);
-} ItemVTable;
-
-struct Item {
-    u8 kind;
-    u8 pad1[7];
-    ItemVTable *vtable8;
-    PotContents contents;
-    u8 pad28[8];
-};
-
-struct Table {
-    Item *items;
-    u8 *occupied;
-    s32 count;
-};
 
 typedef struct {
     u8 pad0[0x98];
@@ -78,25 +37,22 @@ struct Unit {
 };
 
 extern const unsigned char D_8015488C[8];
-typedef struct { Pair first, last; } Rectangle;
-extern Rectangle D_801429D0;
+extern MapRect D_801429D0;
 
-Item *func_800AFD78(Table *table, u8 index);
-Pair *func_800A3610(Pair *out, GridIter *it);
-void *func_800B4D80(Pair *p);
+void *func_800B4D80(MapPos *p);
 s32 func_800CD090(void *container, void *element);
 s32 func_800A8F6C(s32 *iter);
 void *func_800A910C(s32 *iter);
 
 /* ODD_C: The grid constructor retains the original temporary-copy ordering. */
-static inline void init_grid(GridIter *it, Pair *tmp, s32 x, s32 y, s32 lastX, s32 lastY) {
+static inline void init_grid(MapPositionIterator *it, MapPos *tmp, s32 x, s32 y, s32 lastX, s32 lastY) {
     tmp->x = x;
     tmp->y = y;
-    it->first = *tmp;
-    it->current = it->first;
+    it->start = *tmp;
+    it->cur = it->start;
     tmp->x = lastX;
     tmp->y = lastY;
-    it->last = *tmp;
+    it->end = *tmp;
 }
 
 /* Remove an item only after checking the map, item containers, and unit inventories.
@@ -105,24 +61,26 @@ static inline void init_grid(GridIter *it, Pair *tmp, s32 x, s32 y, s32 lastX, s
 /* Bit 2 of flags1E marks a unit whose inventory comes from vtable slot 19. */
 static inline signed char is_player(Unit *unit) { return (unit->flags1E >> 2) & 1; }
 
-void func_800B0438(Table *table) {
+/* The only caller, func_800C701C, passes a second argument (li a1,1 in the jal delay slot);
+ * this body never reads it. */
+void func_800B0438(ItemPool *table, s32 flag) {
     s32 i;
-    GridIter grid;
-    Pair pos;
+    MapPositionIterator grid;
+    MapPos pos;
     s32 unitIter;
 
-    for (i = table->count; ;) {
+    for (i = table->capacity; ;) {
         Item *item;
         Item *owner;
         s32 found;
         s32 j;
         Unit *unitOwner;
-        GridIter *cursor;
+        MapPositionIterator *cursor;
         i--;
         if (i == -1) {
             break;
         }
-        if (!(table->occupied[i >> 3] & D_8015488C[i & 7])) {
+        if (!(table->occupancy[i >> 3] & D_8015488C[i & 7])) {
             continue;
         }
         item = func_800AFD78(table, (u8)i);
@@ -132,9 +90,9 @@ void func_800B0438(Table *table) {
         }
         found = 0;
         cursor = &grid;
-        init_grid(cursor, &pos, D_801429D0.first.x, D_801429D0.first.y, D_801429D0.last.x, D_801429D0.last.y);
+        init_grid(cursor, &pos, D_801429D0.min.x, D_801429D0.min.y, D_801429D0.max.x, D_801429D0.max.y);
         for (;;) {
-            s32 more = grid.current.x <= cursor->last.x;
+            s32 more = grid.cur.x <= cursor->end.x;
             if (!more) {
                 break;
             }
@@ -147,18 +105,18 @@ void func_800B0438(Table *table) {
         if (found) {
             continue;
         }
-        for (j = table->count; ;) {
+        for (j = table->capacity; ;) {
             Item *container;
             j--;
             if (j == -1) {
                 break;
             }
-            if (!(table->occupied[j >> 3] & D_8015488C[j & 7])) {
+            if (!(table->occupancy[j >> 3] & D_8015488C[j & 7])) {
                 continue;
             }
             container = func_800AFD78(table, (u8)j);
-            if (container != owner && container->kind == 9 &&
-                func_800CD090(&container->contents, owner) != -1) {
+            if (container != owner && container->field00 == 9 &&
+                func_800CD090(&container->payload.pot, owner) != -1) {
                 owner = container;
                 break;
             }
@@ -187,7 +145,7 @@ void func_800B0438(Table *table) {
             }
         }
         if (!unitOwner && item) {
-            item->vtable8->destroy((u8 *)item + item->vtable8->destroy_delta, 3);
+            item->field08->method0C((u8 *)item + item->field08->delta08, 3);
         }
     }
 }

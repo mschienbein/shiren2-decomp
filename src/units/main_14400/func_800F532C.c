@@ -1,4 +1,4 @@
-#include "common.h"
+#include "map_unit_iterator.h"
 typedef struct { s32 x, y; } Point;
 typedef struct { u32 bits; } Flags;
 typedef struct { s32 kind; void *source; unsigned char payload[8]; s32 value; } Message;
@@ -7,7 +7,6 @@ typedef struct Unit {
     Point position; unsigned char direction, terrain; unsigned char pad0A[0x12];
     unsigned short status, field1E; Flags flags; Methods *methods;
 } Unit;
-typedef struct { s32 index; Unit *source; Point position; s32 bounds[4]; } Iterator;
 typedef struct Rng Rng;
 extern Rng D_80147620;
 extern unsigned char D_80156A3D;
@@ -15,9 +14,6 @@ extern s32 func_800C587C(void *rng, unsigned char limit);
 extern s32 func_80049CB4(s32 id, ...);
 extern void func_800497F0(s32 message, ...);
 extern char *func_800A3B20(Unit *unit);
-extern Iterator *func_800A915C(Iterator *iterator, Unit *unit);
-extern s32 func_800A9284(Iterator *iterator, s32 filter);
-extern Unit *func_800A942C(Iterator *iterator);
 extern u32 func_800B1C6C(Point *position);
 extern s32 func_800A6E90(void *unit);
 extern s32 func_800A692C(Unit *unit, s32 status);
@@ -38,7 +34,7 @@ static inline s32 flagsHas(const Flags *flags, u32 mask) {
 void func_800F532C(Unit *unit) {
     Point original;
     Message message;
-    Iterator iterator;
+    MapUnitIterator iterator;
     if ((func_800C587C(&D_80147620, D_80156A3D) ^ 1) == 0) {
         if (func_80049CB4(0xDA, copyPoint(&original, &unit->position)) != -2) {
             s32 context;

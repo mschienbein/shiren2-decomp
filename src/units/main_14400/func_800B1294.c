@@ -1,14 +1,13 @@
 #include "common.h"
-typedef struct { s32 x, y; } Pair;
-typedef struct { Pair cur; Pair start; Pair end; } Range;
-void func_800B1420(Range *r);
-static inline void pair_set(Pair *p, s32 x, s32 y) {
+#include "map_position_iterator.h"
+void func_800B1420(MapPositionIterator *r);
+static inline void pair_set(MapPos *p, s32 x, s32 y) {
     p->x = x;
     p->y = y;
 }
 void func_800B1294(void) {
-    Range r;
-    Pair a, b;
+    MapPositionIterator r;
+    MapPos a, b;
     pair_set(&a, 0, 0);
     pair_set(&b, 9, 75);
     r.start = a;

@@ -1,5 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
-extern void *const D_80153AE4[];
-extern s32 func_800AFD08(void *table, void *obj);
-void *func_800AFB80(void *obj) { s32 i=0; for (;;) { void *entry; if (i>=7) break; entry=D_80153AE4[i]; if ((unsigned char)func_800AFD08(entry,obj)!=255) return entry; i++; } return 0; }
+/* The item pool whose storage holds `item`, or 0. */
+ItemPool *func_800AFB80(Item *item) { s32 i=0; for (;;) { ItemPool *pool; if (i>=7) break; pool=D_80153AE4[i]; if ((unsigned char)func_800AFD08(pool,item)!=255) return pool; i++; } return 0; }

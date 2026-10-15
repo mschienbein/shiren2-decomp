@@ -1,16 +1,11 @@
 #include "common.h"
+#include "collection_iterator.h"
 
 typedef unsigned char u8;
 typedef short s16;
 
 typedef struct Container Container;
 
-typedef struct {
-    s32 index;
-    Container *container;
-    s32 active;
-    void *current;
-} Iter;
 
 typedef struct {
     u8 kind;
@@ -28,14 +23,11 @@ typedef struct {
     VTable800E91E4 *vtable_24;
 } Unit;
 
-Iter *func_800CEB20(Iter *it, void *a);
-s32 func_800CEBA0(Iter *it);
-Ent *func_800CEC68(Iter *it);
 void func_80112E7C(Ent *object);
 
 s32 func_800E91E4(Unit *unit)
 {
-    Iter it;
+    CollectionIterator it;
     s32 found = 0;
     Container *contents = unit->vtable_24->contents_9C((u8 *)unit + unit->vtable_24->delta_98);
 

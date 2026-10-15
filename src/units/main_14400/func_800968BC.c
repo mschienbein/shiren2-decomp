@@ -41,7 +41,7 @@ extern ExtendedMenu800968BC D_801404E0;
 extern u8 D_80138D90[];
 extern void *func_80096748(void);
 extern Holder800968BC *func_800EBA54(void *owner);
-extern void func_80097B90(void *obj, void *owner, void *holder, s32 mode, void *desc, s32 flag);
+extern void func_80097B90(void *obj, void *owner, void *holder, s32 mode, const void *desc, s32 flag);
 extern void func_8009F680(void *loader, s32 arg);
 static __inline__ void prepare_menu(void *owner) {
     func_80097B90(&D_801404E0, owner, 0, 2, D_80138D90, 0);

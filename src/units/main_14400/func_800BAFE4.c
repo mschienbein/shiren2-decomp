@@ -1,30 +1,27 @@
 #include "common.h"
+#include "map_position_iterator.h"
 
 typedef unsigned char u8;
 typedef signed char s8;
 typedef unsigned short u16;
 typedef short s16;
 
-typedef struct { s32 x; s32 y; } Point;
-typedef struct { Point min; Point max; } Rect;
-typedef struct { Point cur; Point min; Point max; } RectIter;
 extern u8 D_80147620[];
-void *func_800A3610(void *out, void *iter);
-u32 func_800B1C6C(Point *pos);
-void func_800B1AE0(Point *pos, u16 flags);
+u32 func_800B1C6C(MapPos *pos);
+void func_800B1AE0(MapPos *pos, u16 flags);
 u8 func_800C57A0(void *table);
 void func_800B17A4(void);
-s32 func_800BAFE4(void *self, Rect *rect) {
-    Point pos;
-    Rect r;
-    RectIter left;
-    Rect col;
-    RectIter right;
+s32 func_800BAFE4(void *self, MapRect *rect) {
+    MapPos pos;
+    MapRect r;
+    MapPositionIterator left;
+    MapRect col;
+    MapPositionIterator right;
     s32 can_left;
     s32 can_right;
     s32 more;
     u32 flags;
-    Point *pt;
+    MapPos *pt;
     s32 edge;
     s32 edge2;
 
@@ -40,12 +37,12 @@ s32 func_800BAFE4(void *self, Rect *rect) {
     col.min.y = r.min.y;
     col.max.x = edge;
     col.max.y = r.max.y;
-    left.min = col.min;
-    left.cur = left.min;
-    left.max = col.max;
+    left.start = col.min;
+    left.cur = left.start;
+    left.end = col.max;
     pt = &col.min;
 scan_left:
-    more = left.cur.x <= left.max.x;
+    more = left.cur.x <= left.end.x;
     if (more) {
         func_800A3610(pt, &left);
         if (func_800B1C6C(pt) & 0xE100) {
@@ -57,12 +54,12 @@ scan_left:
     col.min.y = r.min.y;
     col.max.x = r.max.x + 2;
     col.max.y = r.max.y;
-    right.min = col.min;
-    right.cur = right.min;
-    right.max = col.max;
+    right.start = col.min;
+    right.cur = right.start;
+    right.end = col.max;
     pt = &col.min;
 scan_right:
-    more = right.cur.x <= right.max.x;
+    more = right.cur.x <= right.end.x;
     if (more) {
         func_800A3610(pt, &right);
         if (func_800B1C6C(pt) & 0xE100) {

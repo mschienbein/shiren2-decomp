@@ -19,13 +19,18 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 import packet
-from certification import file_inventory, sha256
-from images import ComponentRecord, ImageInventory, ImageRecord
+import progress
+from certification import archive_orchestration, file_inventory, runtime_fingerprint, sha256
+from images import ComponentRecord, ImageInventory, ImageRecord, ProvisionalCpuRange
 from rom import EXPECTED_SHA256
 from workspace import REQUIRED_FILES, input_manifest
 
 
 class PacketTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.process_runtime = runtime_fingerprint()
+
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
@@ -59,7 +64,9 @@ class PacketTests(unittest.TestCase):
             }), (), (), (), MappingProxyType({}), MappingProxyType({}),
         )
         self.profile = {"id": "fixture", "profiles": {"candidate": {"scope": "fixture only"}}, "tu_profiles": {}}
-        self.runtime = {"scope": "fixture only"}
+        self.runtime = copy.deepcopy(self.process_runtime)
+        self.orchestration = archive_orchestration(
+            self.directory, Path(packet.__file__).resolve().parent / "build.py")
         self.graph = {
             "obj/generated/asm/sdk.o": {"image_id": "resident", "input": "generated/asm/sdk.s", "source": "generated/asm/sdk.s", "source_kind": "asm"},
             "obj/generated/asm/game.o": {"image_id": "main_14400", "input": "generated/asm/game.s", "source": "generated/asm/game.s", "source_kind": "asm"},
@@ -117,7 +124,8 @@ class PacketTests(unittest.TestCase):
         (self.directory / "input-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
         self.receipt = {
             "schema_version": 3, "target_sha256": EXPECTED_SHA256, "input_manifest": manifest,
-            "profile": self.profile, "runtime": self.runtime, "graph": self.graph,
+            "profile": self.profile,
+            "runtime": {**self.runtime, "orchestration": self.orchestration}, "graph": self.graph,
             "image_inventory": {**self.image_report(), "linked_images": {}},
             "c_matches": self.matches, "generated": file_inventory(self.directory / "generated"),
             "artifacts": {"shiren2.ld": sha256(self.directory / "shiren2.ld")},
@@ -145,6 +153,72 @@ class PacketTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             catalogue.functions[sdk.key] = game
 
+    def test_build_shaped_runtime_flows_through_progress_catalogue_freeze(self) -> None:
+        # The full compiler verifier remains the explicit fixture boundary.
+        # No accepted pointer or game-build acceptance is manufactured here.
+        self.inventory = replace(self.inventory, images=MappingProxyType({
+            name: replace(image, provisional_cpu_ranges=(
+                ProvisionalCpuRange(image.rom_start, image.rom_end, "provisional", (), "fixture"),))
+            for name, image in self.inventory.images.items()
+        }))
+        accepted = progress.AcceptedReceipt(
+            self.root, self.reference, self.receipt_path, sha256(self.receipt_path),
+            json.loads(self.receipt_path.read_text()), self.inventory,
+            self.reference.read_bytes(), None)
+        frozen = progress.freeze_catalogue(accepted, {"fixture": "unit-test-only"})
+        self.assertEqual(frozen["audit"]["functions"], 2)
+        self.assertEqual(frozen["audit"]["instruction_bytes"], 24)
+        self.assertEqual(frozen["denominator_id"], packet.json_digest(frozen["identity"]))
+        self.verifier.assert_called_once_with(self.receipt_path, require_current=False, reference=self.reference)
+
+    def test_missing_or_forged_orchestration_is_not_process_metadata(self) -> None:
+        for mutation in ("missing", "wrong-entry-hash", "unknown-field"):
+            with self.subTest(mutation=mutation):
+                self.rewrite_receipt()
+                receipt = json.loads(self.receipt_path.read_text())
+                runtime = receipt["runtime"]
+                if mutation == "missing":
+                    runtime.pop("orchestration")
+                elif mutation == "wrong-entry-hash":
+                    runtime["orchestration"]["entrypoint_sha256"] = "0" * 64
+                else:
+                    runtime["orchestration"]["ignored"] = True
+                self.receipt_path.write_text(json.dumps(receipt))
+                with self.assertRaisesRegex(ValueError, "orchestration"):
+                    self.catalogue()
+
+    def test_process_runtime_comparison_retains_all_remaining_fields(self) -> None:
+        for mutation in ("extra-field", "python-version", "package-files"):
+            with self.subTest(mutation=mutation):
+                self.rewrite_receipt()
+                receipt = json.loads(self.receipt_path.read_text())
+                runtime = receipt["runtime"]
+                if mutation == "extra-field":
+                    runtime["unrecognized-metadata"] = True
+                elif mutation == "python-version":
+                    runtime["python"]["version"] += " altered"
+                else:
+                    runtime["packages"]["h21-forged-package"] = {
+                        "version": "0", "files_sha256": "0" * 64, "file_count": 1}
+                self.receipt_path.write_text(json.dumps(receipt))
+                with self.assertRaisesRegex(ValueError, "Python/package runtime"):
+                    self.catalogue()
+
+    def test_cached_catalogue_rechecks_orchestration_archive(self) -> None:
+        catalogue = self.catalogue()
+        archived = self.directory / "trusted-orchestration/packet.py"
+        archived.write_text(archived.read_text() + "\n# changed after catalogue freeze\n")
+        with self.assertRaisesRegex(ValueError, "Changed trusted orchestration source archive"):
+            packet.create_packet(catalogue, "resident", "sdk", self.output(), run_m2c=False)
+        self.assertFalse(self.output().exists())
+        self.assertEqual(self.verifier.call_count, 1)
+
+    def test_missing_archived_helper_rejects_build_shaped_runtime(self) -> None:
+        archived = self.directory / "trusted-orchestration/packet.py"
+        archived.rename(archived.with_suffix(".missing"))
+        with self.assertRaisesRegex(ValueError, "Changed trusted orchestration source archive"):
+            self.catalogue()
+
     def test_duplicate_labels_and_missing_or_mismatched_end_labels_fail(self) -> None:
         original = self.assembly("sdk", 0x1000, 0x80025C00, self.sdk_words)
         for text in (original + original, original.replace("endlabel sdk", "endlabel other"), original.replace("endlabel sdk", ""), original.replace("endlabel sdk", "glabel nested\nendlabel sdk")):
@@ -155,18 +229,28 @@ class PacketTests(unittest.TestCase):
                     self.catalogue()
 
     def test_jump_table_labels_keep_function_extents(self) -> None:
-        # Rodata split emits `jlabel .Lxxxxxxxx` case targets inside a function, and
-        # `jlabel func_X` when a catalogued function start is itself a case target.
+        # Rodata split emits case targets inside a function; overlays append ROM.
+        # A catalogued function start can itself be a global jump-table target.
         original = self.assembly("sdk", 0x1000, 0x80025C00, self.sdk_words)
         lines = original.splitlines(keepends=True)
-        case_label = lines[:4] + ["jlabel .L80025C08\n"] + lines[4:]
+        cases = ["".join(lines[:4] + [f"jlabel {label}\n"] + lines[4:])
+                 for label in (".L80025C04", ".L80025C04_1004")]
         as_start = original.replace("glabel sdk", "jlabel sdk")
-        for text in ("".join(case_label), as_start):
+        for text in (*cases, as_start):
             with self.subTest(text=text):
                 self.write_asm("sdk", text)
                 self.rewrite_receipt()
                 sdk = next(function for function in self.catalogue().values() if function.symbol == "sdk")
                 self.assertEqual((sdk.rom_start, sdk.size), (0x1000, 4 * len(self.sdk_words)))
+
+    def test_malformed_rom_qualified_case_labels_fail_closed(self) -> None:
+        original = self.assembly("sdk", 0x1000, 0x80025C00, self.sdk_words)
+        for label in (".L80025C04_", ".L80025C04_1004_extra", ".L80025C04_1004 nop"):
+            with self.subTest(label=label):
+                self.write_asm("sdk", original.replace("endlabel sdk", f"jlabel {label}\nendlabel sdk"))
+                self.rewrite_receipt()
+                with self.assertRaisesRegex(ValueError, "Unannotated or malformed instruction"):
+                    self.catalogue()
 
     def test_duplicate_and_overlapping_function_identities_across_units_fail(self) -> None:
         for symbol in ("sdk", "different"):
@@ -181,6 +265,30 @@ class PacketTests(unittest.TestCase):
         self.write_asm("game", self.assembly("sdk", 0x2000, 0x800413C0, self.game_words))
         self.rewrite_receipt()
         self.assertEqual(set(self.catalogue()), {("resident", "sdk"), ("main_14400", "sdk")})
+
+    def test_same_vram_overlay_calls_resolve_inside_the_callers_image(self) -> None:
+        call, leaf = (0x0C0793AC, 0, 0x03E00008, 0), (0x03E00008, 0)  # jal 0x801E4EB0
+        original = bytearray(self.reference.read_bytes())
+        units = {"host": ("main_14400", 0x2020, 0x800413E0, call)}
+        for image, rom in (("overlay_1339f0", 0x2400), ("overlay_136dc0", 0x2800)):
+            units[f"{image}_caller"] = (image, rom, 0x801E4EA0, call)
+            units[f"{image}_leaf"] = (image, rom + 0x10, 0x801E4EB0, leaf)
+        for name, (image, rom, vram, words) in units.items():
+            original[rom:rom + 4 * len(words)] = b"".join(word.to_bytes(4, "big") for word in words)
+            self.write_asm(name, self.assembly(name, rom, vram, words))
+            self.graph[f"obj/generated/asm/{name}.o"] = {"image_id": image, "input": f"generated/asm/{name}.s", "source": f"generated/asm/{name}.s", "source_kind": "asm"}
+        self.reference.write_bytes(original)
+        self.inventory = replace(self.inventory, images=MappingProxyType({
+            **self.inventory.images, "overlay_1339f0": self.image("overlay_1339f0", 0x2400, 0x801E4EA0),
+            "overlay_136dc0": self.image("overlay_136dc0", 0x2800, 0x801E4EA0)}))
+        self.rewrite_receipt()
+        catalogue = self.catalogue()
+        a_leaf, b_leaf = ("overlay_1339f0", "overlay_1339f0_leaf"), ("overlay_136dc0", "overlay_136dc0_leaf")
+        self.assertEqual(catalogue[("overlay_1339f0", "overlay_1339f0_caller")].direct_calls[0].possible_targets, (a_leaf,))
+        self.assertEqual(catalogue[("overlay_136dc0", "overlay_136dc0_caller")].direct_calls[0].possible_targets, (b_leaf,))
+        # Main cannot know which image occupies the slot.
+        self.assertEqual(catalogue[("main_14400", "host")].direct_calls[0].possible_targets, (a_leaf, b_leaf))
+        self.assertEqual(catalogue[a_leaf].callers, (("main_14400", "host"), ("overlay_1339f0", "overlay_1339f0_caller")))
 
     def test_noncontiguous_rom_or_vram_wrong_mapping_and_wrong_words_fail(self) -> None:
         original = self.assembly("sdk", 0x1000, 0x80025C00, self.sdk_words)
@@ -277,6 +385,9 @@ class PacketTests(unittest.TestCase):
         metadata = json.loads((destination / "task.json").read_text())
         self.assertEqual(metadata["status"], "prepared-unverified")
         self.assertEqual(metadata["baseline"]["receipt_sha256"], catalogue.baseline.receipt_sha256)
+        self.assertEqual(json.loads(catalogue.baseline.runtime_json), self.receipt["runtime"])
+        self.assertEqual(metadata["baseline"]["runtime_sha256"], packet.json_digest(self.receipt["runtime"]))
+        self.assertNotEqual(metadata["baseline"]["runtime_sha256"], packet.json_digest(self.runtime))
         self.assertEqual(metadata["candidate"]["c_credit_bytes"], 0)
         self.assertEqual(metadata["boundary"]["confidence"], "provisional")
         self.assertFalse(metadata["m2c"]["invoked"])

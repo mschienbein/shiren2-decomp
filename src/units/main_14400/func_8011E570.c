@@ -1,11 +1,12 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
 typedef signed char s8;
 typedef unsigned short u16;
 typedef signed short s16;
 
 typedef struct { u8 pad[0x1C]; void *vtbl; u8 pad20[0x18]; } Obj;
-extern s32 func_80111A20(void *, void *);
+extern s32 func_80111A20(Item *, void *);
 extern Obj *func_80111E08(Obj *o, void *unit, void *item, void *pos, u8 *dir);
 extern void func_800C2D0C(Obj *);
 extern u8 D_8015EF30[];

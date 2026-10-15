@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -7,7 +8,6 @@ typedef struct Actor {
     u8 pad_00[0x1E];
     u8 field_1E;
 } Actor;
-typedef struct Item Item;
 typedef struct {
     Actor *field_00;
     s32 field_04;

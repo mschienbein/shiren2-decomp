@@ -4,6 +4,16 @@ typedef unsigned char u8;
 typedef unsigned short u16;
 typedef short s16;
 
+/* Damage fields written by func_80136910; natural target extent is 0x14. */
+typedef struct {
+    void *source;
+    u32 kind;
+    u32 field_8;
+    u16 amount;
+    u16 flags;
+    u8 field_10;
+} Damage801181C0;
+
 typedef struct Obj Obj;
 typedef struct { s16 delta; s16 index; void (*func)(void *self, s16 step); } VtblEntry;
 typedef struct { u8 pad0[0x78]; VtblEntry entry78; } Vtbl;
@@ -15,14 +25,14 @@ s32 func_80049CB4(s32 id, ...);
 s32 func_800E0F40(Obj *obj);
 u16 func_800E08B0(Obj *obj);
 char *func_800A3B20(Obj *obj);
-void func_80136910(char *buf, void *source, u32 arg2, u32 arg3, u32 arg4);
-void func_800A7ADC(Obj *obj, char *buf);
+void func_80136910(Damage801181C0 *buf, void *source, u32 arg2, u32 arg3, u32 arg4);
+void func_800A7ADC(Obj *obj, Damage801181C0 *buf);
 /* The +0x4C slot supplies the receiver pointer; this override does not use it. */
 void func_801181C0(void *arg0, void *source, Obj *obj) {
-    char buf[0x18];
+    Damage801181C0 buf;
     s32 changed;
     s32 cur;
-    char *p;
+    Damage801181C0 *p;
     u8 next;
     u16 count;
     if (func_800A99D0()) {
@@ -50,7 +60,7 @@ void func_801181C0(void *arg0, void *source, Obj *obj) {
     func_80049CB4(7);
     count = func_800E08B0(obj);
     if (count >= 2) {
-        p = buf;
+        p = &buf;
         func_80136910(p, source, (u32)(s16)(count - 1), 0x19, 8);
         func_800A7ADC(obj, p);
     }

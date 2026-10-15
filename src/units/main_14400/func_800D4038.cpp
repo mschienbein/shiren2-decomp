@@ -1,83 +1,64 @@
 #include "common.h"
+#include "map_position_iterator.h"
+#include "map_line_iterator.h"
 
 /*
- * Room carving: clear every cell of the room rectangle, then cut the door
- * corridors.  g++ 2.8.1 translation unit: block-scoped locals (the corridor
- * iterators and the per-step points) share stack slots once their scope ends,
- * which only the C++ front end does, and the Rect by-value argument is copied
- * member-wise through Point's copy constructor.
+ * Room carving: mark every cell of the room rectangle, then cut the door
+ * corridors. Keep the MapRect argument by value, its MapPos member copies,
+ * and the separately scoped line iterators and per-step positions.
  */
 
 typedef unsigned char u8;
 typedef unsigned short u16;
 
-struct Point {
-    s32 x;
-    s32 y;
-
-    Point() {}
-    Point(const Point &other) : x(other.x), y(other.y) {}
-};
-
-struct Rect {
-    Point begin;
-    Point end;
-};
-
-struct RectIter {
-    Point current;
-    Point begin;
-    Point end;
-};
-
-struct Dir {
+struct Dir_800D4038 {
     u8 value;
 };
 
-struct LineIter {
-    Point current;
-    u8 dir;
-    s32 length;
-    s32 index;
+
+/* B68B0 and B6A98 index four side counts at +0x10..+0x13. They need the
+ * complete room-area record, not a pointer to its 16-byte geometry alone.
+ * Foreign backing storage and C++ lifetime remain provider/caller contracts. */
+struct RoomArea_800D4038 {
+    MapRect area;
+    u8 side_counts[4];
 };
 
-struct Room {
-    Rect *bounds;
+/* The corridor state exposes its room-area pointer at +0. */
+struct Room_800D4038 {
+    RoomArea_800D4038 *bounds;
 };
 
 extern "C" {
 extern u8 D_80147620[];
 
-Point *func_800A3610(Point *out, RectIter *it);
-void func_800B1B58(Point *pos, u16 flags);
-s32 func_800B68B0(Rect *rect);
-void *func_800B6A98(void *out, void *room, s32 index);
-s32 func_800B69F4(Rect *r, Point *p);
-void func_800A2758(Point *p, Dir d);
-u32 func_800B1C6C(Point *pos);
-void func_800B1BE0(Point *pos, s32 mask);
-s32 func_800A3138(Rect *rect);
-s32 func_800A315C(Rect *rect);
+void func_800B1B58(MapPos *pos, u16 flags);
+s32 func_800B68B0(RoomArea_800D4038 *room);
+MapPos *func_800B6A98(MapPos *out, RoomArea_800D4038 *room, s32 index);
+s32 func_800B69F4(MapRect *r, MapPos *p);
+void func_800A2758(MapPos *p, Dir_800D4038 d);
+u32 func_800B1C6C(MapPos *pos);
+void func_800B1BE0(MapPos *pos, s32 mask);
+s32 func_800A3138(MapRect *rect);
+s32 func_800A315C(MapRect *rect);
 s32 func_800C5844(void *rng, u8 base, u8 top);
-void func_800C25D0(LineIter *it, Point *start, u8 *dir, s32 length);
-Point *func_800C2758(Point *result, LineIter *it);
-void func_800D4038(Room *room);
+void func_800D4038(Room_800D4038 *room);
 }
 
-static inline Point *copy_point(Point *dst, Point *src)
+static inline MapPos *copy_point(MapPos *dst, MapPos *src)
 {
     dst->x = src->x;
     dst->y = src->y;
     return dst;
 }
 
-static inline void rect_iter_init(RectIter *it, Rect bounds)
+static inline void rect_iter_init(MapPositionIterator *it, MapRect bounds)
 {
-    Point tmp;
+    MapPos tmp;
 
-    it->begin = *copy_point(&tmp, &bounds.begin);
-    it->current = it->begin;
-    it->end = *copy_point(&tmp, &bounds.end);
+    it->start = *copy_point(&tmp, &bounds.min);
+    it->cur = it->start;
+    it->end = *copy_point(&tmp, &bounds.max);
 }
 
 static inline u8 random_between(s32 low, s32 high)
@@ -86,26 +67,26 @@ static inline u8 random_between(s32 low, s32 high)
 }
 
 /* 8-way direction for a room wall side index. */
-static inline void set_side_dir(Dir *dir, s32 side)
+static inline void set_side_dir(Dir_800D4038 *dir, s32 side)
 {
     dir->value = (side * 2 + 4) & 7;
 }
 
-static inline s32 rect_iter_valid(RectIter *it)
+static inline s32 rect_iter_valid(MapPositionIterator *it)
 {
-    return it->current.x <= it->end.x;
+    return it->cur.x <= it->end.x;
 }
 
-static inline s32 line_iter_valid(LineIter *it)
+static inline s32 line_iter_valid(MapLineIterator *it)
 {
     return it->index < it->length;
 }
 
-extern "C" void func_800D4038(Room *room)
+extern "C" void func_800D4038(Room_800D4038 *room)
 {
-    RectIter cells;
-    rect_iter_init(&cells, *room->bounds);
-    Point point;
+    MapPositionIterator cells;
+    rect_iter_init(&cells, room->bounds->area);
+    MapPos point;
     while (rect_iter_valid(&cells)) {
         func_800A3610(&point, &cells);
         func_800B1B58(&point, 0x2000);
@@ -114,8 +95,8 @@ extern "C" void func_800D4038(Room *room)
     s32 count = func_800B68B0(room->bounds);
     if (count == 1) {
         func_800B6A98(&point, room->bounds, 0);
-        Dir dir;
-        set_side_dir(&dir, func_800B69F4(room->bounds, &point));
+        Dir_800D4038 dir;
+        set_side_dir(&dir, func_800B69F4(&room->bounds->area, &point));
         for (;;) {
             func_800A2758(&point, dir);
             if (!(func_800B1C6C(&point) & 0x1000)) {
@@ -129,55 +110,55 @@ extern "C" void func_800D4038(Room *room)
 
         for (s32 i = 0; i < count; i++) {
             func_800B6A98(&point, room->bounds, i);
-            s32 side = func_800B69F4(room->bounds, &point);
+            s32 side = func_800B69F4(&room->bounds->area, &point);
             if (!(side & 1)) {
                 horizontal++;
             } else {
                 vertical++;
             }
         }
-        s32 width = func_800A3138(room->bounds);
-        s32 height = func_800A315C(room->bounds);
+        s32 width = func_800A3138(&room->bounds->area);
+        s32 height = func_800A315C(&room->bounds->area);
         if (!horizontal) {
-            LineIter line;
+            MapLineIterator line;
 
-            copy_point(&point, &room->bounds->begin);
-            point.x = random_between(room->bounds->begin.x + 1, room->bounds->end.x - 1);
+            copy_point(&point, &room->bounds->area.min);
+            point.x = random_between(room->bounds->area.min.x + 1, room->bounds->area.max.x - 1);
             u8 dir = 0;
             func_800C25D0(&line, &point, &dir, width);
             while (line_iter_valid(&line)) {
-                Point current;
+                MapPos current;
 
                 func_800C2758(&current, &line);
                 func_800B1BE0(&current, 0x2000);
             }
         }
         if (!vertical) {
-            LineIter line;
+            MapLineIterator line;
 
-            copy_point(&point, &room->bounds->begin);
-            point.y = random_between(room->bounds->begin.y + 1, room->bounds->end.y - 1);
+            copy_point(&point, &room->bounds->area.min);
+            point.y = random_between(room->bounds->area.min.y + 1, room->bounds->area.max.y - 1);
             u8 dir = 6;
             func_800C25D0(&line, &point, &dir, height);
             while (line_iter_valid(&line)) {
-                Point current;
+                MapPos current;
 
                 func_800C2758(&current, &line);
                 func_800B1BE0(&current, 0x2000);
             }
         }
         for (s32 i = 0; i < count; i++) {
-            LineIter line;
+            MapLineIterator line;
 
             func_800B6A98(&point, room->bounds, i);
-            s32 side = func_800B69F4(room->bounds, &point);
-            Dir dir;
+            s32 side = func_800B69F4(&room->bounds->area, &point);
+            Dir_800D4038 dir;
             set_side_dir(&dir, side);
             func_800A2758(&point, dir);
             s32 length = !(side & 1) ? width : height;
             func_800C25D0(&line, &point, &dir.value, length);
             while (line_iter_valid(&line)) {
-                Point current;
+                MapPos current;
 
                 func_800C2758(&current, &line);
                 func_800B1BE0(&current, 0x2000);

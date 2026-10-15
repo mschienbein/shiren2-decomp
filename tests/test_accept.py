@@ -26,7 +26,7 @@ import certification
 
 def match(symbol: str, source: str, index: int, image_id: str = "resident") -> dict:
     return {"image_id": image_id, "symbol": symbol, "source": source,
-            "rom_start": 0x1000 + index * 8, "size": 8}
+            "rom_start": 0x1000 + index * 8, "vram_start": 0x80001000 + index * 8, "size": 8}
 
 
 def receipt(matches: list[dict], sources: dict[str, str], dependencies: dict[str, list[str]] | None = None) -> dict:
@@ -103,7 +103,7 @@ class AcceptanceReviewTests(unittest.TestCase):
         return path
 
     def run_command(self, argv: list[str], log: Path, env: dict | None = None) -> tuple[int, float]:
-        log.write_text("Ran 1 test in 0.001s\n\nOK\n" if "unittest" in argv else "fixture command\n")
+        log.write_text("Ran 1 test in 0.001s\n\nOK\n" if "tools/test_suite.py" in argv else "fixture command\n")
         return 0, 0.001
 
     def prepare(self) -> dict:
@@ -143,6 +143,60 @@ class AcceptanceReviewTests(unittest.TestCase):
             self.write_json(f"build/{self.name}-{suffix}/receipt.json", self.current)
             self.write_json(f"build/{self.name}-{suffix}/input-manifest.json", self.current["input_manifest"])
         return self.prepare()
+
+    def test_library_match_preserves_vram_through_prepare_and_finalize(self) -> None:
+        library = {"image_id": "resident", "symbol": "func_80035F50",
+                   "source": "src/units/resident/func_80035F50.c",
+                   "rom_start": 0x11350, "vram_start": 0x80035F50, "size": 1468}
+        self.prior = receipt([], {})
+        self.current = receipt([library], {library["source"]:
+            '#define L_divdi3\n#define __divdi3 func_80035F50\n#include "toolchain/gcc281pm/libgcc2.c"\n'})
+        self.current["coverage"] = {"matched_c_functions": 0, "matched_c_bytes": 0,
+                                    "matched_toolchain_library_functions": 1, "matched_toolchain_library_bytes": 1468}
+        prior_path = self.write_json("build/prior/receipt.json", self.prior)
+        self.write_json("build/latest.json", {"receipt": "build/prior/receipt.json",
+                                             "receipt_sha256": accept._sha256(prior_path)})
+        for suffix in ("a", "b"):
+            self.write_json(f"build/{self.name}-{suffix}/receipt.json", self.current)
+            self.write_json(f"build/{self.name}-{suffix}/input-manifest.json", self.current["input_manifest"])
+        prepared = self.prepare()
+        self.assertEqual(prepared["new_functions"], [library])
+        self.review(prepared, [library["symbol"]])
+        validation = accept.read_json(accept.finalize(self.name, []))
+        self.assertEqual(validation["new_C_functions"], 0)
+        self.assertEqual(validation["new_unique_C_instruction_bytes"], 0)
+        self.assertEqual(validation["new_toolchain_library_functions"], 1)
+        self.assertEqual(validation["new_unique_toolchain_library_instruction_bytes"], 1468)
+        self.assertEqual(validation["new_functions"][0]["vram_start"], 0x80035F50)
+
+    def test_generated_absorption_preserves_markers_and_new_subset(self) -> None:
+        old_source = "src/initializer.c"
+        source = "src/interpreter.cpp"
+        cleanup = {**match("cleanup", source, 0), "size": 80, "generated": "__tcf_0"}
+        interpreter = {**match("interpreter", source, 10), "size": 7448}
+        initializer = {**match("initializer", source, 941), "generated": "_GLOBAL_.I.interpreter"}
+        self.prior = receipt([{k: v for k, v in {**initializer, "source": old_source}.items() if k != "generated"}],
+                             {old_source: "void initializer(void) {}"})
+        self.current = receipt([cleanup, interpreter, initializer], {source: "fixture C++ source"})
+        self.current["coverage"].update(matched_generated_cpp_functions=2, matched_generated_cpp_bytes=88)
+        prior_path = self.write_json("build/prior/receipt.json", self.prior)
+        self.write_json("build/latest.json", {"receipt": "build/prior/receipt.json", "receipt_sha256": accept._sha256(prior_path)})
+        for suffix in ("a", "b"):
+            self.write_json(f"build/{self.name}-{suffix}/receipt.json", self.current)
+            self.write_json(f"build/{self.name}-{suffix}/input-manifest.json", self.current["input_manifest"])
+        prepared = self.prepare()
+        self.assertEqual([m.get("generated") for m in prepared["new_functions"]], ["__tcf_0", None])
+        self.assertEqual(prepared["changed_functions"][0]["generated"], "_GLOBAL_.I.interpreter")
+        self.assertEqual(prepared["new_instruction_bytes"], 7528)
+        self.assertEqual((prepared["new_generated_cpp_functions"], prepared["new_generated_cpp_instruction_bytes"]), (1, 80))
+        self.review(prepared, ["cleanup", "interpreter", "initializer"])
+        validation = accept.read_json(accept.finalize(self.name, []))
+        self.assertEqual(validation["new_functions"], prepared["new_functions"])
+        self.assertEqual(validation["changed_functions"], prepared["changed_functions"])
+        self.assertEqual((validation["new_CPP_functions"], validation["new_unique_CPP_instruction_bytes"]), (2, 7528))
+        self.assertEqual((validation["new_generated_cpp_functions"], validation["new_generated_cpp_instruction_bytes"]), (1, 80))
+        self.assertEqual(validation["coverage"]["matched_generated_cpp_functions"], 2)
+        self.assertEqual(validation["coverage"]["matched_generated_cpp_instruction_bytes"], 88)
 
     def test_header_only_change_requires_review_of_every_dependent_c_and_cpp_function(self) -> None:
         prepared = self.prepare_header_change("include/inner.h")
@@ -235,9 +289,36 @@ class AcceptanceReviewTests(unittest.TestCase):
                          ["edited", "moved", "absorbed", "reused", "edited_cpp"])
         self.assertEqual(prepared["new_instruction_bytes"], 8)
         self.assertEqual(prepared["coverage"], self.current["coverage"])
+        self.assertNotIn("new_generated_cpp_functions", prepared)
+        self.assertNotIn("new_generated_cpp_instruction_bytes", prepared)
         self.assertEqual([m["source"] for m in prepared["changed_functions"]],
                          ["src/edited.c", "src/renamed.c", "src/joint.c", "src/joint.c", "src/edited.cpp"])
         self.assertTrue(prepared["suite"]["passed"])
+
+    def test_prepare_rejects_invalid_jobs_before_builds_or_directory_creation(self) -> None:
+        for jobs in (0, -1, 33, True, 1.5):
+            with self.subTest(jobs=jobs), self.assertRaisesRegex(ValueError, "test jobs must be between"):
+                accept.prepare(self.name, test_jobs=jobs)
+        self.commands.assert_not_called()
+        self.assertFalse(self.work.exists())
+
+    def test_prepare_counts_only_combined_summary_and_refuses_failed_shards(self) -> None:
+        def run(argv, log, env=None):
+            if "tools/test_suite.py" in argv:
+                log.write_text("[live-1] Ran 2 tests in 0.001s\n[live-1] OK\n"
+                               "Ran 5 tests in 0.003s\n\nFAILED (errors=2, runnerErrors=1)\n")
+                return 1, 0.003
+            return self.run_command(argv, log, env)
+
+        self.commands.side_effect = run
+        prepared = accept.read_json(accept.prepare(self.name, test_jobs=2))
+        self.assertEqual(prepared["suite"]["tests"], 5)
+        self.assertEqual(prepared["suite"]["exit_code"], 1)
+        self.assertFalse(prepared["suite"]["passed"])
+        self.commands.reset_mock()
+        with self.assertRaisesRegex(ValueError, "The prepared suite did not pass"):
+            accept.finalize(self.name, [])
+        self.commands.assert_not_called()
 
     def test_unchanged_sources_and_metadata_only_changes_do_not_need_rereview(self) -> None:
         current = copy.deepcopy(self.prior)
@@ -333,7 +414,7 @@ class PrepareBuildModeTests(unittest.TestCase):
     write_json = AcceptanceReviewTests.write_json
 
     def run_command(self, argv: list[str], log: Path, env: dict | None = None) -> tuple[int, float]:
-        if "unittest" in argv:
+        if "tools/test_suite.py" in argv:
             with self.lock:
                 self.events.append(("suite", None))
             log.write_text("Ran 1 test in 0.001s\n\nOK\n")

@@ -5,7 +5,7 @@ typedef unsigned char u8;
 typedef struct { u8 bytes[0xC8]; } State;
 extern void *func_800C9E00(void);
 
-u8 func_8004260C(s32 row, s32 column)
+s32 func_8004260C(s32 row, s32 column)
 {
     u8 *bytes = ((State *)func_800C9E00())->bytes;
     row *= 4;

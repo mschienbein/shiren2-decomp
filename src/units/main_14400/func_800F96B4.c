@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 
@@ -19,10 +20,6 @@ typedef struct {
     s32 type_0;
 } Msg_800F96B4;
 
-typedef struct {
-    u8 pad0;
-    u8 kind_1;
-} Item_800F96B4;
 
 static inline void pos_copy(Pos_800F96B4 *dst, Pos_800F96B4 *src) {
     dst->x = src->x;
@@ -33,9 +30,8 @@ extern s32 func_800CF47C(void *field);
 extern void *func_800AC244(u8 id);
 extern s32 func_800ADC90(void *effect, void *a, void *b);
 extern s32 func_800F069C(Obj_800F96B4 *obj);
-extern Item_800F96B4 *func_800B4D80(Pos_800F96B4 *pos);
-extern char *func_800AE674(void *item);
-extern s32 func_800F9564(Obj_800F96B4 *obj, Item_800F96B4 *item, Pos_800F96B4 *pos);
+extern void *func_800B4D80(Pos_800F96B4 *pos);
+extern s32 func_800F9564(Obj_800F96B4 *obj, Item *item, Pos_800F96B4 *pos);
 extern s32 func_80049CB4(s32 command, ...);
 extern char *func_800A3B20(void *obj);
 extern void func_800497F0(s32 id, ...);
@@ -44,7 +40,7 @@ extern s32 func_800F27A4(Obj_800F96B4 *obj, Msg_800F96B4 *msg);
 
 s32 func_800F96B4(Obj_800F96B4 *obj, Msg_800F96B4 *msg) {
     Pos_800F96B4 pos;
-    Item_800F96B4 *item;
+    Item *item;
     void *effect;
     char *name;
     s32 text;
@@ -63,7 +59,7 @@ s32 func_800F96B4(Obj_800F96B4 *obj, Msg_800F96B4 *msg) {
             if ((func_800F069C(obj) ^ 1) != 0) {
                 pos_copy(&pos, &obj->pos_0);
                 item = func_800B4D80(&pos);
-                if (item != 0 && item->kind_1 == 0xCC) {
+                if (item != 0 && item->field01 == 0xCC) {
                     name = func_800AE674(item);
                     if (func_800F9564(obj, item, &pos) != 0) {
                         text = func_80049CB4(0xDA, &pos);

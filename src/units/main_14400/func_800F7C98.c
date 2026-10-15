@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
 typedef signed char s8;
 typedef unsigned short u16;
@@ -7,7 +8,6 @@ typedef struct { s32 field_00; InventoryTable *table; u8 field_08[0x18]; } Inven
 typedef struct { u8 field_00[0x8C]; Inventory inventory; u8 field_AC; } Shop;
 typedef struct { u8 field_00[0x98]; short field_98, field_9A; void *(*field_9C)(void *); } PlayerTable;
 typedef struct { u8 field_00[0x24]; PlayerTable *table; u8 field_28[0x5C]; u32 money; } Player;
-typedef struct { u8 field_00[4]; u8 count; } Item;
 typedef struct { void *container; void *item; } Pair;
 typedef struct { u8 field_00[0x14]; } List;
 typedef struct { u8 field_00[0xB0]; List items; } Order;
@@ -23,7 +23,7 @@ extern const unsigned char D_80151E38[144];
 extern u8 D_8014AB2C[], D_8014AB3C[];
 extern void func_800CDC2C(void *inventory, s8 mode);
 extern void func_800CDCC8(void *inventory, s8 mode);
-extern void func_80097B90(void *menu, void *owner, void *holder, s32 mode, void *desc, s32 flag);
+extern void func_80097B90(void *menu, void *owner, void *holder, s32 mode, const void *desc, s32 flag);
 extern s32 func_800EB820(Player *player);
 extern s32 func_800EB8B0(s32 value);
 extern void func_80099E50(Menu *menu);
@@ -39,7 +39,6 @@ extern void func_800D05A4(List *list, Pair *selection);
 extern s32 func_800CD278(void *inventory);
 extern Window *func_800953C0(Window *window);
 extern char *func_80048480(u16 id);
-extern char *func_800AE674(void *item);
 extern s32 func_8005EF08(char *out, const char *format, ...);
 extern void func_8009D610(void *window, char *text, void *rect, void *position);
 extern void func_80049BF0(s32 mode);
@@ -94,7 +93,7 @@ retry:
                     selection = func_8009A054(&D_801404E0, i);
                     item = selection.item;
                     cost += func_800AE9AC(item, 1, adjustment);
-                    quantity += item->count;
+                    quantity += item->field04;
                     func_800D05A4(&order->items, &selection);
                 }
                 if (D_801476B8->money >= cost) {

@@ -22,7 +22,7 @@ typedef struct {
     u8 range_89;
 } Obj800FC630;
 
-void *func_800F13A0(void *out, void *obj, s32 range);
+Pos800FC630 func_800F13A0(void *obj, s32 range);
 s32 func_800F1244(void *obj, void *target, s32 range, s32 a3);
 s32 func_800A65B8(Obj800FC630 *obj, Pos800FC630 *target);
 s32 func_800A692C(Obj800FC630 *obj, s32 kind);
@@ -34,7 +34,7 @@ s32 func_800FC630(Obj800FC630 *obj, void *target_unused) {
     Pos800FC630 *target;
     s32 ok;
 
-    func_800F13A0(&pos, obj, obj->range_89);
+    pos = func_800F13A0(obj, obj->range_89);
     switch (func_800F1244(obj, obj->target_58, obj->range_89, 0)) {
     case 1:
         return 0;

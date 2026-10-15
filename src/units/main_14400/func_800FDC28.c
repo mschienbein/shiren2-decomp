@@ -1,7 +1,8 @@
 #include "common.h"
+#include "collection_iterator.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 typedef struct { s32 x; s32 y; } Position;
 typedef struct { s32 type; void *target; void *item; s32 fields[5]; } Event;
 /* Entity table at +0x24: +0xC destructor, +0x9C contents accessor. */
@@ -45,9 +46,6 @@ u16 func_800E08B0(Entity *state);
 s32 func_800E20CC(void *arg0);
 u8 func_800A6420(Entity *obj, Entity *target);
 s32 func_800A8A50(void);
-void *func_800CEAF0(void *iterator, void *collection, s32 mode);
-s32 func_800CEBA0(s32 *iterator);
-Item *func_800CEC68(s32 *iterator);
 s32 func_800AC670(void *key);
 void *func_8011422C(Item *obj);
 void func_800CD304(void *obj, u32 value);
@@ -74,7 +72,7 @@ static inline void *collection_get(Collection *contents, u32 index) {
  * dispatcher supplies the func_800A6CF0 target, which this action does not read. */
 s32 func_800FDC28(Entity *root, void *target_unused) {
     Position position;
-    s32 iterator[4];
+    CollectionIterator iterator;
     Event event;
     u8 kind;
     u8 level;
@@ -134,16 +132,16 @@ s32 func_800FDC28(Entity *root, void *target_unused) {
             if (found < count && func_800A8A50()) {
                 Entity *owner = D_801476B8;
                 void *collection = owner->table_24->contents_9C((u8 *)owner + owner->table_24->delta_98);
-                func_800CEAF0(iterator, collection, 0);
+                func_800CEAF0(&iterator, collection, 0);
                 for (;;) {
-                    s32 active = func_800CEBA0(iterator);
+                    s32 active = func_800CEBA0(&iterator);
                     Item *item;
                     s32 populated;
                     Collection *contents;
                     SubItem *child;
                     s32 suitable;
                     if (!active) break;
-                    item = func_800CEC68(iterator);
+                    item = func_800CEC68(&iterator);
                     populated = 0;
                     if (item->type_01 == 0xAC) {
                         contents = &item->contents_0C;

@@ -1,45 +1,28 @@
 #include "common.h"
+#include "map_position_iterator.h"
 
-typedef struct Pos800B16C8 {
-    s32 x;
-    s32 y;
-} Pos800B16C8;
-
-/* Rectangle walker consumed by func_800A3610 (cursor, row start, end corner). */
-typedef struct Iter800B16C8 {
-    Pos800B16C8 cur;
-    Pos800B16C8 start;
-    Pos800B16C8 end;
-} Iter800B16C8;
-
-/* 16-byte map bounds rectangle at 0x801429D0: start then end corner. */
-typedef struct Bounds800B16C8 {
-    Pos800B16C8 start;
-    Pos800B16C8 end;
-} Bounds800B16C8;
 
 typedef struct Obj Obj;
 
-extern Bounds800B16C8 D_801429D0;
-Pos800B16C8 *func_800A3610(Pos800B16C8 *out, Iter800B16C8 *it);
-void *func_800B4D80(Pos800B16C8 *p);
+extern MapRect D_801429D0;
+void *func_800B4D80(MapPos *p);
 s32 func_800AC670(Obj *obj);
-void *func_800B4E18(Pos800B16C8 *pos);
+void *func_800B4E18(MapPos *pos);
 
-static inline void bounds_start(Pos800B16C8 *pos, Bounds800B16C8 *bounds) {
-    pos->x = bounds->start.x;
-    pos->y = bounds->start.y;
+static inline void bounds_start(MapPos *pos, MapRect *bounds) {
+    pos->x = bounds->min.x;
+    pos->y = bounds->min.y;
 }
 
-static inline void bounds_end(Pos800B16C8 *pos, Bounds800B16C8 *bounds) {
-    pos->x = bounds->end.x;
-    pos->y = bounds->end.y;
+static inline void bounds_end(MapPos *pos, MapRect *bounds) {
+    pos->x = bounds->max.x;
+    pos->y = bounds->max.y;
 }
 
 void func_800B16C8(void) {
-    Iter800B16C8 range;
-    Iter800B16C8 *r = &range;
-    Pos800B16C8 pos;
+    MapPositionIterator range;
+    MapPositionIterator *r = &range;
+    MapPos pos;
 
     bounds_start(&pos, &D_801429D0);
     range.start = pos;

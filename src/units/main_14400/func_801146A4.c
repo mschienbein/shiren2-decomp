@@ -1,14 +1,14 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned short u16;
 
 extern s32 func_80049CB4(s32 command, ...);
 extern void func_800498E4(s32 id, ...);
-extern char *func_800AE674(void *obj);
-extern char *func_80114BCC(void *obj, char *buffer, s32 flags);
+extern char *func_80114BCC(Item *obj, char *buffer, s32 flags);
 extern s32 func_8011459C(void *obj, void *pos);
 
-void func_801146A4(void *obj, void *pos, u16 id) {
+void func_801146A4(Item *obj, void *pos, u16 id) {
     func_80049CB4(0xFE, pos);
     if (id != 0) {
         func_80049CB4(6);

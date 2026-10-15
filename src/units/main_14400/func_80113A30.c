@@ -1,13 +1,7 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
-typedef struct {
-    u8 pad_00[8];
-    signed short delta_08;
-    unsigned short reserved_0A;
-    void (*destroy_0C)(void *, s32);
-} ItemVtable;
-typedef struct { u8 pad_00[8]; ItemVtable *vtable_08; } Item;
 typedef struct {
     u8 pad_00[0x98];
     signed short delta_98;
@@ -21,7 +15,6 @@ typedef struct {
     OwnerVtable *vtable_24;
 } Owner;
 extern u32 D_8013960C;
-extern char *func_800AE674(void *item);
 extern char *func_800A3B20(Owner *owner);
 extern void func_800498E4(s32 id, ...);
 extern void func_80049BF0(s32 mode);
@@ -50,7 +43,7 @@ void func_80113A30(Item *item, Owner *owner)
     }
     func_800D3650(item);
     if (item != 0) {
-        ItemVtable *vtable = item->vtable_08;
-        vtable->destroy_0C((char *)item + vtable->delta_08, 3);
+        ItemMethods *vtable = item->field08;
+        vtable->method0C((char *)item + vtable->delta08, 3);
     }
 }

@@ -1,6 +1,6 @@
-#include "common.h"
+#include "map_rect.h"
 
-typedef struct { unsigned char pad00[0x10]; unsigned char counts10[4]; } Obj800B6C14;
+typedef struct { MapRect bounds; unsigned char counts10[4]; } Obj800B6C14;
 
 s32 func_800B68B0(Obj800B6C14 *obj)
 {

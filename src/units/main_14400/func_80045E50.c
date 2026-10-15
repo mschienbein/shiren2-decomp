@@ -10,7 +10,7 @@ typedef struct { s32 id; Key key; } End;
 typedef struct { End end; s32 foundC; } Query;
 /* Sound request built by func_80045370 (0x18 bytes, kind byte at +4). */
 typedef struct { Pair8 *pos; u8 kind, padding[3]; Key field08, field10; } Request;
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 
 extern s32 D_80138BD0;
 extern End D_80138B40;
@@ -18,7 +18,7 @@ extern SelectionRecord D_80142F18;
 extern Query *func_80044730(Query *query);
 End *func_80044768(Query *query);
 u8 func_80052694(s16 id);
-void func_80045370(Request *request, Key *key, Pair8 mode);
+Request *func_80045370(Request *request, Key *key, Pair8 mode);
 Pair8 func_800453B8(Request *request);
 Pair8 func_80045468(Request *request);
 s32 func_800524F4(void);

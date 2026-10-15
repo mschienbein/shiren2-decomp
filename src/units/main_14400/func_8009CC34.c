@@ -60,6 +60,11 @@ void func_8009CC34(Menu *menu)
         }
         case 6:
         case 7:
+            /* ODD_C: Always-available menu kinds: 6 is the mode-3 entry
+             * (text 0x043F), 7 the sound-mode entry (text 0x0440).
+             * Removing these labels with gcc281pm-gnu291-O2-unsigned changes
+             * zero text or jump-table words; they document real kinds, not
+             * a switch-dispatch shaping requirement. */
             break;
         }
         if (include) menu->entries[menu->count++] = D_80141D30[i];

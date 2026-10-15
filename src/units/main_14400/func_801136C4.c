@@ -1,15 +1,15 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
-typedef struct { u8 field_00, kind_01; u8 pad_02[10]; u8 turns_0C; } Timer;
 extern u8 D_80156931, D_80156933;
-extern void func_801137CC(Timer *, void *, u8);
-extern void func_801138DC(Timer *, void *);
-extern void func_8011391C(Timer *, void *);
-extern void func_80113A30(Timer *, void *);
-void func_801136C4(Timer *timer, void *owner, short damage, s32 kind, u16 flags) {
+extern void func_801137CC(Item *, void *, u8);
+extern void func_801138DC(Item *, void *);
+extern void func_8011391C(Item *, void *);
+extern void func_80113A30(Item *, void *);
+void func_801136C4(Item *timer, void *owner, short damage, s32 kind, u16 flags) {
     if (damage > 0) {
-        u8 type = timer->kind_01;
+        u8 type = timer->field01;
         if (type == 0x8C && (flags & 0x800)) {
             func_80113A30(timer, owner);
             return;
@@ -23,7 +23,7 @@ void func_801136C4(Timer *timer, void *owner, short damage, s32 kind, u16 flags)
                 return;
             }
         }
-        if (timer->turns_0C == 0) {
+        if (timer->payload.timer.turns0C == 0) {
             switch (kind) {
             case 1:
                 func_801137CC(timer, owner, D_80156933);

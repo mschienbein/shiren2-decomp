@@ -47,7 +47,7 @@ extern s32 D_8013B800;
 s32 func_800627C4(void);
 void func_80067380(void);
 void func_800673D8(u16 id, u16 mask, s32 enable, u16 *tilemap);
-u8 func_800424EC(s32 id);
+s32 func_800424EC(s32 id);
 unsigned char func_80041EF0(s32 flag);
 
 void func_80066B2C(u16 *canvas, s32 selected) {

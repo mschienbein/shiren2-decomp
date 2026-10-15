@@ -1,4 +1,5 @@
 #include "common.h"
+#include "map_rect.h"
 
 /*
  * Fixed grid floor preset (C++ TU). Board::setup is the shared inline that
@@ -10,26 +11,8 @@
 typedef unsigned char u8;
 typedef signed char s8;
 
-struct Point {
-    s32 x;
-    s32 y;
-};
 
-struct Rect {
-    Point a;
-    Point b;
-    Rect() {}
-    Rect(s32 x0, s32 y0, s32 x1, s32 y1) { a.x = x0; a.y = y0; b.x = x1; b.y = y1; }
-    Rect(const Rect &o) : a(o.a), b(o.b) {}
-    Rect &operator=(const Rect &o)
-    {
-        a = o.a;
-        b = o.b;
-        return *this;
-    }
-};
-
-struct Cell {
+struct Cell_800C1970 {
     u8 kind;
     u8 attr;
     u8 pad2[2];
@@ -44,32 +27,32 @@ extern u8 D_80143392;
 }
 
 /* Partial view of the grid floor generator. */
-struct Board {
+struct Board_800C1970 {
     u8 pad0[0x10];
     u8 grid_rows;
     u8 grid_cols;
     u8 field_12;
     /* ROM 0x8B6C8..0x8B6D0: 4-byte cells at +0x13, words at +0x174.
      * Both grids have 11 rows of 8; the edge pointers follow at +0x2D4. */
-    Cell cells[11][8];
+    Cell_800C1970 cells[11][8];
     u8 pad173;
     s32 available[11][8];
     s8 *row_edges;
     s8 *col_edges;
-    Rect rects[16];
+    MapRect rects[16];
     s32 room_count;
     void setup(u8 rows, u8 cols, u8 extra, u8 mode);
 };
 
 extern "C" {
-void func_800B8628(Board *board, u8 mode);
-void func_800B90E8(Board *board, u8 col, u8 row);
-void func_800B95DC(Board *board);
+void func_800B8628(Board_800C1970 *board, u8 mode);
+void func_800B90E8(Board_800C1970 *board, u8 col, u8 row);
+void func_800B95DC(Board_800C1970 *board);
 void func_800B17A4(void);
 }
 
 /* Clamps the grid size to 3..8 x 3..5, picks the edge tables, then lays out the cells. */
-inline void Board::setup(u8 rows, u8 cols, u8 extra, u8 mode)
+inline void Board_800C1970::setup(u8 rows, u8 cols, u8 extra, u8 mode)
 {
     if (rows < 3) {
         rows = 3;
@@ -102,13 +85,25 @@ extern u8 D_80153EB4[];
 extern u8 D_80153EB8[];
 }
 
-static inline Rect make_rect(s32 x0, s32 y0, s32 x1, s32 y1)
+/* The original copies a rectangle corner by corner: two 8-byte MapPos copies
+ * (0x800C1A7C..0x800C1A98 and 0x800C1A9C..0x800C1AB8), whereas the implicit
+ * MapRect assignment is one 16-byte block copy and the implicit MapRect copy
+ * constructor copies the MapPos members field by field. */
+static inline void assign(MapRect &dst, const MapRect &src) { dst.min = src.min; dst.max = src.max; }
+
+/* The four scalar corner stores (0x800C1A6C..0x800C1A78) fill a stack rectangle,
+ * which is then copied corner by corner into the caller's rectangle. */
+static inline void make_rect(MapRect &out, s32 x0, s32 y0, s32 x1, s32 y1)
 {
-    Rect r(x0, y0, x1, y1);
-    return r;
+    MapRect r;
+    r.min.x = x0;
+    r.min.y = y0;
+    r.max.x = x1;
+    r.max.y = y1;
+    assign(out, r);
 }
 
-extern "C" void func_800C1970(Board *board)
+extern "C" void func_800C1970(Board_800C1970 *board)
 {
     board->setup(7, 5, 4, 2);
     for (s32 row = 1; row < 6; row++) {
@@ -117,7 +112,9 @@ extern "C" void func_800C1970(Board *board)
             board->cells[col][row].kind = kind;
             if (kind & 0x20) {
                 kind &= 0xF;
-                board->rects[kind] = make_rect(D_80153EB4[kind], D_80153EAC[kind], D_80153EB8[kind], D_80153EB0[kind]);
+                MapRect rect;
+                make_rect(rect, D_80153EB4[kind], D_80153EAC[kind], D_80153EB8[kind], D_80153EB0[kind]);
+                assign(board->rects[kind], rect);
             }
             board->cells[col][row].attr = D_80153E88[row - 1][col - 1];
             func_800B90E8(board, col, row);

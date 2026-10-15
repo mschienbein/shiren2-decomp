@@ -1,12 +1,10 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef struct { short delta, index; s32 (*call)(void *); } CountEntry;
-typedef struct { short delta, index; void *(*call)(void *, u32); } GetEntry;
-typedef struct { short delta, index; void (*call)(void *, s32); } DestroyEntry;
+typedef struct { short delta, index; Item *(*call)(void *, u32); } GetEntry;
 typedef struct { char pad0[0x20]; CountEntry count_20; char pad28[0x10]; GetEntry get_38; } CollectionVtable;
 typedef struct { void *owner; CollectionVtable *vtbl_4; } Collection;
-typedef struct { char pad0[8]; DestroyEntry destroy_8; } ItemVtable;
-typedef struct { char pad0[8]; ItemVtable *vtbl_8; u32 amount_C; } Item;
 typedef struct { char pad0[0x8C]; Collection *collection_8C; } Object;
 typedef struct { s32 x, y; } Pos;
 extern u32 D_80159F54[];
@@ -32,17 +30,17 @@ s32 func_800F9564(Object *obj, Item *item, Pos *pos) {
     get = &collection->vtbl_4->get_38;
     current = get->call((char *)collection + get->delta, 0);
     limit = D_80159F54[(unsigned char)func_800E0F40(obj) - 1];
-    if (current->amount_C >= limit) {
+    if (current->payload.amount.amount0C >= limit) {
         s32 text = func_80049CB4(0xDA, pos);
         func_800497F0(0x123, text);
         return 0;
     }
-    func_8010E05C(current, item->amount_C);
-    if (limit < current->amount_C) current->amount_C = limit;
+    func_8010E05C(current, item->payload.amount.amount0C);
+    if (limit < current->payload.amount.amount0C) current->payload.amount.amount0C = limit;
     if (pos->y | pos->x) func_800AD868(pos);
     if (item) {
-        DestroyEntry *destroy = &item->vtbl_8->destroy_8;
-        destroy->call((char *)item + destroy->delta, 3);
+        ItemMethods *methods = item->field08;
+        methods->method0C((char *)item + methods->delta08, 3);
     }
     return 1;
 }

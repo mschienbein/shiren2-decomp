@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -39,19 +40,6 @@ typedef struct {
     u16 flags;
 } Unit;
 
-typedef struct {
-    u8 pad00[8];
-    s16 destroyDelta;
-    s16 destroyIndex;
-    void (*destroy)(void *self, s32 flags);
-} SpawnVTable;
-
-/* Spawn descriptor that owns this handler (vtable at +8, flags at +0xC). */
-typedef struct {
-    u8 pad00[8];
-    SpawnVTable *vtable;
-    u8 flags;
-} Spawn;
 
 typedef struct {
     u8 pad00[0x1E];
@@ -67,8 +55,8 @@ typedef struct {
     s32 dir;
 } Msg;
 
-extern Unit *func_80128404(Spawn *spawn);
-extern s32 func_800AF28C(Spawn *self, Msg *msg);
+extern Unit *func_80128404(Item *spawn);
+extern s32 func_800AF28C(Item *self, Msg *msg);
 extern void *func_800A2594(void *out, void *from, Dir dir);
 extern s32 func_800A5D2C(void *object, Pos *output, s32 flags);
 extern s32 func_800A4314(Unit *object, Pos *position);
@@ -104,7 +92,7 @@ static inline void vec2i_copy(Pos *dst, Pos *src) {
     dst->x = src->x;
     dst->y = src->y;
 }
-s32 func_801285A0(Spawn *self, Msg *msg) {
+s32 func_801285A0(Item *self, Msg *msg) {
     Pos target;
     Pos dest;
     Pos cell;
@@ -137,7 +125,7 @@ s32 func_801285A0(Spawn *self, Msg *msg) {
                 dest = target;
                 func_800A5D2C(unit, &dest, 1);
             }
-            self->flags |= 8;
+            self->payload.containerF1.field0C |= 8;
             blocked = func_800A4314(unit, &dest);
             blocked ^= 1;
             func_80049CB4(0x86, unit);
@@ -151,7 +139,7 @@ s32 func_801285A0(Spawn *self, Msg *msg) {
             if (!blocked) {
                 func_800A58FC(unit, &dest);
             }
-            if (self->flags & 2) {
+            if (self->payload.containerF1.field0C & 2) {
                 void *item = msg->item;
                 Actor *actor;
                 func_800F02B0(unit, item);
@@ -228,7 +216,7 @@ s32 func_801285A0(Spawn *self, Msg *msg) {
                 func_800A529C(unit, 0);
             }
             if (self != 0) {
-                self->vtable->destroy((u8 *)self + self->vtable->destroyDelta, 3);
+                self->field08->method0C((u8 *)self + self->field08->delta08, 3);
             }
             return 1;
         }

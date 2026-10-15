@@ -21,7 +21,7 @@ extern u16 D_80156990;
 extern void func_80049A04(u16, ...);
 extern s32 func_80049CB4(s32, ...);
 extern void func_800A7A9C(Target *, Damage *, Outcome *), func_800A7BA4(void *, s32);
-extern char *func_800AC990(Actor *);
+extern char *func_800AC990(void *);
 extern s32 func_800C587C(void *, u8);
 extern s32 func_800E0534(void *, s32);
 extern u16 func_800E08B0(void *);

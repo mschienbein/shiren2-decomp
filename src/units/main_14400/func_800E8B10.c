@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef short s16;
@@ -19,9 +20,9 @@ typedef struct {
 } Obj800E8B10;
 
 s32 func_800E4454(Obj800E8B10 *obj);
-s32 func_800CF250(void *target, u8 **out, s32 count);
+s32 func_800CF250(void *target, Item **out, s32 count);
 
-u8 func_800E8B10(Obj800E8B10 *obj, u8 **out) {
+u8 func_800E8B10(Obj800E8B10 *obj, Item **out) {
     s32 ready = 0;
     s32 i;
     void *target;

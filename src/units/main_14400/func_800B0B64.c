@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef struct { u8 bits[5]; } BitSet;
@@ -9,7 +10,6 @@ extern u8 *D_8015380C[];
 extern u8 D_80153734[];
 extern const u8 D_8015488C[8];
 extern const u8 D_80154894[8];
-extern u8 D_80143094[];
 extern u8 D_8014313C[];
 Iter *func_800B07E0(Iter *, void *);
 s32 func_800B0808(Iter *);
@@ -55,7 +55,7 @@ void func_800B0B64(void) {
             }
         }
     }
-    func_800B07E0(&iter, D_80143094);
+    func_800B07E0(&iter, &D_80143094);
     while (func_800B0808(&iter)) {
         Thing *thing = func_800B0864(&iter);
         if (thing->kind == 9) {

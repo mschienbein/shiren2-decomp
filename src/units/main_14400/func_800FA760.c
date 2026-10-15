@@ -1,28 +1,25 @@
-#include "common.h"
-typedef struct { s32 x, y; } Pair;
-typedef struct { Pair origin; s32 field8; Pair start, end; } Object;
-typedef struct { Pair current, start, end; } Iterator;
-extern Pair *func_800A3610(Pair *, Iterator *);
-extern s32 func_800FA710(Object *, Pair *);
-extern s32 func_800A23E8(Pair *, Pair *);
-static inline void copy(Pair *dest, const Pair *source) {
+#include "map_position_iterator.h"
+typedef struct { MapPos origin; s32 field8; MapPos start, end; } Object;
+extern s32 func_800FA710(Object *, MapPos *);
+extern s32 func_800A23E8(MapPos *, MapPos *);
+static inline void copy(MapPos *dest, const MapPos *source) {
     dest->x = source->x;
     dest->y = source->y;
 }
-static inline s32 in_range(Iterator *iter) { return iter->current.x <= iter->end.x; }
-Pair *func_800FA760(Pair *result, Object *obj) {
-    Pair best;
-    Pair origin;
-    Iterator iter;
-    Pair current;
-    Pair distance_position;
+static inline s32 in_range(MapPositionIterator *iter) { return iter->cur.x <= iter->end.x; }
+MapPos *func_800FA760(MapPos *result, Object *obj) {
+    MapPos best;
+    MapPos origin;
+    MapPositionIterator iter;
+    MapPos current;
+    MapPos distance_position;
     s32 best_distance = 0x4C;
     best.x = 0;
     best.y = 0;
     copy(&origin, &obj->origin);
     copy(&current, &obj->start);
     iter.start = current;
-    iter.current = iter.start;
+    iter.cur = iter.start;
     copy(&current, &obj->end);
     iter.end = current;
     for (;;) {

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 
@@ -26,20 +27,13 @@ typedef struct Monster80126D2C {
     u8 flags_72;
 } Monster80126D2C;
 
-/* Partial view of this item: vtable at 0x08, monster kind at 0x0F. */
-typedef struct Self80126D2C {
-    u8 pad_00[8];
-    Methods80126D2C *vtable_08;
-    u8 pad_0C[3];
-    u8 kind_0F;
-} Self80126D2C;
 
 typedef struct Msg80126D2C {
     s32 type_00;
     void *target_04;
 } Msg80126D2C;
 
-s32 func_80112B38(void *self, void *msg);
+s32 func_80112B38(Item *self, void *msg);
 void *func_800F8720(u8 value);
 s32 func_800A3934(void *obj);
 char *func_800A3B20(void *u);
@@ -47,14 +41,13 @@ void func_800498E4(s32 id, ...);
 s32 func_80049CB4(s32 id, ...);
 void *func_800A6CC0(Pos80126D2C *out_position, void *obj);
 s32 func_800A4314(void *o, Pos80126D2C *p);
-char *func_800AE674(void *obj);
 void func_800A58FC(void *actor, Pos80126D2C *position);
 void *func_800A65E4(Dir80126D2C *p, void *q, void *target);
 void func_800A665C(void *obj, u8 *value);
 void func_800D3650(void *arg);
 
 /* Message handler: on message 6, release the monster of kind_0F next to the target. */
-s32 func_80126D2C(Self80126D2C *self, Msg80126D2C *msg)
+s32 func_80126D2C(Item *self, Msg80126D2C *msg)
 {
     Pos80126D2C pos;
     Dir80126D2C dir;
@@ -64,7 +57,7 @@ s32 func_80126D2C(Self80126D2C *self, Msg80126D2C *msg)
 
     if (msg->type_00 == 6) {
         target = msg->target_04;
-        monster = func_800F8720(self->kind_0F);
+        monster = func_800F8720(self->payload.level.bytes0C[3]);
         if (func_800A3934(monster)) {
             func_800498E4(0x118, func_800A3B20(target));
             return 0;
@@ -86,7 +79,7 @@ s32 func_80126D2C(Self80126D2C *self, Msg80126D2C *msg)
         monster->flags_72 |= 4;
         func_800D3650(self);
         if (self != 0) {
-            self->vtable_08->destroy_0C((u8 *)self + self->vtable_08->delta_08, 3);
+            self->field08->method0C((u8 *)self + self->field08->delta08, 3);
         }
         return 1;
     }

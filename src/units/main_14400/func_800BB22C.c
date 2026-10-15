@@ -1,74 +1,71 @@
 #include "common.h"
+#include "map_position_iterator.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef signed char s8;
 typedef short s16;
 
-typedef struct { s32 x; s32 y; } Point800BB22C;
-typedef struct { Point800BB22C a; Point800BB22C b; } Rect800BB22C;
-typedef struct { Point800BB22C cur; Point800BB22C start; Point800BB22C end; } RectIter800BB22C;
 extern u8 D_80147620[];
-void *func_800A3610(void *out, void *it);
-u32 func_800B1C6C(void *pos);
+u32 func_800B1C6C(MapPos *pos);
 u8 func_800C57A0(void *rng);
-void func_800B1AE0(Point800BB22C *pos, u16 flags);
+void func_800B1AE0(MapPos *pos, u16 flags);
 void func_800B17A4(void);
 
-static inline void initIter800BB22C(RectIter800BB22C *it, Rect800BB22C *rect) {
-    it->start = rect->a;
+static inline void initIter800BB22C(MapPositionIterator *it, MapRect *rect) {
+    it->start = rect->min;
     it->cur = it->start;
-    it->end = rect->b;
+    it->end = rect->max;
 }
 
-static inline s32 iterValid800BB22C(RectIter800BB22C *it) {
+static inline s32 iterValid800BB22C(MapPositionIterator *it) {
     return it->cur.x <= it->end.x;
 }
 
-s32 func_800BB22C(void *self, Rect800BB22C *area) {
-    Point800BB22C pos;
-    Rect800BB22C rect;
-    RectIter800BB22C it1;
-    Rect800BB22C line;
-    RectIter800BB22C it2;
+s32 func_800BB22C(void *self, MapRect *area) {
+    MapPos pos;
+    MapRect rect;
+    MapPositionIterator it1;
+    MapRect line;
+    MapPositionIterator it2;
     s32 canUp;
     s32 canDown;
     u32 flags;
 
-    rect.a.x = area->a.x;
-    rect.a.y = area->a.y;
-    rect.b.x = area->b.x;
-    rect.b.y = area->b.y;
-    line.a.x = rect.a.x;
-    line.a.y = rect.a.y - 2;
-    line.b.x = rect.b.x;
-    line.b.y = rect.a.y - 1;
+    rect.min.x = area->min.x;
+    rect.min.y = area->min.y;
+    rect.max.x = area->max.x;
+    rect.max.y = area->max.y;
+    line.min.x = rect.min.x;
+    line.min.y = rect.min.y - 2;
+    line.max.x = rect.max.x;
+    line.max.y = rect.min.y - 1;
     canUp = 0;
-    if (rect.a.y - 1 >= 10) {
+    if (rect.min.y - 1 >= 10) {
         canUp = 1;
     }
     canDown = 0;
-    if (rect.b.y + 1 < 0x42) {
+    if (rect.max.y + 1 < 0x42) {
         canDown = 1;
     }
 
     initIter800BB22C(&it1, &line);
     while (iterValid800BB22C(&it1)) {
-        func_800A3610(&line.a, &it1);
-        if (!(func_800B1C6C(&line.a) & 0xE100)) {
+        func_800A3610(&line.min, &it1);
+        if (!(func_800B1C6C(&line.min) & 0xE100)) {
             canUp = 0;
             break;
         }
     }
 
-    line.a.x = rect.a.x;
-    line.a.y = rect.b.y + 1;
-    line.b.x = rect.b.x;
-    line.b.y = rect.b.y + 2;
+    line.min.x = rect.min.x;
+    line.min.y = rect.max.y + 1;
+    line.max.x = rect.max.x;
+    line.max.y = rect.max.y + 2;
     initIter800BB22C(&it2, &line);
     while (iterValid800BB22C(&it2)) {
-        func_800A3610(&line.a, &it2);
-        if (!(func_800B1C6C(&line.a) & 0xE100)) {
+        func_800A3610(&line.min, &it2);
+        if (!(func_800B1C6C(&line.min) & 0xE100)) {
             canDown = 0;
             break;
         }
@@ -77,23 +74,23 @@ s32 func_800BB22C(void *self, Rect800BB22C *area) {
     if (!canUp && !canDown) {
         return 0;
     }
-    flags = func_800B1C6C(&rect.a);
+    flags = func_800B1C6C(&rect.min);
     if (canUp && (!canDown || (func_800C57A0(D_80147620) & 1))) {
-        s32 y = rect.a.y - 1;
+        s32 y = rect.min.y - 1;
 
         pos.y = y;
-        rect.a.y = y;
+        rect.min.y = y;
     } else {
-        s32 y = rect.b.y + 1;
+        s32 y = rect.max.y + 1;
 
         pos.y = y;
-        rect.b.y = y;
+        rect.max.y = y;
     }
-    for (pos.x = rect.a.x; pos.x <= rect.b.x; pos.x++) {
+    for (pos.x = rect.min.x; pos.x <= rect.max.x; pos.x++) {
         func_800B1AE0(&pos, flags);
     }
-    area->a = rect.a;
-    area->b = rect.b;
+    area->min = rect.min;
+    area->max = rect.max;
     func_800B17A4();
     return 1;
 }

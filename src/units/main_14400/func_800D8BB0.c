@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
 extern void *func_800AC5B4(s32 kind, s32 count);
 extern void *func_801172E0(void *base);
@@ -25,7 +26,7 @@ extern void *func_80119610(void *base);
 extern void *func_801198E0(void *base);
 
 /* object: unused; supplied by func_8011DBB0 and func_8011DD9C. */
-void *func_800D8BB0(void *object, s32 value) {
+Item *func_800D8BB0(void *object, s32 value) {
     u8 kind = value;
     switch (kind) {
     case 1:

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef short s16;
@@ -19,26 +20,12 @@ typedef struct {
     s32 dir18;
 } Msg;
 
-typedef struct Obj Obj;
-typedef struct {
-    s16 delta;
-    s16 index;
-    void (*fn)(void *obj, s32 arg);
-} VtblEntry801280F0;
-typedef struct {
-    u8 pad00[8];
-    VtblEntry801280F0 slot08;
-} Vtbl801280F0;
-struct Obj {
-    u8 pad00[8];
-    Vtbl801280F0 *vtable;
-};
 
-extern s32 func_800AF28C(Obj *, Msg *);
+extern s32 func_800AF28C(Item *, Msg *);
 extern void func_800A2758(Pos *p, Dir d);
 extern void *func_800A2594(Pos *out, void *arg, Dir cell);
 extern u32 func_800B1C6C(Pos *pos);
-extern void func_80127DA0(Obj *self, Pos *pos);
+extern void func_80127DA0(void *self, Pos *pos);
 extern s32 D_801487C0;
 
 /* Direction constructor: keeps the low three bits (eight compass directions). */
@@ -47,7 +34,7 @@ static inline void dir_init(Dir *d, s32 value)
     d->v = value & 7;
 }
 
-s32 func_801280F0(Obj *self, Msg *msg)
+s32 func_801280F0(Item *self, Msg *msg)
 {
     Pos pos;
     Pos *at;
@@ -85,7 +72,7 @@ s32 func_801280F0(Obj *self, Msg *msg)
         }
         func_80127DA0(self, &pos);
         if (self != 0) {
-            self->vtable->slot08.fn((u8 *)self + self->vtable->slot08.delta, 3);
+            self->field08->method0C((u8 *)self + self->field08->delta08, 3);
         }
         return 1;
     }

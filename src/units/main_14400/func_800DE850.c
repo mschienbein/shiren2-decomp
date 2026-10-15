@@ -1,22 +1,20 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
-typedef struct Item Item;
 typedef struct List List;
-typedef struct { s32 type; u8 payload[0x1C]; } Message;
-typedef struct { u8 pad_00[0x38]; short adjust_38; short pad_3A; s32 (*event_3C)(void *receiver, void *event); } ItemVTable;
-struct Item { u8 pad_00[8]; ItemVTable *vtable_08; };
+/* Kind-0x1C message: the handler-message base and the later words. */
+typedef struct { ItemMessage base; u8 payload[0x1C]; } Message;
 typedef struct { List *owner; Item *item; } Entry;
 typedef struct {
     u8 pad_00[0x20]; short adjust_20; short pad_22; s32 (*count_24)(void *self);
     u8 pad_28[0x38]; short adjust_60; short pad_62; s32 (*accept_64)(void *self, void *item, s32 verbose);
 } ListVTable;
-struct List { void *kind_00; ListVTable *vtable_04; Entry *entries_08; s32 capacity_0C, count_10; };
+struct List { ItemPool *kind_00; ListVTable *vtable_04; Entry *entries_08; s32 capacity_0C, count_10; };
 typedef struct { u8 pad_00[0x98]; short adjust_98; short pad_9A; void *(*list_9C)(void *self); } UnitVTable;
 typedef struct { u8 pad_00[0xA]; u8 kind_0A; u8 pad_0B[0x19]; UnitVTable *vtable_24; } Unit;
 typedef struct { u8 pad_00[0xB0]; List source_B0; List *destination_C4; s32 moved_C8; } Transfer;
 extern Unit *D_801476B8;
 extern u32 D_8013960C;
-extern u8 D_80143094[];
 extern s32 func_800CD4C4(void *list, void *item);
 extern void func_800AE518(void *item, void *owner, s32 a, s32 b);
 extern s32 func_800CD2BC(void *list, void *item);
@@ -53,8 +51,8 @@ s32 func_800DE850(Transfer *transfer) {
             D_8013960C >>= 1;
         }
         func_800CD2BC(&transfer->source_B0, item);
-        message.type = 0x1C;
-        item->vtable_08->event_3C((u8 *)item + item->vtable_08->adjust_38, &message);
+        message.base.kind = 0x1C;
+        item->field08->handle3C((u8 *)item + item->field08->delta38, &message.base);
         func_800CD538(transfer->destination_C4, item);
         transfer->moved_C8++;
     }
@@ -65,7 +63,7 @@ s32 func_800DE850(Transfer *transfer) {
             func_80049CB4(0x95, other);
         }
     }
-    if (transfer->destination_C4->kind_00 != D_80143094) func_800CDE78(transfer->destination_C4);
+    if (transfer->destination_C4->kind_00 != &D_80143094) func_800CDE78(transfer->destination_C4);
     func_80049CB4(2);
     return 1;
 }

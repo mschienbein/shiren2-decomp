@@ -22,7 +22,7 @@ extern s32 D_80139054[2];
 extern u8 D_80154718[];
 s32 func_8009A354(void *object);
 s32 func_800CE46C(Loader800A1DAC *loader, Predicate800A1DAC cb);
-void func_80097B90(Ctx800A1DAC *ctx, Loader800A1DAC *loader, void *holder, s32 size, s32 *arg4, s32 arg5);
+void func_80097B90(Ctx800A1DAC *ctx, Loader800A1DAC *loader, void *holder, s32 size, const s32 *arg4, s32 arg5);
 s32 func_800957C0(Ctx800A1DAC *ctx, s32 *out, s32 arg2, void *arg3, s32 arg4);
 Table800A1DAC *func_800C9E00(void);
 s32 func_800A1DAC(Out800A1DAC *out) {

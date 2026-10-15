@@ -1,11 +1,11 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
 typedef signed char s8;
 typedef unsigned short u16;
 typedef signed short s16;
 
-typedef struct { u8 pad[0xC]; u8 xC; } A;
-extern s32 func_800ACEB4(A *);
+extern s32 func_800ACEB4(void *);
 extern char *func_800ACC90(void *obj);
 extern char *func_800ACB40(void *obj);
 extern char *func_800ACCDC(void *obj);
@@ -13,7 +13,7 @@ extern char *func_80048480(u16 id);
 extern s32 func_8005EF08(char *dst, const char *fmt, ...);
 extern char *func_80083C90(char *dst, char *src);
 extern char *func_80083D04(char *dst, char *src);
-void *func_80113564(A *a, void *out){
+char *func_80113564(Item *a, char *out){
     s32 r = func_800ACEB4(a);
     if (r == 2) {
         func_80083C90(out, func_800ACC90(a));
@@ -27,7 +27,8 @@ void *func_80113564(A *a, void *out){
             func_80083C90(out, func_800ACCDC(a));
         }
     }
-    if (a->xC) {
+    /* D_8015D888 is the kind-6 table installed by func_80113520. */
+    if (a->payload.timer.turns0C) {
         func_80083D04(out, func_80048480(0xFC));
     }
     return out;

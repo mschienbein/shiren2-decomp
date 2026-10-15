@@ -1,6 +1,7 @@
 #include "common.h"
 
 typedef struct { s32 a; s32 b; } Pair;
+struct MenuPos { s32 x; s32 y; };
 typedef struct { unsigned char pad[0x5C]; void *f5C; } Node;
 /* Each menu record is three words: packed message selector, value, and result.
  * Own both two-record arrays at their real bases, 0x801424A0 and 0x801424B8.
@@ -9,7 +10,7 @@ typedef s32 MenuRecord[3];
 MenuRecord D_801424A0[2] = {{0x045B0000, 0, 0}, {0x045E0000, 0, 2}};
 MenuRecord D_801424B8[2] = {{0x045C0000, 0, 0}, {0x02960000, 0, 3}};
 extern Pair D_80138F78;
-extern Pair D_80138F80;
+extern const struct MenuPos D_80138F80[3];
 s32 func_800D15B0(void *board);
 void func_80097240(Node *n, MenuRecord *records, Pair *pairs, s32 *counts);
 void func_8009D7EC(Node *n, void *board, Pair *src, s32 value) {
@@ -29,8 +30,8 @@ void func_8009D7EC(Node *n, void *board, Pair *src, s32 value) {
     } else {
         s32 *slot = &D_801424A0[0][1];
         *slot = value;
-        pairs[0].a = D_80138F80.a;
-        pairs[0].b = D_80138F80.b;
+        pairs[0].a = D_80138F80[0].x;
+        pairs[0].b = D_80138F80[0].y;
         counts[0] = 2;
         func_80097240(n, (MenuRecord *)(slot - 1), pairs, counts);
     }

@@ -13,10 +13,13 @@ from typing import Any
 
 import yaml
 
-from certification import REQUIRED_ARTIFACTS, build_graph, c_attributions, check_elf, compiler_environment, expected_commands, file_inventory, object_commands, python_command, read_json, sha256, splat_options, tool_profile, runtime_fingerprint, image_evidence, image_matches, reproduce_c_objects_and_link, linked_image_records
+from certification import REQUIRED_ARTIFACTS, build_graph, c_attributions, check_elf, compiler_environment, expected_commands, file_inventory, object_commands, python_command, read_json, rom_map_report, sha256, split_commands, splat_options, tool_profile, runtime_fingerprint, image_evidence, image_matches, reproduce_c_objects_and_link, linked_image_records, validate_asset_recipe
+from certification import archive_orchestration, orchestration_sources, validate_orchestration
 from evidence import COMPILED_KINDS, validate_attributions, validate_matches
+from certification import generated_table_discards
 from rom import CANONICAL_ROM, EXPECTED_SHA256, PROJECT, attest
 from workspace import create_snapshot, verify_manifest
+import toolchain_library
 
 
 def compare_rom(path: Path, reference: Path = CANONICAL_ROM) -> dict[str, object]:
@@ -52,14 +55,26 @@ def dependency_inputs(directory: Path, dependency: Path, manifest: dict[str, Any
         raise ValueError("Empty compiler dependency closure")
     if source is not None and source not in result:
         raise ValueError("Compiler dependency closure omits its declared C source")
+    toolchain_library.validate_dependencies(source_root, source or "", result)
     return sorted(result)
 
 
-def execute_snapshot(directory: Path, tool_root: Path, reference: Path) -> Path:
-    """Called in a child interpreter executing the copied build tooling."""
+def execute_snapshot(directory: Path, tool_root: Path, reference: Path, *, preflight_only: bool = False) -> Path | None:
+    """Build frozen game inputs using the independently selected trusted tooling."""
     directory = directory.resolve()
+    entrypoint = Path(__file__).resolve()
+    if entrypoint != (tool_root.resolve() / "tools/build.py"):
+        raise ValueError("Build child must execute the operator-selected trusted tool_root/tools/build.py")
+    recipe = split_commands()
+    validate_asset_recipe(directory / "source", recipe)
     manifest = read_json(directory / "input-manifest.json")
     verify_manifest(directory / "source", manifest)
+    if preflight_only:
+        print(json.dumps({"status": "TRUSTED_CHILD_PREFLIGHT_ONLY_NOT_BUILT", "accepted": False, "build_source_bytes": 0,
+                          "entrypoint": str(entrypoint), "entrypoint_sha256": sha256(entrypoint),
+                          "input_manifest_sha256": manifest["sha256"], "recipe": recipe}))
+        return None
+    orchestration = archive_orchestration(directory, entrypoint)
     reference_report = attest(reference.read_bytes())
     profile = tool_profile(tool_root, directory / "source")
     inventory, inventory_report = image_evidence(directory / "source", reference.read_bytes())
@@ -81,7 +96,8 @@ def execute_snapshot(directory: Path, tool_root: Path, reference: Path) -> Path:
                 with output.open("w", encoding="utf-8") as stream:
                     subprocess.run(command, cwd=directory, env=environment, stdout=stream, stderr=log, check=True)
 
-        run([python_command(), "-m", "splat", "split", "source/config/shiren2.jp.yaml", "splat.override.yaml", "--disassemble-all"])
+        for operation in recipe:
+            run(operation)
         generated_before = file_inventory(directory / "generated")
         graph = build_graph(directory)
         for name, item in graph.items():
@@ -98,6 +114,7 @@ def execute_snapshot(directory: Path, tool_root: Path, reference: Path) -> Path:
             else:
                 for operation in operations:
                     run(operation)
+        generated_table_discards(directory, graph, profile, reference.read_bytes())
         for operation in expected_commands(graph, profile)[-2:]:
             run(operation)
 
@@ -109,24 +126,29 @@ def execute_snapshot(directory: Path, tool_root: Path, reference: Path) -> Path:
         raise ValueError("External tool/runtime/ROM inputs changed while building")
     matches = read_json(directory / "source/config/matches.json")["functions"]
     coverage = image_matches(matches, inventory)
-    inventory_report["linked_images"] = linked_image_records(directory, inventory, reference.read_bytes(), graph=graph)
+    inventory_report["linked_images"] = linked_image_records(directory, inventory, reference.read_bytes())
     reproduction = reproduce_c_objects_and_link(directory, graph, profile, reference)
     attribution = c_attributions(directory, matches, graph, profile, reference.read_bytes(), reproduction=reproduction)
     validate_attributions(matches, attribution, graph)
     check_elf(directory)
     if commands != expected_commands(graph, profile):
         raise ValueError("Executed commands disagree with the declared graph")
+    complete_game = rom_map_report(directory, reference.read_bytes(), matches, commands=commands,
+                                   reproduction=reproduction, graph=graph, profile=profile)
+    if orchestration_sources(entrypoint.parent) != orchestration["source_files"]:
+        raise ValueError("Trusted orchestration sources changed while building")
+    validate_orchestration(directory, orchestration)
     receipt = {
         "schema_version": 3, "status": "byte-identical", "created_at": datetime.now(timezone.utc).isoformat(),
         "target_sha256": EXPECTED_SHA256, "rom": report, "input_manifest": manifest,
-        "profile": profile, "runtime": runtime, "compiler_environment": environment,
-        "coverage": {**coverage, "description": f"Reviewed {'C and C++' if 'matched_cpp_functions' in coverage else 'C'} functions only; whole-game executable denominator is unknown"},
+        "profile": profile, "runtime": {**runtime, "orchestration": orchestration}, "compiler_environment": environment,
+        "coverage": {**coverage, "description": "Reviewed C/C++ functions, including explicitly listed generated C++ subsets (not double-counted); pinned upstream toolchain library counted separately, never in C/C++; complete-game accounting is the rom_map section"},
         "c_matches": matches, "c_attributions": attribution, "graph": graph, "dependencies": dependencies,
         "artifacts": {name: sha256(directory / name) for name in sorted(REQUIRED_ARTIFACTS)},
         "generated": generated_before, "compiled": file_inventory(directory / "compiled"),
         "objects": {name: sha256(directory / name) for name in graph}, "commands": commands,
-        "reproduction": reproduction, "image_inventory": inventory_report,
-        "limitations": ["Image inventory is partial; overlay B supports binary storage only with zero new C, overlay A remains opaque, and CPU/data/ucode section closure is unfinished", "Scoped C profiles and MIPS26/HI16/LO16 text relocations only; whole-game compiler provenance remains unproved", "Python standard-library/shared-library fingerprint closure pending", "Human review required for semantics and disguised raw-byte misuse"],
+        "reproduction": reproduction, "image_inventory": inventory_report, "rom_map": complete_game,
+        "limitations": ["Image inventory is partial; both overlays link as same-VRAM splat code parents whose data/rodata cuts stay provisional until their owning C is matched, and CPU/data/ucode section closure is unfinished", "Scoped C profiles and MIPS26/HI16/LO16 text relocations only; whole-game compiler provenance remains unproved", "Python standard-library/shared-library fingerprint closure pending", "Human review required for semantics and disguised raw-byte misuse"],
     }
     receipt_path = directory / "receipt.json"
     write_json(receipt_path, receipt)
@@ -154,8 +176,9 @@ def build(name: str, promote: bool = False, tool_root: Path = PROJECT, reference
     directory.mkdir(exist_ok=False)
     manifest = create_snapshot(source_root.resolve(), directory / "source")
     write_json(directory / "input-manifest.json", manifest)
-    # Execute copied build tooling as well as copied game source.
-    subprocess.run([python_command(), str(directory / "source/tools/build.py"), "--execute-snapshot", str(directory), "--tool-root", str(tool_root.resolve()), "--rom", str(reference.resolve())], check=True)
+    # Keep the verifier outside the tested snapshot; only the bound asset packer
+    # executes snapshot Python. Game/header/config inputs remain frozen.
+    subprocess.run([python_command(), "-B", str(tool_root.resolve() / "tools/build.py"), "--execute-snapshot", str(directory), "--tool-root", str(tool_root.resolve()), "--rom", str(reference.resolve())], check=True)
     receipt_path = directory / "receipt.json"
     from verify import promote_receipt, verify_receipt
     verify_receipt(receipt_path, require_current=False, tool_root=tool_root, reference=reference)
@@ -177,10 +200,14 @@ def main() -> None:
     parser.add_argument("--build-root", type=Path, default=None,
                         help="Private trial: create the run directory here instead of build/")
     parser.add_argument("--execute-snapshot", type=Path, help=argparse.SUPPRESS)
+    parser.add_argument("--preflight-only", action="store_true",
+                        help="With --execute-snapshot only: check trusted child entry and frozen inputs; never build or issue a receipt")
     args = parser.parse_args()
+    if args.preflight_only and not args.execute_snapshot:
+        parser.error("--preflight-only requires --execute-snapshot")
     try:
         if args.execute_snapshot:
-            execute_snapshot(args.execute_snapshot, args.tool_root, args.rom)
+            execute_snapshot(args.execute_snapshot, args.tool_root, args.rom, preflight_only=args.preflight_only)
         else:
             build(args.name, args.promote, args.tool_root, args.rom, args.source_root, args.build_root)
     except (ValueError, OSError, KeyError, subprocess.CalledProcessError) as error:

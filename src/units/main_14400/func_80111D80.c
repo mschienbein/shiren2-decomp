@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 
@@ -17,7 +18,7 @@ typedef struct {
     u8 dir;
 } Unit;
 
-extern s32 func_80111A20(void *, void *);
+extern s32 func_80111A20(Item *, void *);
 extern Obj *func_80111E08(Obj *o, void *unit, void *item, Vec2 *pos, u8 *dir);
 extern void func_800C2D0C(Obj *);
 

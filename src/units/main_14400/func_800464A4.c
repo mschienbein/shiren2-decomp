@@ -1,11 +1,8 @@
 #include "common.h"
+#include "map_position_iterator.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
-
-typedef struct { s32 x; s32 y; } Pos800464A4;
-typedef struct { s32 x0; s32 y0; s32 x1; s32 y1; } Rect800464A4;
-typedef struct { Pos800464A4 cur; Pos800464A4 origin; Pos800464A4 end; } Iter800464A4;
 
 typedef struct {
     unsigned high : 8;
@@ -47,19 +44,16 @@ extern u16 D_8014767C;
 extern Player800464A4 *D_801476B8;
 typedef struct { void *room; s32 kind, changed, active; } RoomState;
 extern RoomState D_80143434;
-extern Rect800464A4 D_801429C0;
+extern MapRect D_801429C0;
 
 Ctx800464A4 *func_800C5F60(void);
 s32 func_800C965C(void);
-/* Returns its rectangle by value through the hidden result pointer. */
-Rect800464A4 func_800B3024(Ctx800464A4 *ctx);
-Pos800464A4 *func_800A3610(Pos800464A4 *out, Iter800464A4 *iter);
-u32 func_800B1C6C(Pos800464A4 *pos);
-Unit800464A4 *func_800B4928(Pos800464A4 *pos);
+u32 func_800B1C6C(MapPos *pos);
+Unit800464A4 *func_800B4928(MapPos *pos);
 s32 func_800E1CC4(Unit800464A4 *unit, s32 flag);
-s32 func_800A24DC(Pos800464A4 *pos, Rect800464A4 *rect);
-Item800464A4 *func_800B4D80(Pos800464A4 *pos);
-s32 func_800B5728(Pos800464A4 *pos);
+s32 func_800A24DC(void *object, MapRect *bounds);
+Item800464A4 *func_800B4D80(MapPos *pos);
+s32 func_800B5728(MapPos *pos);
 
 /* ODD_C: Access the copied flag objects using the canonical bitfield view;
  * the accessor boundary preserves the original whole-word copy lowering. */
@@ -67,9 +61,9 @@ static inline s32 flag23(Flags800464A4 *flags) { return flags->bit23; }
 static inline s32 flag7(Flags800464A4 *flags) { return flags->bit7; }
 
 /* ODD_C: Copy members in source order rather than using aggregate assignment. */
-static inline void copy_rect(Rect800464A4 *out, const Rect800464A4 *in) {
-    s32 x0 = in->x0, y0 = in->y0, x1 = in->x1, y1 = in->y1;
-    out->x0 = x0; out->y0 = y0; out->x1 = x1; out->y1 = y1;
+static inline void copy_rect(MapRect *out, const MapRect *in) {
+    s32 x0 = in->min.x, y0 = in->min.y, x1 = in->max.x, y1 = in->max.y;
+    out->min.x = x0; out->min.y = y0; out->max.x = x1; out->max.y = y1;
 }
 /* ODD_C: Preserve the separate flag-test expression used by the unit view. */
 static inline s32 unit_hidden(Unit800464A4 *unit) {
@@ -81,11 +75,11 @@ static inline s32 unit_hidden(Unit800464A4 *unit) {
 static inline u8 not_one(s32 v) { return v != 1; }
 
 /* The caller passes the map-renderer object D_80138C40; it is unused here. */
-s32 func_800464A4(void *unused, u32 (*grid)[54], Rect800464A4 *rect) {
-    Rect800464A4 area;
-    Rect800464A4 view;
-    Iter800464A4 iter;
-    Pos800464A4 pos;
+s32 func_800464A4(void *unused, u32 (*grid)[54], MapRect *rect) {
+    MapRect area;
+    MapRect view;
+    MapPositionIterator iter;
+    MapPos pos;
     Flags800464A4 ctxFlags;
     Flags800464A4 curFlags;
     s32 bit23;
@@ -119,22 +113,22 @@ s32 func_800464A4(void *unused, u32 (*grid)[54], Rect800464A4 *rect) {
         blind = D_801476B8->field_104 == 0;
     }
     ctx = func_800C5F60();
-    area.x0 = rect->x0;
-    area.y0 = rect->y0;
-    area.x1 = rect->x1;
-    area.y1 = rect->y1;
+    area.min.x = rect->min.x;
+    area.min.y = rect->min.y;
+    area.max.x = rect->max.x;
+    area.max.y = rect->max.y;
     changed = 0;
     if (D_80143434.active != 0) {
         copy_rect(&view, &D_801429C0);
     } else {
         view = func_800B3024(ctx);
     }
-    pos.x = area.x0;
-    pos.y = area.y0;
-    iter.origin = pos;
-    iter.cur = iter.origin;
-    pos.x = area.x1;
-    pos.y = area.y1;
+    pos.x = area.min.x;
+    pos.y = area.min.y;
+    iter.start = pos;
+    iter.cur = iter.start;
+    pos.x = area.max.x;
+    pos.y = area.max.y;
     iter.end = pos;
     for (;;) {
         s32 more = iter.cur.x <= iter.end.x;

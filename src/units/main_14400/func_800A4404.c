@@ -1,27 +1,24 @@
 #include "common.h"
+#include "map_rect.h"
 
-typedef struct {
-    s32 x;
-    s32 y;
-} Pair;
 typedef struct {
     char reserved_00[9];
     unsigned char field_09;
 } State;
-extern u32 func_800B1C6C(Pair *);
+extern u32 func_800B1C6C(MapPos *);
 extern s32 func_800A58B8(State *);
-extern s32 func_800B5900(Pair *, s32, s32, s32 *);
-extern s32 func_800A422C(State *, Pair *, s32);
+extern s32 func_800B5900(void *, s32, s32, void **);
+extern s32 func_800A422C(State *, MapPos *, s32);
 
-static inline Pair *copy_pair(Pair *destination, Pair *source) {
+static inline MapPos *copy_pair(MapPos *destination, MapPos *source) {
     destination->x = source->x;
     destination->y = source->y;
     return destination;
 }
 
-s32 func_800A4404(State *state, Pair *position, s32 *output) {
-    Pair copy;
-    Pair *point;
+s32 func_800A4404(State *state, MapPos *position, void **output) {
+    MapPos copy;
+    MapPos *point;
     s32 direction;
     s32 result;
     *output = 0;

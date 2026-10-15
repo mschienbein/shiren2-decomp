@@ -6,7 +6,7 @@ typedef short s16;
 typedef signed char s8;
 
 s16 *func_80045B48(void);
-void func_80045AC8(s16 id);
+void func_80045AC8(s32 id);
 void func_80045AE8(void) {
     s16 *ids = func_80045B48();
     while (*ids != -1) {

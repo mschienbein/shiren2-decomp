@@ -1,26 +1,24 @@
 #include "common.h"
+#include "map_rect.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
-typedef struct { s32 x, y; } Pair;
-typedef struct { Pair min, max; } Rect;
 typedef struct { u8 value; } Dir;
 extern u8 D_80147620[];
 extern s32 func_800C5B20(void *rng, u16 alignment);
 extern s32 func_800C5844(void *rng, u8 base, u8 top);
-extern u32 func_800B1C6C(Pair *pos);
-extern void *func_800A2594(Pair *out, void *arg, Dir cell);
-extern s32 func_800B43BC(void *pos, s32 mode, u8 flag);
-extern s32 func_800B38F8(Pair *pos);
-extern void func_800B7E9C(void *owner, const Rect *from, const Rect *to);
+extern u32 func_800B1C6C(MapPos *pos);
+extern void *func_800A2594(MapPos *out, void *arg, Dir cell);
+extern s32 func_800B43BC(MapPos *pos, s32 mode, u8 flag);
+extern s32 func_800B38F8(MapPos *pos);
 
-static inline void set_pair(Pair *p, s32 x, s32 y) {
+static inline void set_pair(MapPos *p, s32 x, s32 y) {
     p->x = x;
     p->y = y;
 }
-static inline void copy_pair(Pair *dst, Pair *src) {
+static inline void copy_pair(MapPos *dst, MapPos *src) {
     *dst = *src;
 }
-static inline void copy_rect(Rect *dst, Rect *src) {
+static inline void copy_rect(MapRect *dst, MapRect *src) {
     copy_pair(&dst->min, &src->min);
     copy_pair(&dst->max, &src->max);
 }
@@ -28,25 +26,26 @@ static inline void copy_rect(Rect *dst, Rect *src) {
    range test) are kept as inline helpers; they also shape the loop tests and the
    full-word read of the lower bound. */
 static inline s32 remaining(s32 count) { return count; }
-static inline s32 lower_y(Rect *bounds) { return bounds->min.y; }
+static inline s32 lower_y(MapRect *bounds) { return bounds->min.y; }
 static inline s32 direction_valid(s32 i) { return i < 8; }
 static inline Dir *set_direction(Dir *dir, u8 value) {
     dir->value = value;
     return dir;
 }
 
-void func_800B7C88(void *kind, const Rect *a, const Rect *b) {
-    Rect bounds;
-    Rect *range;
-    /* Reuse the initial rectangle's storage for the selected point and the
-     * neighbor/path temporaries: those phases never overlap. */
+void func_800B7C88(void *kind, const MapRect *a, const MapRect *b) {
+    MapRect bounds;
+    MapRect *range;
+    /* Copy candidate into bounds before selecting pos. The search phase keeps
+     * neighbor and first_path separate; second_path replaces search only after
+     * the first corridor call returns. No inactive union view is read. */
     union {
-        Rect candidate;
+        MapRect candidate;
         struct {
-            Pair pos;
+            MapPos pos;
             union {
-                struct { Pair neighbor; Rect first_path; } search;
-                Rect second_path;
+                struct { MapPos neighbor; MapRect first_path; } search;
+                MapRect second_path;
             } scratch;
         } selected;
     } work;

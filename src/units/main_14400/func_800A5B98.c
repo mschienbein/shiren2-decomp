@@ -1,24 +1,23 @@
 #include "common.h"
+#include "map_rect.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
-typedef struct { s32 x; s32 y; } Pos;
-typedef struct { s32 x0; s32 y0; s32 x1; s32 y1; } Rect;
 typedef struct { u8 unk0[0x1C]; u16 flags; } Obj;
-extern Rect D_801429C0;
-void *func_800B221C(Pos *p);
-void *func_800A33DC(Pos *p, Rect *r);
-s32 func_800A4314(Obj *o, Pos *p);
-s32 func_800B5BDC(Pos *p);
-u32 func_800B1C6C(Pos *p);
+extern MapRect D_801429C0;
+void *func_800B221C(MapPos *p);
+MapPos *func_800A33DC(MapPos *p, MapRect *r);
+s32 func_800A4314(Obj *o, MapPos *p);
+s32 func_800B5BDC(MapPos *p);
+u32 func_800B1C6C(MapPos *p);
 static inline s32 canPlace(s32 r) { return r == 1; }
-static inline void rect_set(Rect *r, s32 x0, s32 y0, s32 x1, s32 y1) {
-    r->x0 = x0;
-    r->y0 = y0;
-    r->x1 = x1;
-    r->y1 = y1;
+static inline void rect_set(MapRect *r, s32 x0, s32 y0, s32 x1, s32 y1) {
+    r->min.x = x0;
+    r->min.y = y0;
+    r->max.x = x1;
+    r->max.y = y1;
 }
-s32 func_800A5B98(Obj *o, Pos *out) {
-    Pos p;
+s32 func_800A5B98(Obj *o, MapPos *out) {
+    MapPos p;
     s32 i;
     for (i = 0; ; i++) {
         u32 attr;
@@ -35,9 +34,9 @@ s32 func_800A5B98(Obj *o, Pos *out) {
         }
     }
     for (i = 0; ; i++) {
-        Rect r;
+        MapRect r;
         if (i >= 100) break;
-        rect_set(&r, D_801429C0.x0, D_801429C0.y0, D_801429C0.x1, D_801429C0.y1);
+        rect_set(&r, D_801429C0.min.x, D_801429C0.min.y, D_801429C0.max.x, D_801429C0.max.y);
         func_800A33DC(&p, &r);
         if (!canPlace(func_800A4314(o, &p))) continue;
         if (func_800B5BDC(&p)) continue;

@@ -1,6 +1,6 @@
-#include "common.h"
-extern void func_800A30AC(void *output, void *input, unsigned char index);
-void *func_800A2FD0(void *output, void *input, unsigned char index) {
+#include "map_rect.h"
+
+MapRect *func_800A2FD0(MapRect *output, void *input, unsigned char index) {
     func_800A30AC(output, input, index);
     return output;
 }

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 
@@ -20,13 +21,12 @@ extern void func_800AD868(Pos80107EC0 *pos);
 extern u32 func_800B1C6C(void *pos);
 extern s32 func_80049CB4(s32 id, ...);
 extern char *func_800A3B20(void *obj);
-extern char *func_800AE674(void *obj);
 extern void func_800497F0(s32 message_id, ...);
 
 s32 func_80107EC0(Obj80107EC0 *obj) {
     Pos80107EC0 pos;
     Pos80107EC0 *p;
-    void *tile;
+    Item *tile;
     s32 name;
     char *actor;
 

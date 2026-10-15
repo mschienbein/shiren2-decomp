@@ -1,10 +1,6 @@
-#include "common.h"
+#include "map_unit_iterator.h"
 typedef struct { char pad[0xA]; unsigned char unkA; char padB[0x1E - 0xB]; unsigned char unk1E; } Unit;
-typedef struct { s32 cur; s32 data[7]; } UnitIter;
 extern char D_80147620[];
-UnitIter *func_800A919C(UnitIter *, void *pos);
-s32 func_800A9284(UnitIter *, s32);
-Unit *func_800A942C(UnitIter *);
 s32 func_800E1CC4(Unit *, s32);
 unsigned char func_800C57CC(void *, s32);
 static inline s32 skip(Unit *u, unsigned char team) {
@@ -17,11 +13,11 @@ static inline s32 skip(Unit *u, unsigned char team) {
 }
 void *func_800B31E8(void *pos, s32 team) {
     unsigned short t = team;
-    UnitIter it;
+    MapUnitIterator it;
     Unit *last;
     s32 n;
     Unit *u;
-    UnitIter *p;
+    MapUnitIterator *p;
     func_800A919C(&it, pos);
     last = 0;
     n = 0;
@@ -34,7 +30,7 @@ void *func_800B31E8(void *pos, s32 team) {
     }
     if (n < 2) return last;
     n = func_800C57CC(D_80147620, (unsigned char)(n - 1));
-    it.cur = 0;
+    it.cursor = 0;
     for (p = &it; func_800A9284(p, 0xFF); ) {
         u = func_800A942C(p);
         if (skip(u, t)) {

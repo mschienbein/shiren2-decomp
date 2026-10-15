@@ -27,7 +27,8 @@ class InputManifest(TypedDict):
     sha256: str
 
 
-SOURCE_DIRECTORIES = ("src", "include", "config", "tools", "tests")
+SOURCE_DIRECTORIES = ("src", "include", "config", "tools", "tests", "assets")
+PROOF_DIRECTORY = PurePosixPath("docs/evidence/handwritten")
 REQUIRED_FILES = (
     ".python-version", "Makefile", "diff_settings.py", "pyproject.toml",
     "toolchain.lock.json", "uv.lock",
@@ -60,6 +61,7 @@ def _relative_path(value: str) -> PurePosixPath:
     if not (
         value in REQUIRED_FILES or value in OPTIONAL_FILES
         or (len(path.parts) > 1 and path.parts[0] in SOURCE_DIRECTORIES)
+        or (path != PROOF_DIRECTORY and path.is_relative_to(PROOF_DIRECTORY))
     ):
         raise ValueError(f"Input path is outside the allowlist: {value!r}")
     return path
@@ -109,7 +111,7 @@ def _input_paths(root: Path) -> dict[str, Path]:
         path = root / relative
         if path.exists() or path.is_symlink():
             result[relative] = _checked_input(root, relative)
-    for relative in SOURCE_DIRECTORIES:
+    for relative in (*SOURCE_DIRECTORIES, str(PROOF_DIRECTORY)):
         path = root / relative
         if path.exists() or path.is_symlink():
             visit(path)
@@ -228,7 +230,9 @@ def _destination_path(root: Path, destination: Path) -> Path:
     destination = destination.parent.resolve() / destination.name
     if destination.is_relative_to(root):
         relative = destination.relative_to(root)
-        if relative.parts and relative.parts[0] in SOURCE_DIRECTORIES:
+        if ((relative.parts and relative.parts[0] in SOURCE_DIRECTORIES)
+                or relative.is_relative_to(PROOF_DIRECTORY)
+                or PROOF_DIRECTORY.is_relative_to(relative)):
             raise ValueError("Snapshot destination must be outside the source allowlist")
     return destination
 

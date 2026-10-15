@@ -1,25 +1,23 @@
 #include "common.h"
+#include "map_rect.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
-typedef struct { s32 x, y; } Coord;
-typedef struct { s32 values[4]; } Bounds;
 typedef struct { u8 pad0[0x1C]; u16 flags; } Object;
 extern void *func_800B1F90(void *);
-extern s32 *func_800B1F58(s32 *);
-extern Coord *func_800A33DC(Coord *, Bounds *);
-extern void *func_800B221C(Coord *);
-extern s32 func_800A4314(Object *, Coord *);
-extern u32 func_800B1C6C(Coord *);
-extern s32 func_800B5BDC(Coord *);
-extern s32 func_800A23E8(Coord *, Coord *);
+extern MapPos *func_800A33DC(MapPos *, MapRect *);
+extern void *func_800B221C(MapPos *);
+extern s32 func_800A4314(Object *, MapPos *);
+extern u32 func_800B1C6C(MapPos *);
+extern s32 func_800B5BDC(MapPos *);
+extern s32 func_800A23E8(MapPos *, MapPos *);
 
-static inline void copy_coord(Coord *dst, Coord *src) {
+static inline void copy_coord(MapPos *dst, MapPos *src) {
     dst->x = src->x;
     dst->y = src->y;
 }
 
-static inline void pick_coord(Object *self, Bounds *bounds, Coord *out) {
-    Coord pick;
+static inline void pick_coord(Object *self, MapRect *bounds, MapPos *out) {
+    MapPos pick;
     if (self->flags & 8) {
         func_800A33DC(&pick, bounds);
     } else {
@@ -28,32 +26,32 @@ static inline void pick_coord(Object *self, Bounds *bounds, Coord *out) {
     *out = pick;
 }
 
-static inline s32 coord_distance(Coord *from, Coord *to) {
-    Coord target;
+static inline s32 coord_distance(MapPos *from, MapPos *to) {
+    MapPos target;
     copy_coord(&target, to);
     return func_800A23E8(from, &target);
 }
 
 
-static inline s32 in_room(void *room, Coord *coord) {
+static inline s32 in_room(void *room, MapPos *coord) {
     return room == func_800B1F90(coord);
 }
 
-static inline s32 is_occupied(Coord *coord) {
+static inline s32 is_occupied(MapPos *coord) {
     return func_800B5BDC(coord) != 0;
 }
 
-s32 func_800A5E24(Object *self, Coord *out, s32 sameRoom, s32 occupied) {
-    Coord origin;
-    Bounds bounds;
-    Coord candidate;
+s32 func_800A5E24(Object *self, MapPos *out, s32 sameRoom, s32 occupied) {
+    MapPos origin;
+    MapRect bounds;
+    MapPos candidate;
     void *room;
     s32 distance;
 
     copy_coord(&origin, out);
     room = func_800B1F90(&origin);
     distance = 11;
-    func_800B1F58(bounds.values);
+    func_800B1F58(&bounds);
     for (;;) {
         s32 tries;
         if (--distance < 5) {

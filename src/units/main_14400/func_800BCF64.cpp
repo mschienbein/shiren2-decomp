@@ -1,28 +1,23 @@
 #include "common.h"
+#include "map_rect.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
 
-struct Point {
-    s32 x;
-    s32 y;
+struct Room_800BCF64 {
+    MapRect geometry;
+    u8 sides[4];
 };
 
-struct Room {
-    Point min;
-    Point max;
-    u8 pad10[4];
-};
-
-struct ShirenDirection {
+struct ShirenDirection_800BCF64 {
     signed char value;
-    ShirenDirection(s32 v) : value(v & 7) {}
+    ShirenDirection_800BCF64(s32 v) : value(v & 7) {}
 };
 
 
 
 /* Partial view of the floor generator object. */
-struct Floor {
+struct Floor_800BCF64 {
     u8 pad0[0x3DC];
     s32 room_count;
     u8 pad3E0[0x22];
@@ -34,22 +29,22 @@ struct Floor {
 };
 
 extern "C" {
-extern Room D_801431F0[];
+extern Room_800BCF64 D_801431F0[];
 extern u8 D_80147620[];
 u8 func_800C57CC(void *rng, s32 limit);
 u8 func_800C57A0(void *rng);
 s32 func_800C5844(void *rng, u8 base, u8 top);
-s32 func_800A3138(Room *room);
-s32 func_800A315C(Room *room);
-s32 func_800BB22C(Floor *floor, Room *room);
-s32 func_800BAFE4(Floor *floor, Room *room);
-void func_800B1B58(Point *pos, u16 kind);
-void *func_800A2594(Point *out, Point *from, ShirenDirection dir);
+s32 func_800A3138(MapRect *room);
+s32 func_800A315C(MapRect *room);
+s32 func_800BB22C(void *floor, MapRect *room);
+s32 func_800BAFE4(void *floor, MapRect *room);
+void func_800B1B58(MapPos *pos, u16 kind);
+void *func_800A2594(MapPos *out, MapPos *from, ShirenDirection_800BCF64 dir);
 }
 
 
 
-extern "C" s32 func_800BCF64(Floor *floor)
+extern "C" s32 func_800BCF64(Floor_800BCF64 *floor)
 {
     s32 width = 0;
     s32 height = 0;
@@ -58,23 +53,23 @@ extern "C" s32 func_800BCF64(Floor *floor)
     if (!(floor->flags & 0x20)) {
         return 0;
     }
-    Room *room = 0;
+    Room_800BCF64 *room = 0;
     for (tries = 100; --tries != -1;) {
         u8 index = func_800C57CC(D_80147620, (u8)(floor->room_count - 1));
         if (floor->room_open[index] == 0) {
             continue;
         }
         room = &D_801431F0[index];
-        width = func_800A3138(room);
-        height = func_800A315C(room);
+        width = func_800A3138(&room->geometry);
+        height = func_800A315C(&room->geometry);
         if (width < 5 || height < 5) {
             if (width < 5) {
-                if (func_800BB22C(floor, room) != 0) {
+                if (func_800BB22C(floor, &room->geometry) != 0) {
                     width++;
                 }
             }
             if (height < 5) {
-                if (func_800BAFE4(floor, room) != 0) {
+                if (func_800BAFE4(floor, &room->geometry) != 0) {
                     height++;
                 }
             }
@@ -87,8 +82,8 @@ extern "C" s32 func_800BCF64(Floor *floor)
     if (tries < 0) {
         return 0;
     }
-    Point center;
-    s32 y = room->min.y + width / 2;
+    MapPos center;
+    s32 y = room->geometry.min.y + width / 2;
     center.y = y;
     if (!(width & 1)) {
         s32 odd = func_800C57A0(D_80147620) & 1;
@@ -96,7 +91,7 @@ extern "C" s32 func_800BCF64(Floor *floor)
         if (odd) adjusted--;
         center.y = adjusted;
     }
-    s32 x = room->min.x + height / 2;
+    s32 x = room->geometry.min.x + height / 2;
     center.x = x;
     if (!(height & 1)) {
         s32 odd = func_800C57A0(D_80147620) & 1;
@@ -121,8 +116,8 @@ extern "C" s32 func_800BCF64(Floor *floor)
                 break;
             }
         }
-        Point pos;
-        func_800A2594(&pos, &center, ShirenDirection(slot));
+        MapPos pos;
+        func_800A2594(&pos, &center, ShirenDirection_800BCF64(slot));
         func_800B1B58(&pos, floor->field_402);
     }
     return 1;

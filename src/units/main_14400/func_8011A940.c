@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -6,15 +7,6 @@ typedef short s16;
 typedef signed char s8;
 
 typedef struct { s32 a, b; } Pair;
-typedef struct {
-    u8 kind;
-    u8 x1;
-    u8 pad2[3];
-    s8 x5;
-    u8 pad6[6];
-    u8 xC;
-} Item;
-char *func_800AE674(Item *item);
 s32 func_8010BEC4(Item *item, u8 id);
 s32 func_8010BD00(Item *item, u8 id);
 u16 func_800AE710(Item *item);
@@ -30,7 +22,7 @@ void func_800498E4(s32 message_id, ...);
 void func_8011A940(void *unused, Pair *who, Item *item) {
     if (item != 0) {
         char *name = func_800AE674(item);
-        switch (item->kind) {
+        switch (item->field00) {
         case 3:
         case 4:
             if ((u8)func_8010BEC4(item, 0x1D)) {
@@ -45,7 +37,7 @@ void func_8011A940(void *unused, Pair *who, Item *item) {
             }
             return;
         case 6:
-            if (item->xC) {
+            if (item->payload.timer.turns0C) {
                 func_80049CB4(0x2C, who, item);
                 func_80113914(item);
                 func_80049A04(0xD5, func_800AE674(item));
@@ -53,9 +45,9 @@ void func_8011A940(void *unused, Pair *who, Item *item) {
             }
             break;
         default:
-            if (item->x1 == 0x77) {
+            if (item->field01 == 0x77) {
                 u16 count = func_800AE710(item);
-                s32 x5 = item->x5;
+                s32 x5 = item->owner05;
                 Pair tmp;
                 item = func_8011D400(func_800AC5F4(0x18, item));
                 func_800AE6C4(item, (u32)(count + 1) >> 1);

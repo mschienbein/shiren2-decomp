@@ -31,8 +31,21 @@ _REVIEWED_IMAGES = {
 _REVIEWED_BSS = {
     "resident": ((0x80039000, 0x800413C0),),
     "main_14400": ((0x801609B0, 0x801E4EA0),),
-    "overlay_1339f0": (),
-    "overlay_136dc0": (),
+    # OVL1 (docs/OVERLAYS.md): highest code access plus bzero/loop extents for A;
+    # B ends at the heap base 0x801F7200 that main 0x8006A864 installs.
+    "overlay_1339f0": ((0x801E8270, 0x801E8700),),
+    "overlay_136dc0": ((0x801F6540, 0x801F7200),),
+}
+# The two same-VRAM overlay images; their splat parents are named after them.
+OVERLAY_IMAGES = ("overlay_1339f0", "overlay_136dc0")
+# Fixed RSP partitions and execution windows. Audio stored endpoints remain provisional;
+# the task request establishes starts/transfer windows, not complete stored extents.
+_REVIEWED_COMPONENTS = {
+    "rsp_boot": (0x109A50, 0x109B20, 0x04001000, 0x040010D0),
+    "rsp_gfx_text": (0x109B20, 0x10AEB0, 0x04001080, 0x04002000),
+    "rsp_audio_text": (0x10AEB0, 0x10BB10, 0x04001080, 0x04002000),
+    "rsp_gfx_data": (0x11D0A0, 0x11D4C0, 0x04000000, 0x04000800),
+    "rsp_audio_data": (0x11D4C0, 0x11D770, 0x04000000, 0x04000800),
 }
 
 
@@ -319,13 +332,14 @@ def _parse_component(value: object, images: Mapping[str, ImageRecord], evidence:
     estart, eend = _interval(record["execution_start"], record["execution_end"], f"Component {name} execution RAM", ADDRESS_LIMIT)
     if not parent.rom_start <= start < end <= parent.rom_end:
         raise ValueError(f"Component {name} exceeds its parent image storage")
-    if (vstart, vend) != (start + parent.vram_rom_delta, end + parent.vram_rom_delta) or eend - estart != end - start:
-        raise ValueError(f"Component {name} has an inconsistent storage/execution mapping")
-    if record["kind"] != "rsp" or record["cpu_c_excluded"] is not True or record["confidence"] != "reviewed-component-extent":
-        raise ValueError(f"Component {name} must preserve the confirmed RSP CPU-C exclusion")
+    if (vstart, vend) != (start + parent.vram_rom_delta, end + parent.vram_rom_delta):
+        raise ValueError(f"Component {name} has an inconsistent storage mapping")
+    confidence = "provisional-component-extent" if name in {"rsp_audio_text", "rsp_audio_data"} else "reviewed-component-extent"
+    if record["kind"] != "rsp" or record["cpu_c_excluded"] is not True or record["confidence"] != confidence:
+        raise ValueError(f"Component {name} must preserve its RSP exclusion and endpoint confidence")
     return ComponentRecord(
         name, parent_id, "rsp", start, end, vstart, vend, estart, eend,
-        _digest(record["rom_sha256"], name), True, "reviewed-component-extent",
+        _digest(record["rom_sha256"], name), True, confidence,
         _references(record["evidence"], f"Component {name}", evidence), _text(record["note"], name),
     )
 
@@ -391,22 +405,29 @@ def validate_inventory(document: object) -> ImageInventory:
             raise ValueError(f"Image {name} disagrees with its reviewed BSS mapping")
     if images["resident"].splat_segments != ("entry", "main") or images["main_14400"].splat_segments != ("main_14400",):
         raise ValueError("Resident/main splat bindings disagree with the reviewed segment identities")
-    if images["overlay_1339f0"].split_status != "opaque":
-        raise ValueError("Overlay split/linkage is unsupported for overlay_1339f0")
-    overlay_b = images["overlay_136dc0"]
-    if overlay_b.split_status != "opaque" and (
-            overlay_b.split_status != "active"
-            or overlay_b.splat_segments != ("overlay_b_136dc0_storage",)):
-        raise ValueError("Only the reviewed storage-only overlay B split/linkage is supported")
+    # Each overlay is either opaque or one splat code parent named after its image;
+    # the two parents share the 0x801E4EA0 slot through one exclusive_ram_id.
+    for overlay_id in OVERLAY_IMAGES:
+        overlay = images[overlay_id]
+        if overlay.split_status != "opaque" and (overlay.split_status != "active" or overlay.splat_segments != (overlay_id,)):
+            raise ValueError(f"Overlay split/linkage must be one active code parent named after its image: {overlay_id}")
     components = tuple(_parse_component(value, images, evidence) for value in _items(record["components"], "Components"))
     _no_overlap([(part.rom_start, part.rom_end, part.component_id) for part in components], "component ROM storage")
-    if (len(components) != 1 or components[0].component_id != "rsp_boot" or components[0].parent_image_id != "main_14400"
-            or (components[0].rom_start, components[0].rom_end, components[0].execution_start, components[0].execution_end)
-            != (0x109A50, 0x109B20, 0x04001000, 0x040010D0)):
-        raise ValueError("Confirmed RSP bootstrap identity and extents must be preserved")
+    declared = {part.component_id: (part.rom_start, part.rom_end, part.execution_start, part.execution_end)
+                for part in components}
+    # The generic CPU/progress reader supports the original reviewed bootstrap
+    # inventory as well as the later full RSP inventory. It never supplies omitted
+    # declarations; current ROM-map classification still requires its full proof.
+    if (set(declared) not in ({"rsp_boot"}, set(_REVIEWED_COMPONENTS))
+            or len(components) != len(declared)
+            or any(extent != _REVIEWED_COMPONENTS.get(name) for name, extent in declared.items())
+            or any(part.parent_image_id != "main_14400" for part in components)):
+        raise ValueError("Confirmed RSP bootstrap/microcode identities and extents must be preserved")
     for image in images.values():
         for hint in image.provisional_cpu_ranges:
-            if any(part.parent_image_id == image.image_id and _overlap((hint.rom_start, hint.rom_end), (part.rom_start, part.rom_end)) for part in components):
+            if image.image_id == "main_14400" and any(
+                    _overlap((hint.rom_start, hint.rom_end), (start, end))
+                    for start, end, _, _ in _REVIEWED_COMPONENTS.values()):
                 raise ValueError(f"Provisional CPU hint includes a confirmed RSP exclusion: {image.image_id}")
     windows = tuple(_parse_window(value, evidence) for value in _items(record["load_windows"], "Load windows"))
     if (len(windows) != 1 or windows[0].window_id != "ipl3_boot_window"
@@ -435,8 +456,8 @@ def validate_inventory(document: object) -> ImageInventory:
         name = _identity(image_id, "Source binding image")
         if name not in images:
             raise ValueError(f"Source binding references unknown image: {name}")
-        if name in {"overlay_1339f0", "overlay_136dc0"}:
-            raise ValueError("Overlay source bindings are unsupported by the storage-only B path")
+        if name in OVERLAY_IMAGES and (images[name].split_status != "active" or not path.startswith(f"src/units/{name}/")):
+            raise ValueError(f"Overlay source bindings must be active-image units under src/units/{name}/")
         bindings[path] = name
     return ImageInventory(
         EXPECTED_SHA256, EXPECTED_SIZE, False, False, None, _text(record["scope"], "Inventory scope"),
@@ -509,6 +530,12 @@ def require_cpu_range(image_id: str, rom_start: int, size: int, inventory: Image
     if not image.rom_start <= first < last <= image.rom_end:
         raise ValueError(f"CPU range exceeds its original image: {name}")
     for component in inventory.components:
-        if component.parent_image_id == name and component.cpu_c_excluded and _overlap((first, last), (component.rom_start, component.rom_end)):
+        if (component.parent_image_id == name and component.cpu_c_excluded
+                and _overlap((first, last), (component.rom_start, component.rom_end))):
             raise ValueError(f"CPU range includes confirmed non-CPU component: {name}/{component.component_id}")
+    # Known exclusions do not disappear when a historical inventory predates
+    # their classification records. Absence can never make RSP bytes CPU C.
+    for component_id, (start, end, _, _) in _REVIEWED_COMPONENTS.items():
+        if name == "main_14400" and _overlap((first, last), (start, end)):
+            raise ValueError(f"CPU range includes confirmed non-CPU component: {name}/{component_id}")
     return image

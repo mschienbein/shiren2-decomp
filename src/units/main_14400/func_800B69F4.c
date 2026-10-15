@@ -1,25 +1,23 @@
-#include "common.h"
+#include "map_rect.h"
 
-typedef struct { s32 x0; s32 y0; s32 x1; s32 y1; } Rect;
-typedef struct { s32 x; s32 y; } Point;
-s32 func_800B69F4(Rect *r, Point *p) {
+s32 func_800B69F4(MapRect *r, MapPos *p) {
     s32 inside;
 
-    inside = r->x0 <= p->x && p->x <= r->x1;
+    inside = r->min.x <= p->x && p->x <= r->max.x;
     if (inside) {
-        if (p->y == r->y0 - 1) {
+        if (p->y == r->min.y - 1) {
             return 2;
         }
-        if (p->y == r->y1 + 1) {
+        if (p->y == r->max.y + 1) {
             return 0;
         }
     }
-    inside = r->y0 <= p->y && p->y <= r->y1;
+    inside = r->min.y <= p->y && p->y <= r->max.y;
     if (inside) {
-        if (p->x == r->x0 - 1) {
+        if (p->x == r->min.x - 1) {
             return 1;
         }
-        if (p->x == r->x1 + 1) {
+        if (p->x == r->max.x + 1) {
             return 3;
         }
     }

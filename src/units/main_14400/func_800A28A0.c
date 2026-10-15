@@ -1,16 +1,12 @@
 #include "common.h"
+#include "map_rect.h"
 
-/* Partial compatible word view; full owner/type and API remain unresolved. */
-typedef struct {
-    u32 field00;
-    u32 field04;
-} ObservedWords_800A28A0;
 
-void func_800A28A0(ObservedWords_800A28A0 *record)
+void func_800A28A0(MapPos *record)
 {
-    u32 original00 = record->field00;
-    u32 original04 = record->field04;
+    s32 original00 = record->x;
+    s32 original04 = record->y;
 
-    record->field04 = original00;
-    record->field00 = original04;
+    record->y = original00;
+    record->x = original04;
 }

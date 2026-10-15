@@ -1,0 +1,81 @@
+{
+  "kind": "Opus-base/Astra-delta",
+  "scope": "research correction; no canonical or H21 integration",
+  "opus_base": {
+    "scratch/omp/denominator/splat-segments.json": {
+      "sha256": "a8347af61dd6024991263cc1e9a4c0d05c692a93c520d21fe62e88a6edc6e409",
+      "review_recorded_sha256": "a8347af61dd6024991263cc1e9a4c0d05c692a93c520d21fe62e88a6edc6e409"
+    },
+    "scratch/omp/denominator/REPORT.md": {
+      "sha256": "45bb33629b0b81ee168cfc21ee3bcfd7dcf639ab497f8b60497400ebcd0eaa50",
+      "review_recorded_sha256": "45bb33629b0b81ee168cfc21ee3bcfd7dcf639ab497f8b60497400ebcd0eaa50"
+    },
+    "scratch/omp/denominator/splat_segments.py": {
+      "sha256": "b313a6e733fcbd9757ac8014bd49c3b7729ae666d10c3aa6d312503facffd22a",
+      "review_recorded_sha256": "b313a6e733fcbd9757ac8014bd49c3b7729ae666d10c3aa6d312503facffd22a"
+    },
+    "scratch/omp/denominator/build_map.py": {
+      "sha256": "442c4bd8ae894660b5c81d24554b17c945006492168e491e4c64e1e6ff1be282",
+      "review_recorded_sha256": "442c4bd8ae894660b5c81d24554b17c945006492168e491e4c64e1e6ff1be282"
+    },
+    "scratch/omp/denominator/denominator-schema.json": {
+      "sha256": "e829668359e9b03594f00d0c25bebaadc76ec8a327f0e1f7753261ae10b1674b",
+      "review_recorded_sha256": "e829668359e9b03594f00d0c25bebaadc76ec8a327f0e1f7753261ae10b1674b"
+    },
+    "scratch/omp/denominator/yay0-streams.json": {
+      "sha256": "c9b3cc5332c30a1de8b8d6c1c9e5047ab33d23580e0bf9dcca5ccd22a343a02b",
+      "review_recorded_sha256": "c9b3cc5332c30a1de8b8d6c1c9e5047ab33d23580e0bf9dcca5ccd22a343a02b"
+    },
+    "scratch/omp/denominator/yay0scan.py": {
+      "sha256": "d76adf4e351deeea3b7edea93d26604ec361073b546db26469e6e47bf46ca9f2",
+      "review_recorded_sha256": "d76adf4e351deeea3b7edea93d26604ec361073b546db26469e6e47bf46ca9f2"
+    },
+    "scratch/omp/denominator/windows.json": {
+      "sha256": "0edc65010eedc67d8cdde897dad80713bde35ae83549c77d024d081bd8922206",
+      "review_recorded_sha256": "0edc65010eedc67d8cdde897dad80713bde35ae83549c77d024d081bd8922206"
+    },
+    "scratch/omp/denominator/yay0-roundtrip.json": {
+      "sha256": "31a6eae503cb55b32c2ac2d6750bc6a34ff481bb86a1e5c5038705b606007f1c",
+      "review_recorded_sha256": "31a6eae503cb55b32c2ac2d6750bc6a34ff481bb86a1e5c5038705b606007f1c"
+    },
+    "scratch/omp/denominator/yay0_roundtrip.py": {
+      "sha256": "344ae227da76b7941d56c63d048653e537caddf23588bd399ed1d6f27c61a5c3",
+      "review_recorded_sha256": "344ae227da76b7941d56c63d048653e537caddf23588bd399ed1d6f27c61a5c3"
+    },
+    "scratch/omp/denominator/rom-map.json": {
+      "sha256": "a52d416623b4412c7b5c388c56fb0b272789546ce5f20ec21d6da9f5509fe056",
+      "review_recorded_sha256": "a52d416623b4412c7b5c388c56fb0b272789546ce5f20ec21d6da9f5509fe056"
+    },
+    "scratch/omp/denominator/windows.py": {
+      "sha256": "cfbed17d2c869c974e889f7aa176de28aed832a79e52f4b8313c51a9ce0d949a",
+      "review_recorded_sha256": "cfbed17d2c869c974e889f7aa176de28aed832a79e52f4b8313c51a9ce0d949a"
+    },
+    "scratch/omp/denominator/yay0-roundtrip-all.json": {
+      "sha256": "c0138d59450917fe3e00b1461d3343681dcef4fc6925c3dbdb04db9f07211b28",
+      "review_recorded_sha256": "c0138d59450917fe3e00b1461d3343681dcef4fc6925c3dbdb04db9f07211b28"
+    },
+    "scratch/omp/denominator/romrefs.py": {
+      "sha256": "a502e5305620b952d54bdaaac3e8014c37683833c35f4f4a09aef15f5a3e462c",
+      "review_recorded_sha256": "a502e5305620b952d54bdaaac3e8014c37683833c35f4f4a09aef15f5a3e462c"
+    },
+    "scratch/omp/denominator/romrefs.json": {
+      "sha256": "d6a29cccfe957b29ab612a00d6a22c041b0e72f04f21fb1113bba932fd68384e",
+      "review_recorded_sha256": "d6a29cccfe957b29ab612a00d6a22c041b0e72f04f21fb1113bba932fd68384e"
+    },
+    "scratch/omp/denominator/yay0-scan.json": {
+      "sha256": "1606095c9b59923c159599a7544c519118cfc8ca083331c47ff23b2ad77d0ba5",
+      "review_recorded_sha256": "1606095c9b59923c159599a7544c519118cfc8ca083331c47ff23b2ad77d0ba5"
+    }
+  },
+  "astra_failed_review": {
+    "scratch/omp/denominator-review/review.json": "3bac856bde2309fec0c25b8a2a3abd6b8644cbfd18c2bcd7d8a5b287a81f05de",
+    "scratch/omp/denominator-review/rom-audit.json": "eccf2ccc188f178bb9bd144e6265dd8d712dca44b41626323e29586dd3b8325f",
+    "scratch/omp/denominator-review/structure-audit.json": "77eff5240017bc67dce0044595037b42d2582eb96a1354d50d9493cf5f93bd2d",
+    "scratch/omp/denominator-review/followup-audit.json": "50ebd30662a3fa7c881b1afae88a6bec5c64cf117f16b9deca402de9e82d7db4",
+    "scratch/omp/denominator-review/audit_rom.py": "7ae03bf982a1b9c2473f57b4c216aa8baed77d92b83d5139b517f187d459d931",
+    "scratch/omp/denominator-review/audit_structures.py": "0e4a86e5da26c9e96881bc1e2d36728b9a8cb70d1dd15b7086fab499364e2edd",
+    "scratch/omp/denominator-review/audit_followup.py": "b8ea4ef6440e2afb452f8a2b30d8bde179eee75fc12c396c2a5020b5048df804"
+  },
+  "target_sha256": "4073a9f6516ef5d15cdd8b259a952a7d07633a2815f2a738fb5d98415d30a458",
+  "mandatory_next_review": "Opus; not performed by this correction"
+}

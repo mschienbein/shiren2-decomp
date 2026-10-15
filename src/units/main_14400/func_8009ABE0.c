@@ -1,6 +1,6 @@
 #include "common.h"
+#include "item_records.h"
 
-typedef struct Unit Unit;
 
 /* Actor inventory list at actor+0xCC (vtable D_80154438, installed at 0x800CECC4):
  * slot +0x3C is func_800CE7A0(list, u32 index), returning the entry pointer. */
@@ -8,7 +8,7 @@ typedef struct LookupTable {
     unsigned char pad_00[0x38];
     short adjust_38;
     short field_3A;
-    Unit *(*method_3C)(void *, u32);
+    Item *(*method_3C)(void *, u32);
 } LookupTable;
 
 typedef struct Lookup {
@@ -46,7 +46,7 @@ typedef struct {
 } RenderBuffer;
 
 extern Global *D_801476B8;
-extern char *func_800514F0(Unit *unit, char *output, s32 mode, s32 scale, s32 offset, s32 kind, s32 flags);
+extern char *func_800514F0(Item *unit, char *output, s32 mode, s32 scale, s32 offset, s32 kind, s32 flags);
 extern void func_80048870(Panel *, s32);
 extern void func_800487EC(Panel *, s32, s32, void *);
 

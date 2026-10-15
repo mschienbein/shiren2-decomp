@@ -13,81 +13,30 @@ the original.
 
 ## Status
 
-Accepted checkpoint **omp-b6r**: **6,396 functions** and **978,648 bytes** of matching source,
-91.40% of the provisional mapped CPU catalogue. That is 6,355 C functions (956,860 bytes)
-and 41 C++ functions (21,788 bytes), the latter proven original C++ units.
+Accepted checkpoint **omp-r4a**: **6,830 functions** and **1,125,196 bytes** of matching source,
+98.06% of the provisional mapped CPU catalogue. That is 6,660 C functions (1,050,708 bytes)
+and 170 C++ functions (74,488 bytes), the latter proven original C++ units.
 Accepted with qualifications (non-blocking review findings and deferred debt): see [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
 Live progress, history and a per-function map: [decomp.dev/mschienbein/shiren2-decomp](https://decomp.dev/mschienbein/shiren2-decomp).
 
 | Image | Matched functions | Matched code bytes | Code % |
 | --- | ---: | ---: | ---: |
-| Main game | 6,170 / 6,249 | 919,604 / 1,001,476 | 91.82% |
+| Main game | 6,237 / 6,254 | 991,708 / 1,001,476 | 99.02% |
+| Overlay 1339F0 | 62 / 63 | 10,168 / 10,584 | 96.07% |
+| Overlay 136DC0 | 305 / 311 | 64,276 / 66,144 | 97.18% |
 | Resident (boot + libultra) | 226 / 268 | 59,044 / 69,224 | 85.29% |
 
-The denominator is a fixed catalogue of 6,517 original CPU functions in the resident
-and main images (`docs/progress-catalogues/`). The two overlays, RSP microcode, assets and the
+The denominator is a fixed catalogue of 6,896 original CPU functions in the resident,
+main and both overlay images (`docs/progress-catalogues/`). Three verbatim upstream libgcc functions
+count separately as toolchain library, never as matched C. RSP microcode, assets and the
 complete-game total are not counted yet.
 
-Matching source in this repository receives **accepted checkpoints only**.
-A function counts as matching only after all of the following:
+This repository only receives **accepted checkpoints**. A function counts as matching only after all
+of the following:
 - two fresh full-ROM builds reproduce the original byte for byte;
 - the full test suite passes;
 - independent reviewers have checked the C source rules: no inline asm, no padding blobs standing in
   for code or data, real types for every interface.
-
-Progress publication is continuous: commit and push coherent accepted-source,
-tooling and documentation checkpoints as work advances, and before a handoff,
-rather than waiting for the full decompilation. The private `n64-experiments`
-working/evidence repository is checkpointed alongside this public repository.
-Status documentation may describe unaccepted work, but it must not change the
-published source checkpoint or matching counters without ordinary acceptance.
-Never publish ROMs, extracted assets, credentials, build outputs or incomplete
-live worker writes; never force-push or rewrite history to hide failed work.
-Publication does not replace source review, verification or execution permission.
-
-As of 2026-10-13, the next private successor remains in verification integration.
-Runtime and build repairs passed static review with qualifications. The newest
-native aggregate-array repair also received a qualified complete-source static
-pass, but the whole native/final package remains blocked on genuine fixtures,
-baselines, full caller/census integration and provenance/permission evidence.
-Metadata-graph and seven-view composition reviews found remaining defects.
-The scoped ordered-assertion/parent-cutoff and graph-first retained-reader repairs
-subsequently passed independent static review with qualifications; full containing
-package, census, baseline and provenance closure remains blocked.
-
-A thirty-way private Muse wave, supervised by GPT-6.1-Sol max callers, returned
-byte-sealed static case/handler/source maps. Complete independent review rejected
-all thirty as complete mappings: exact-source and nested callable/caller/schema
-joins remain unfinished, one map omitted original scalar clauses, and disclosed
-directory-scope violations remain. Valid partial literals/source facts are retained
-separately; successful model transport and byte seals are not acceptance.
-Model roles changed on 2026-10-14: **Claude Opus 5.5 (xhigh)** integrates and
-takes the hardest work — hard-tail and overlay matching, original-ROM evidence and
-deep debugging — while **GPT-6.1-Sol (max)** implements harness code, performs
-independent reviews and scouting. Muse is not used. All ten native Sol authors returned
-sealed private static maps on 2026-10-14; exact literal/seal checks passed.
-Six independent Sol critiques completed with qualified static-packet verdicts,
-retaining one citation-boundary exception and all genuine integration/identity/
-fixture/source/execution witnesses. These results are not accepted-source progress.
-The user subsequently authorized coherent fresh Sol-reviewer gate migration and
-resumption of the gated local workflow. An independently reviewed external tool
-baseline now reads the accepted B7s checkpoint correctly; private source remains
-unaccepted. A new original-backed hypothesis was compiled and rejected without
-altering its target. Router/bootstrap and installed-census repairs are in progress.
-In the Opus hardcore wave (2026-10-14), all 23 remaining frontier functions now have
-exact private forms, including `func_800897AC` (1,056 bytes), `func_80071088`
-(880 bytes) and the 142-function Creature joint. The last one, `func_800A2A5C`
-(820 bytes), matches under a narrow user ruling scoped to that function and has passed
-independent review. On 2026-10-14 the user approved a lean acceptance contract: two
-fresh builds, the full suite, independent reviews and a native C++ layout/ODR check,
-replacing the remaining private verification harness. That contract has passed
-independent review. The successor needed ten source fixes, which are now made and
-reviewed. An exhaustive sweep then compiled all 6,494 of its translation units, and
-every one matches exactly. Its native layout/ODR check found no new problem, and both
-controls behaved as expected. A full private trial build reproduced the original ROM
-byte for byte. Cutover and acceptance come next, followed by a batch carrying all 23
-frontier functions. None of these private checkpoints updates this repository's
-**omp-b6r** source or matching counters.
 
 ## Requirements
 
@@ -98,6 +47,10 @@ frontier functions. None of these private checkpoints updates this repository's
   byte-swapped and little-endian dumps. The tools look for the ROM two directories above the repository
   root, so a checkout at `<workspace>/projects/shiren2-decomp` reads
   `<workspace>/inputs/shiren2/baserom.jp.z64`.
+- The N64 SDK's RSP audio object `n_aspMain.o`, placed at `config/rom-evidence/n_aspMain.o` for the
+  RSP evidence check. It is **not** redistributed. Expected SHA-256:
+  `93b92bdcc86d779cca5bf23ff0806bb3b2d3f886df5c612b1cfe023a829e20e1`, from the SDK archive named in
+  `tools/rspaudio.py`.
 
 ## Building
 

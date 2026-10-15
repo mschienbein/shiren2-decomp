@@ -10,7 +10,8 @@ typedef struct { void *field_00; ItemTable *field_04; } Owner;
 typedef struct { unsigned char fields_00[0x60]; short field_60; s32 (*field_64)(void *, s32); } VTable;
 /* Text window subobject (func_800486A4/func_80048650 view): handle at +0xC. */
 typedef struct { unsigned char fields_00[0xC]; s32 handle_0C; } Window;
-typedef struct { unsigned char fields_00[0x20]; s32 field_20, field_24; Pair field_28; unsigned char fields_30[8]; s32 field_38; unsigned char fields_3C[0x10]; VTable *field_4C; unsigned char fields_50[0x2A4]; Owner *field_2F4; Owner *field_2F8; s32 field_2FC; unsigned char fields_300[0xB4]; s32 field_3B4[8]; s32 field_3D4[4]; s32 field_3E4; Window field_3E8; } State;
+/* Three groups have four boundaries in each independent +0x3B4/+0x3C4/+0x3D4 table. */
+typedef struct { unsigned char fields_00[0x20]; s32 field_20, field_24; Pair field_28; unsigned char fields_30[8]; s32 field_38; unsigned char fields_3C[0x10]; VTable *field_4C; unsigned char fields_50[0x2A4]; Owner *field_2F4; Owner *field_2F8; s32 field_2FC; unsigned char fields_300[0xB4]; s32 field_3B4[4]; s32 field_3C4[4]; s32 field_3D4[4]; s32 field_3E4; Window field_3E8; } State;
 typedef struct { s32 field_00, field_04; Pair field_08; } Style;
 extern s32 D_80138E08;
 extern void *D_801476B8;

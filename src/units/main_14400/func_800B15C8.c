@@ -1,53 +1,40 @@
 #include "common.h"
+#include "map_position_iterator.h"
 
-typedef struct {
-    s32 x;
-    s32 y;
-} Pair;
 /* 16-byte map bounds rectangle at 0x801429D0: lower then upper corner. */
-typedef struct {
-    Pair lower;
-    Pair upper;
-} Bounds;
-typedef struct {
-    Pair current;
-    Pair start;
-    Pair end;
-} Iterator;
 typedef struct {
     unsigned char field_00;
     unsigned char field_01;
 } Entry;
-extern Bounds D_801429D0;
-extern Pair *func_800A3610(Pair *, Iterator *);
-extern s32 func_800B4F74(Pair *);
-extern Entry *func_800B4D80(Pair *);
-extern void func_800B4E7C(Pair *);
+extern MapRect D_801429D0;
+extern s32 func_800B4F74(MapPos *);
+extern Entry *func_800B4D80(MapPos *);
+extern void func_800B4E7C(MapPos *);
 
-static inline s32 has_next(Iterator *iterator) {
-    return iterator->current.x <= iterator->end.x;
+static inline s32 has_next(MapPositionIterator *iterator) {
+    return iterator->cur.x <= iterator->end.x;
 }
 
 static inline s32 entry_kind(Entry *entry) {
     return entry->field_01;
 }
 
-static inline void start_point(Pair *point, Bounds *bounds) {
-    point->x = bounds->lower.x;
-    point->y = bounds->lower.y;
+static inline void start_point(MapPos *point, MapRect *bounds) {
+    point->x = bounds->min.x;
+    point->y = bounds->min.y;
 }
 
-static inline void end_point(Pair *point, Bounds *bounds) {
-    point->x = bounds->upper.x;
-    point->y = bounds->upper.y;
+static inline void end_point(MapPos *point, MapRect *bounds) {
+    point->x = bounds->max.x;
+    point->y = bounds->max.y;
 }
 
 void func_800B15C8(s32 kind) {
-    Iterator iterator;
-    Pair point;
+    MapPositionIterator iterator;
+    MapPos point;
     start_point(&point, &D_801429D0);
     iterator.start = point;
-    iterator.current = iterator.start;
+    iterator.cur = iterator.start;
     end_point(&point, &D_801429D0);
     iterator.end = point;
     while (has_next(&iterator)) {

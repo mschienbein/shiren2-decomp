@@ -1,12 +1,7 @@
 #include "common.h"
-typedef struct { s32 x, y; } Coord;
-typedef struct {
-    Coord current, last, minimum, maximum;
-    double slope, intercept;
-    s32 lower, upper;
-} Iterator;
+#include "map_edge_iterator.h"
 
-s32 func_800A375C(Iterator *self)
+s32 func_800A375C(MapEdgeIterator *self)
 {
     s32 found = 0;
     if (self->current.x > self->maximum.x) {

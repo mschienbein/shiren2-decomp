@@ -1,14 +1,13 @@
 #include "common.h"
-extern s32 D_80149DB8[];
-extern s32 D_80154828[];
-extern void func_8013687C(void **pool);
+#include "item_records.h"
 extern void func_800D4C34(void *object);
-/* Pool container: pool-record pointer at +0 (cleared by func_8013687C), vtable at +4. */
-typedef struct { void *pool; s32 *field_04; } Object;
+/* Floor-item grid: a pool handle (derived vtable D_80154828) whose further fields
+ * func_800D4C34 resets; only the handle is accessed here. */
+typedef struct { Handle base; } Object;
 Object *func_800D4C44(Object *object) {
-    object->field_04 = D_80149DB8;
-    func_8013687C(&object->pool);
-    object->field_04 = D_80154828;
+    object->base.vtable = &D_80149DB8;
+    func_8013687C(&object->base.pool);
+    object->base.vtable = &D_80154828;
     func_800D4C34(object);
     return object;
 }

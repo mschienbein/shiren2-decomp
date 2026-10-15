@@ -1,14 +1,12 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 
-s32 func_800AFD08(void *table, void *obj);
-void func_800AFCA8(void *table, u8 id);
-
-void func_800AFC6C(void *table, void *obj) {
-    u8 id = func_800AFD08(table, obj);
+void func_800AFC6C(ItemPool *pool, Item *item) {
+    u8 id = func_800AFD08(pool, item);
 
     if (id != 0xFF) {
-        func_800AFCA8(table, id);
+        func_800AFCA8(pool, id);
     }
 }

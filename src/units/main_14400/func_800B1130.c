@@ -1,53 +1,37 @@
 #include "common.h"
+#include "map_position_iterator.h"
 
 typedef unsigned char u8;
 
-typedef struct {
-    s32 x;
-    s32 y;
-} Pair;
 
-typedef struct {
-    Pair lower;
-    Pair upper;
-} Bounds;
-
-/* Rectangle iterator: current position within [lower, upper]. */
-typedef struct {
-    Pair current;
-    Pair lower;
-    Pair upper;
-} Iter;
-
-extern Bounds D_801429D0;
+extern MapRect D_801429D0;
 extern u8 D_80146468[][76];
 extern u8 D_80145460[][76];
-extern Pair *func_800A3610(Pair *out, Iter *it);
 
-static inline void lower_point(Pair *point, Bounds *bounds) {
-    point->x = bounds->lower.x;
-    point->y = bounds->lower.y;
+static inline void lower_point(MapPos *point, MapRect *bounds) {
+    point->x = bounds->min.x;
+    point->y = bounds->min.y;
 }
 
-static inline void upper_point(Pair *point, Bounds *bounds) {
-    point->x = bounds->upper.x;
-    point->y = bounds->upper.y;
+static inline void upper_point(MapPos *point, MapRect *bounds) {
+    point->x = bounds->max.x;
+    point->y = bounds->max.y;
 }
 
-static inline s32 iter_has_next(Iter *it) {
-    return it->current.x <= it->upper.x;
+static inline s32 iter_has_next(MapPositionIterator *it) {
+    return it->cur.x <= it->end.x;
 }
 
 /* Mark every cell of the map bounds as unset (0xFF) in both grids. */
 void func_800B1130(void) {
-    Iter it;
-    Pair point;
+    MapPositionIterator it;
+    MapPos point;
 
     lower_point(&point, &D_801429D0);
-    it.lower = point;
-    it.current = it.lower;
+    it.start = point;
+    it.cur = it.start;
     upper_point(&point, &D_801429D0);
-    it.upper = point;
+    it.end = point;
     for (;;) {
         s32 valid = iter_has_next(&it);
 

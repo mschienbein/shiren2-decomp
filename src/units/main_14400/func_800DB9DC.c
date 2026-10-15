@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef short s16;
@@ -7,7 +8,6 @@ typedef short s16;
 typedef struct { s16 delta; s16 index; s32 (*func)(void *self, void *item, s32 verbose); } AddEntry;
 typedef struct { char pad0[0x60]; AddEntry add_60; } CollectionVTable;
 typedef struct { char pad0[4]; CollectionVTable *vtable; } Collection;
-typedef struct { u8 kind; u8 subtype; } Item;
 typedef struct { Collection *collection; Item *item; } Slot;
 typedef struct { char pad0[8]; Slot slot; } Command;
 typedef struct { u32 pad0 : 8; u32 flag : 1; u32 pad9 : 23; } Bits;
@@ -19,7 +19,6 @@ extern s32 func_800A692C(Actor *actor, s32 kind);
 extern void func_800498E4(s32 id, ...);
 extern Pair *func_800E93D4(Pair *out, void *source, u8 *state);
 extern s32 func_80049CB4(s32 id, ...);
-extern char *func_800AE674(Item *item);
 extern void *func_800D02AC(Slot *slot);
 extern void func_801269C4(Item *item, void *target);
 extern s32 func_800AD8AC(Item *item, Pair *position);
@@ -48,20 +47,20 @@ s32 func_800DB9DC(Command *command) {
         return 0;
     }
     item = slot->item;
-    func_800E93D4(&position, actor, &item->kind);
+    func_800E93D4(&position, actor, &item->field00);
     if ((position.y | position.x) == 0) {
         func_800498E4(0x7B);
         return 1;
     }
-    if (item->kind == 10) {
+    if (item->field00 == 10) {
         func_80049CB4(0x28, actor);
     } else {
         func_80049CB4(0x27, actor);
     }
     func_800498E4(0x7C, func_800AE674(item));
     func_800D02AC(&command->slot);
-    if (item->subtype == 0xE7) func_801269C4(item, (char *)actor + 8);
+    if (item->field01 == 0xE7) func_801269C4(item, (char *)actor + 8);
     func_800AD8AC(item, &position);
-    return item->kind == 0x10;
+    return item->field00 == 0x10;
 }
 

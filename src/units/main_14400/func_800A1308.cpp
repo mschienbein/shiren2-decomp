@@ -1,12 +1,14 @@
 #include "common.h"
 inline void *operator new(unsigned int, void *p) { return p; }
 extern "C" {
+#include "item_records.h"
 
-typedef struct { short delta; short index; s32 (*fn)(void *); } VEntry;
+typedef struct { short delta; short index; s32 (*fn)(void *); } VEntry_800A1308;
 typedef struct { short delta; short index; void *(*fn)(void *); } OwnerEntry;
-typedef struct { s32 unk0; VEntry *vtbl; } Owner;
+typedef struct { s32 unk0; VEntry_800A1308 *vtbl; } Owner;
 typedef struct { char pad[0x24]; OwnerEntry *vtbl; } Party;
-typedef struct { s32 *unk0; } Member;
+/* Item list: its item pool at +0. */
+typedef struct { ItemPool *unk0; } Member;
 typedef struct {
     Owner *owner;       /* 0x00 */
     Member *member;     /* 0x04 */
@@ -14,9 +16,10 @@ typedef struct {
     s32 (*filter)(void *); /* 0x0C: item filter, 0 = owner default */
     void *list;         /* 0x10 */
 } Ctx;
-typedef struct { s32 unk0; unsigned char *info; } Entry;
+typedef struct { s32 unk0; unsigned char *info; } Entry_800A1308;
 /* The selection entry is dead before the confirmation result is produced. */
-union Scratch { Entry entry; s32 answer; };
+union Scratch { Entry_800A1308 entry; s32 answer; };
+/* Dialog view (0x110 bytes): the table at +0x4C is the same widget-table position other dialog views use. */
 typedef struct {
     char pad0[0x4C];
     void *vtbl;         /* 0x4C */
@@ -24,7 +27,7 @@ typedef struct {
     s32 unk68;          /* 0x68 */
     void *unk6C;        /* 0x6C */
     char pad70[0xA0];
-} Dialog;               /* 0x110 */
+} DialogView_800A1308;               /* 0x110 */
 typedef struct { s32 w[4]; } Reply;
 extern Party *D_801476B8;
 /* Whole session panel, 0x40C bytes (the next panel begins at D_801408EC). */
@@ -46,20 +49,19 @@ extern char D_80151EC8[];
 extern char D_80152AE8[];
 extern s32 func_800CE46C(void *list, s32 (*cb)(void *));
 extern s32 func_800CD278(Member *);
-extern s32 func_800AF950(s32 *);
-extern void func_80097B90(void *obj, void *owner, void *holder, s32 mode, void *desc, s32 flag);
+extern void func_80097B90(void *obj, void *owner, void *holder, s32 mode, const void *desc, s32 flag);
 extern void func_80099E50(void *);
 extern s32 func_800957C0(void *object, void *output, s32 modal, void *history, s32 event);
 extern s32 func_8009A0EC(void *);
 extern s32 func_8009A038(void *);
 extern void *func_800D8FB0(u32 size);
 extern char *func_800DE730(void *, Member *);
-extern Entry func_8009A054(void *, s32);
-extern void func_800D05A4(void *, Entry *);
-extern Dialog *func_800953C0(Dialog *);
+extern Entry_800A1308 func_8009A054(void *, s32);
+extern void func_800D05A4(void *, Entry_800A1308 *);
+extern DialogView_800A1308 *func_800953C0(DialogView_800A1308 *);
 extern char *func_80048480(unsigned short);
 extern void func_8009D610(void *object, char *text, void *rect, void *position);
-extern void func_8009D6E4(Dialog *, s32);
+extern void func_8009D6E4(DialogView_800A1308 *, s32);
 
 /* ODD_C: opens the session panel for the owner; passing the panel through the inline
    parameter keeps its address symbolic for the following field stores (no base
@@ -113,7 +115,7 @@ retry:
             s32 more = i < count;
             if (!more) break;
             {
-                new (&scratch.entry) Entry(func_8009A054(&D_801404E0, i));
+                new (&scratch.entry) Entry_800A1308(func_8009A054(&D_801404E0, i));
                 total += scratch.entry.info[4];
                 func_800D05A4(list + 0xB0, &scratch.entry);
                 i++;
@@ -123,8 +125,8 @@ retry:
         ctx->list = list;
         if (flags & 2) {
             if (msg != 0) {
-                Dialog dialog;
-                Dialog *d = &dialog;
+                DialogView_800A1308 dialog;
+                DialogView_800A1308 *d = &dialog;
                 func_800953C0(d);
                 d->vtbl = D_80152AE8;
                 dialog.unk68 = -1;

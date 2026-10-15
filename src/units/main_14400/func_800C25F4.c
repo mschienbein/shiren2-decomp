@@ -1,14 +1,10 @@
-#include "common.h"
+#include "map_line_iterator.h"
 
 typedef unsigned char u8;
-typedef struct { s32 x, y; } Pair;
-typedef struct { s32 x0, y0, x1, y1; } Rect;
-typedef struct Iterator Iterator;
-extern s32 func_800A3138(Rect *span);
-extern s32 func_800A315C(Rect *range);
-extern void func_800C25D0(Iterator *obj, Pair *pair, u8 *byte, s32 value);
+extern s32 func_800A3138(MapRect *span);
+extern s32 func_800A315C(MapRect *range);
 
-static inline Pair *set_pair(Pair *pair, s32 x, s32 y) {
+static inline MapPos *set_pair(MapPos *pair, s32 x, s32 y) {
     pair->x = x;
     pair->y = y;
     return pair;
@@ -19,13 +15,13 @@ static inline u8 *set_direction(u8 *direction, u8 value) {
     return direction;
 }
 
-void func_800C25F4(Iterator *iter, Rect *rect, s32 side, s32 extend) {
-    Pair position;
+void func_800C25F4(MapLineIterator *iter, MapRect *rect, s32 side, s32 extend) {
+    MapPos position;
     u8 direction0, direction1, direction2, direction3;
-    s32 x0 = rect->x0;
-    s32 y0 = rect->y0;
-    s32 y1 = rect->y1;
-    s32 x1 = rect->x1;
+    s32 x0 = rect->min.x;
+    s32 y0 = rect->min.y;
+    s32 y1 = rect->max.y;
+    s32 x1 = rect->max.x;
     s32 height = func_800A3138(rect);
     s32 width = func_800A315C(rect);
     switch (side) {

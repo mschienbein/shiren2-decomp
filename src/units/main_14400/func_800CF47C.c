@@ -1,13 +1,10 @@
 #include "common.h"
+#include "collection_iterator.h"
 typedef unsigned char u8;
 typedef struct { s32 x; s32 y; } Position;
-/* Same layout as func_800CEBA0/func_800CEC68's iterator. */
-typedef struct { s32 index; void *container; s32 reverse; void *entry; } Iterator;
+/* Shared storage used by func_800CEBA0/func_800CEC68. */
 typedef struct { u8 pad_0[2]; u8 flags_2; } Item;
 typedef struct { u8 pad_0[0x10]; Position *pos_10; } List;
-Iterator *func_800CEB20(Iterator *it, void *container);
-s32 func_800CEBA0(Iterator *it);
-Item *func_800CEC68(Iterator *it);
 void func_800CD304(List *list, u32 index);
 s32 func_80049CB4(s32 id, ...);
 s32 func_800ADC90(void *object, Position *position, void *origin);
@@ -20,7 +17,7 @@ static inline void copyPosition(Position *dst, Position *src) {
 /* Drop every item of the list at the list's position; true if any landed. */
 s32 func_800CF47C(List *self) {
     Position pos;
-    Iterator it;
+    CollectionIterator it;
     s32 found = 0;
     copyPosition(&pos, self->pos_10);
     func_800CEB20(&it, self);

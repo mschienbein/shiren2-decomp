@@ -1,44 +1,43 @@
 #include "common.h"
+#include "map_position_iterator.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef short s16;
 typedef signed char s8;
 
-typedef struct { s32 x, y; } Vec;
-typedef struct { Vec start; Vec pos; Vec end; } Iter;
 typedef struct { u8 pad[0x3DC]; s32 x3DC; } Self;
-typedef struct { s32 x0; s32 y0; s32 x1; s32 y1; } Rect;
-extern Rect D_801429C0;
-extern u8 D_801431F0[];
+/* Runtime room: the rectangle is followed by four per-side exit counts.
+ * Keep the full 0x14-byte record; this declaration does not allocate the table. */
+typedef struct { MapRect bounds; u8 sides[4]; } RoomRecord;
+extern MapRect D_801429C0;
+extern RoomRecord D_801431F0[];
 extern u8 D_8014344C;
 extern u8 D_80143392;
-void *func_800A3610(void *out, void *it);
-void func_800B1BE0(Vec *v, s32 arg);
-void func_800B1B58(Vec *v, u16 flags);
-void func_800B6728(void *dst, void *r);
+void func_800B1BE0(MapPos *v, s32 arg);
+void func_800B1B58(MapPos *v, u16 flags);
 void func_800B17A4(void);
 
-static inline void iter_set_start(Iter *it, Vec *p, s32 x, s32 y) {
+static inline void iter_set_start(MapPositionIterator *it, MapPos *p, s32 x, s32 y) {
     p->x = x;
     p->y = y;
-    it->pos = *p;
-    it->start = it->pos;
+    it->start = *p;
+    it->cur = it->start;
 }
-static inline void iter_set_end(Iter *it, Vec *p, s32 x, s32 y) {
+static inline void iter_set_end(MapPositionIterator *it, MapPos *p, s32 x, s32 y) {
     p->x = x;
     p->y = y;
     it->end = *p;
 }
 void func_800C0A20(Self *self) {
-    Iter it;
-    Vec tmp;
-    Iter *iter = &it;
-    Vec *cur = &tmp;
-    iter_set_start(&it, &tmp, D_801429C0.x0, D_801429C0.y0);
-    iter_set_end(&it, &tmp, D_801429C0.x1, D_801429C0.y1);
+    MapPositionIterator it;
+    MapPos tmp;
+    MapPositionIterator *iter = &it;
+    MapPos *cur = &tmp;
+    iter_set_start(&it, &tmp, D_801429C0.min.x, D_801429C0.min.y);
+    iter_set_end(&it, &tmp, D_801429C0.max.x, D_801429C0.max.y);
     for (;;) {
-        s32 valid = !(it.start.x > iter->end.x);
+        s32 valid = !(it.cur.x > iter->end.x);
         if (!valid) {
             break;
         }

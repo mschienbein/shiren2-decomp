@@ -1,5 +1,5 @@
 #include "common.h"
-extern void *D_80153AE4[7];
+#include "item_records.h"
 extern void func_800B0164(void *self, void *stream);
 void func_800B02F4(void *stream) {
     s32 i;

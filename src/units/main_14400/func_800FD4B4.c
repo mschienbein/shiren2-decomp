@@ -1,19 +1,12 @@
-#include "common.h"
+#include "map_unit_iterator.h"
 typedef unsigned short u16;
 typedef unsigned char u8;
 typedef struct { s32 x, y; } Pos;
-typedef struct { s32 left, top, right, bottom; } Rect;
-typedef struct {
-    s32 field_0;
-    Pos *field_4;
-    Pos field_8;
-    Rect field_10;
-} Iter;
 typedef struct Unit { Pos pos; } Unit;
 typedef struct {
     Pos pos;
     u8 pad08[4];
-    Rect area;
+    MapRect area;
     u8 pad1C[0x6E];
     u8 unk8A;
     u8 pad8B[0x15];
@@ -21,10 +14,6 @@ typedef struct {
 } Actor;
 extern s32 func_800F069C(void *arg);
 extern Unit *func_800C5F60(void);
-extern void *func_800A2FD0(void *output, void *input, u8 index);
-extern Iter *func_800A9204(Iter *it, Rect *area, Pos *pos);
-extern s32 func_800A9284(Iter *it, s32 kind);
-extern Unit *func_800A942C(Iter *it);
 extern u16 func_800E08F0(void *ptr);
 extern u16 func_800E08B0(Unit *unit);
 extern u32 func_800B1C6C(Pos *pos);
@@ -40,11 +29,11 @@ static inline u32 is_wall(Pos *pos) {
 Unit *func_800FD4B4(Actor *self) {
     u16 best;
     Unit *target;
-    Rect area;
+    MapRect area;
 
     if (func_800F069C(self)) {
         {
-            Rect r;
+            MapRect r;
             func_800A2FD0(&r, func_800C5F60(), self->unk8A);
             area = r;
         }
@@ -54,7 +43,7 @@ Unit *func_800FD4B4(Actor *self) {
     best = 0;
     target = 0;
     {
-        Iter it;
+        MapUnitIterator it;
         func_800A9204(&it, &area, &self->pos);
         while (func_800A9284(&it, 0x7C)) {
             Unit *u = func_800A942C(&it);

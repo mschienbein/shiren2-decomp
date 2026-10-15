@@ -20,8 +20,12 @@ from spimdisasm.elf32 import Elf32File
 import yaml
 
 from rom import CANONICAL_ROM, attest
-from images import ImageInventory, image_for_segment, image_for_source, load_inventory, policy_records, require_cpu_range
+from assets import generated_keys as tail_generated_keys
+import rommap
+from images import OVERLAY_IMAGES, ImageInventory, image_for_segment, image_for_source, load_inventory, policy_records, require_cpu_range
 from evidence import COMPILED_KINDS, COMPILED_SUFFIXES, LANGUAGE_LABELS, compiled_kind, validate_matches
+import toolchain_library
+import generated_symbols
 
 COMPILER_FLAGS = ["-O2", "-mips3", "-mgp32", "-mfp32", "-G", "0", "-mno-abicalls", "-fno-PIC", "-fno-builtin", "-funsigned-char", "-nostdinc", "-I", "source/include"]
 ASSEMBLER_FLAGS = ["-march=vr4300", "-mabi=32", "-mfp32", "-EB", "-G", "0", "-I", "source/include"]
@@ -37,7 +41,7 @@ ASSEMBLERS = {"as", *PINNED_ASSEMBLERS}
 LANGUAGES = {"c": "c", "c++": "cpp"}
 CXX_REQUIRED_FLAGS = ("-fno-exceptions", "-fno-rtti")
 REQUIRED_ARTIFACTS = {"shiren2.elf", "shiren2.z64", "shiren2.map", "shiren2.ld", "splat.override.yaml", "input-manifest.json"}
-REQUIRED_RECEIPT_FIELDS = {"schema_version", "status", "created_at", "target_sha256", "rom", "input_manifest", "profile", "runtime", "compiler_environment", "coverage", "c_matches", "c_attributions", "graph", "dependencies", "artifacts", "generated", "compiled", "objects", "commands", "reproduction", "image_inventory", "limitations"}
+REQUIRED_RECEIPT_FIELDS = {"schema_version", "status", "created_at", "target_sha256", "rom", "input_manifest", "profile", "runtime", "compiler_environment", "coverage", "c_matches", "c_attributions", "graph", "dependencies", "artifacts", "generated", "compiled", "objects", "commands", "reproduction", "image_inventory", "rom_map", "limitations"}
 
 
 def read_json(path: Path) -> Any:
@@ -206,16 +210,24 @@ def source_policy_violations(root: Path) -> list[str]:
     for directory in ("src", "include"):
         for path in sorted((root / directory).rglob("*")):
             if path.suffix in {".c", ".cpp", ".h"} and path.is_file():
-                violations.extend(source_file_violations(path, path.relative_to(root).as_posix()))
+                violations.extend(source_file_violations(path, path.relative_to(root).as_posix(), source_root=root))
     return violations
 
 
-def source_file_violations(path: Path, name: str) -> list[str]:
+def source_file_violations(path: Path, name: str, *, source_root: Path | None = None) -> list[str]:
     """Policy violations of one C/C++/H file; see ``source_policy_violations``."""
     violations = []
+    if source_root is not None:
+        try:
+            if toolchain_library.file_exception(source_root, path):
+                return []
+        except ValueError as error:
+            return [str(error)]
     text = path.read_text().replace("\\\r\n", "").replace("\\\n", "")
     without_comments = _C_COMMENT_OR_LITERAL.sub(lambda match: match[0] if match[0][0] in "\"'" else " ", text)
     code = _C_COMMENT_OR_LITERAL.sub(" ", text)
+    if generated_symbols.WRITTEN_GENERATED.search(code):
+        violations.append(f"{name}: hand-written compiler-generated name")
     if _C_ASSEMBLY_TOKEN.search(code):
         violations.append(f"{name}: inline assembly token")
     if "##" in code or "%:%:" in code:
@@ -229,6 +241,8 @@ def source_file_violations(path: Path, name: str) -> list[str]:
             violations.append(f"{name}: include must be a literal .h path: {include[1].strip()}")
         elif target.startswith(("/", "\\")) or Path(target).is_absolute() or ".." in re.split(r"[/\\]", target):
             violations.append(f"{name}: include escapes the source roots: {target}")
+        elif target.startswith("toolchain/gcc281pm/"):
+            violations.append(f"{name}: upstream libgcc include outside the three pinned TUs")
     return violations
 
 
@@ -291,6 +305,7 @@ def tool_profile(tool_root: Path, source_root: Path | None = None) -> dict[str, 
         if (relative.is_absolute() or ".." in relative.parts or relative.parts[0] != "src" or key not in declaration["profiles"]
                 or relative.suffix != COMPILED_SUFFIXES[LANGUAGES[declaration["profiles"][key].get("language", "c")]]):
             raise ValueError("Invalid translation-unit profile assignment")
+    toolchain_library.validate_bindings(declaration)
     lock = read_json(source_root / "toolchain.lock.json")
 
     def installed(entry: str, *names: str) -> dict[str, Path]:
@@ -333,7 +348,10 @@ def tool_profile(tool_root: Path, source_root: Path | None = None) -> dict[str, 
     if emulation is None:
         raise ValueError("Linker has no big-endian ELF32 MIPS emulation")
     # "compiler" stays the default (COMPILER_PATH) compiler for existing consumers.
-    return {"id": PROFILE_ID, "scope": "Explicit per-TU measured assignments; whole-game compiler provenance remains unproved", "tools": tools, "compiler": compilers[DEFAULT_COMPILER], "compilers": compilers, "compiler_flags": COMPILER_FLAGS, "assembler_flags": ASSEMBLER_FLAGS, "ld_emulation": emulation, "profiles": declaration["profiles"], "tu_profiles": declaration["tu_profiles"], "compiler_environment": declaration["compiler_environment"]}
+    result = {"id": PROFILE_ID, "scope": "Explicit per-TU measured assignments; whole-game compiler provenance remains unproved", "tools": tools, "compiler": compilers[DEFAULT_COMPILER], "compilers": compilers, "compiler_flags": COMPILER_FLAGS, "assembler_flags": ASSEMBLER_FLAGS, "ld_emulation": emulation, "profiles": declaration["profiles"], "tu_profiles": declaration["tu_profiles"], "compiler_environment": declaration["compiler_environment"]}
+    if (source_root / generated_symbols.CONFIG).exists():
+        result["symbol_identities"] = generated_symbols.profile_policy(source_root)
+    return result
 
 
 def profile_toolchain(profile: dict[str, Any], profile_id: str) -> tuple[list[str], str]:
@@ -375,6 +393,69 @@ def runtime_fingerprint() -> dict[str, Any]:
     return {"python": {"path": str(python.resolve()), "venv_prefix": str(Path(sys.prefix).resolve()), "binary_sha256": sha256(python), "version": sys.version}, "packages": packages, "scope": "interpreter and installed package files; standard library/shared-library closure pending"}
 
 
+def orchestration_sources(tool_directory: Path) -> dict[str, str]:
+    """Inventory trusted local Python sources, not a claim of full runtime closure."""
+    result = {}
+    for path in sorted(tool_directory.rglob("*.py")):
+        if "__pycache__" in path.parts:
+            continue
+        if path.is_symlink():
+            raise ValueError("Trusted orchestration sources must not be symlinks")
+        result[path.relative_to(tool_directory).as_posix()] = sha256(path)
+    if "build.py" not in result:
+        raise ValueError("Trusted orchestration entry source is absent")
+    return result
+
+
+def archive_orchestration(directory: Path, entrypoint: Path) -> dict[str, Any]:
+    """Freeze declared source provenance, never execution attestation or authority."""
+    trusted = Path(__file__).resolve().parent
+    if entrypoint != trusted / "build.py":
+        raise ValueError("Build entry and trusted certification implementation disagree")
+    files = orchestration_sources(trusted)
+    archive = directory / "trusted-orchestration"
+    archive.mkdir(exist_ok=False)
+    for relative in files:
+        target = archive / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(trusted / relative, target)
+    record = {"kind": "declared-trusted-orchestration-provenance", "entrypoint": str(entrypoint),
+              "entrypoint_sha256": files["build.py"], "child_argv": list(sys.orig_argv),
+              "source_files": files}
+    validate_orchestration(directory, record)
+    return record
+
+
+def validate_orchestration(directory: Path, record: dict[str, Any]) -> None:
+    """Check frozen provenance without trusting or executing its declared paths."""
+    if (not isinstance(record, dict)
+            or set(record) != {"kind", "entrypoint", "entrypoint_sha256", "child_argv", "source_files"}
+            or record["kind"] != "declared-trusted-orchestration-provenance"
+            or not isinstance(record["entrypoint"], str)
+            or not Path(record["entrypoint"]).is_absolute()
+            or Path(record["entrypoint"]).name != "build.py"
+            or not isinstance(record["entrypoint_sha256"], str)
+            or re.fullmatch(r"[0-9a-f]{64}", record["entrypoint_sha256"]) is None
+            or not isinstance(record["child_argv"], list) or not record["child_argv"]
+            or any(not isinstance(arg, str) for arg in record["child_argv"])):
+        raise ValueError("Invalid trusted orchestration provenance")
+    # No receipt path chooses the verifier or archive location. Hashes are frozen
+    # evidence, never permission to execute historical or substituted tooling.
+    files = record["source_files"]
+    if (not isinstance(files, dict) or files.get("build.py") != record["entrypoint_sha256"]
+            or file_inventory(checked_path(directory, "trusted-orchestration")) != files):
+        raise ValueError("Changed trusted orchestration source archive")
+
+
+def validated_process_runtime(directory: Path, record: object) -> dict[str, Any]:
+    """Separate process identity only after checking the required frozen provenance."""
+    if not isinstance(record, dict) or "orchestration" not in record:
+        raise ValueError("New build receipt omits trusted orchestration provenance")
+    runtime = dict(record)
+    validate_orchestration(directory, runtime.pop("orchestration"))
+    return runtime
+
+
 def image_evidence(source_root: Path, reference: bytes) -> tuple[ImageInventory, dict[str, Any]]:
     """Validate image policy and recompute every original-byte evidence digest."""
     attest(reference)
@@ -390,6 +471,65 @@ def image_evidence(source_root: Path, reference: bytes) -> tuple[ImageInventory,
         if hashlib.sha256(reference[evidence.rom_start:evidence.rom_end]).hexdigest() != evidence.sha256:
             raise ValueError(f"Original loader evidence digest disagrees: {evidence.evidence_id}")
     return inventory, {"config_sha256": sha256(path), "inventory": read_json(path), "validation": "fixed target and every image/component/loader evidence interval rehashed"}
+
+
+def validate_build_catalogue(directory: Path, reference: bytes, matches: list[dict[str, Any]],
+                             graph: dict[str, dict[str, str]], profile: dict[str, Any],
+                             rom_map: rommap.RomMap) -> None:
+    """Bind the declared map to THIS build's independently parsed original functions."""
+    from packet import enumerate_build_functions
+    from progress import catalogue_identity
+    if graph != build_graph(directory):
+        raise ValueError("CPU denominator graph differs from this build")
+    inventory, _ = image_evidence(directory / "source", reference)
+    functions = enumerate_build_functions(directory, reference, graph, inventory, matches,
+                                          file_inventory(directory / "generated"), profile)
+    identity = catalogue_identity(inventory, functions)
+    actual = {"identity": identity, "denominator_id": json_digest(identity)}
+    rommap.check_catalogue(rom_map, actual)
+    declared = read_json(directory / "source" / rommap.CATALOGUE_PATH)
+    if declared["identity"] != identity or declared["denominator_id"] != actual["denominator_id"]:
+        raise ValueError("Frozen CPU denominator differs from this build's original catalogue")
+
+
+def rom_map_report(directory: Path, reference: bytes, matches: list[dict[str, Any]], *,
+                   commands: list[list[str]], reproduction: dict[str, Any],
+                   graph: dict[str, dict[str, str]], profile: dict[str, Any]) -> dict[str, Any]:
+    """Receipt-bound research and source accounting; neither is project acceptance.
+
+    Callers supply actual build/replay evidence. verify.py independently reproduces
+    it before accepting this report; progress binds it to the accepted receipt.
+    """
+    source = directory / "source"
+    validate_asset_recipe(source, commands[:2])
+    if commands != expected_commands(graph, profile):
+        raise ValueError("Source coverage recipe disagrees with the declared build graph")
+    manifest = read_json(directory / "input-manifest.json")
+    from workspace import verify_manifest
+    verify_manifest(source, manifest)
+    pack_key = "assets/tail/manifest.json"
+    pack_path = directory / "generated" / pack_key
+    source_key = "assets/tail/source-manifest.json"
+    source_digest = sha256(source / source_key)
+    if manifest["files"].get(source_key) != {
+            "sha256": source_digest, "size": (source / source_key).stat().st_size}:
+        raise ValueError("Editable source manifest is not a frozen receipt input")
+    pack_digest = sha256(pack_path)
+    if reproduction.get("split", {}).get("generated", {}).get(pack_key) != pack_digest:
+        raise ValueError("Tail pack manifest is not bound to full-link replay")
+    if reproduction.get("linked", {}).get("shiren2.z64") != sha256(directory / "shiren2.z64"):
+        raise ValueError("Source coverage requires the corresponding full-ROM replay")
+    rom_map = rommap.load(source, reference)
+    validate_build_catalogue(directory, reference, matches, graph, profile, rom_map)
+    accounting = rommap.account(rom_map, reference, source, matches, read_json(source / rommap.RULES_PATH),
+                                directory)
+    return {"path": rommap.MAP_PATH, "sha256": sha256(source / rommap.MAP_PATH), "rules_sha256": rom_map.rules_sha256,
+            "cpu_catalogue_id": rom_map.cpu_catalogue_id, **accounting,
+            "asset_roundtrip": {"path": "generated/" + pack_key, "sha256": pack_digest,
+                                "source_manifest": {"path": source_key, "sha256": source_digest},
+                                "input_manifest_sha256": manifest["sha256"],
+                                "reproduction_sha256": json_digest(reproduction),
+                                "encoder": read_json(pack_path)["encoder"]}}
 
 
 def image_matches(matches: list[dict[str, Any]], inventory: ImageInventory) -> dict[str, int]:
@@ -531,17 +671,21 @@ def binary_storage_record(directory: Path, image: Any, section_name: str, graph:
 
 
 def opaque_storage_segment(segment: dict[str, Any]) -> bool:
-    """The two opaque bins use ROM offsets as ELF bookkeeping VMAs, never RAM identity."""
+    """The stored tail bin uses ROM offsets as ELF bookkeeping VMAs, never RAM identity.
+
+    It carries its own exclusive_ram_id. Otherwise splat's global ROM hull spans the
+    overlay ROM, and spimdisasm resolves overlay vroms to the global segment (no
+    branch labels, symbols shared between the two same-VRAM overlays).
+    """
     if segment.get("type") != "bin":
         return False
-    expected = {"overlay_1339f0_opaque": 0x1339F0, "remaining": 0x148460}
-    start = expected.get(segment.get("name"))
-    if start is None or set(segment) != {"name", "type", "start", "vram"} or segment["start"] != start or segment["vram"] != start:
+    if (segment.get("name") != "remaining" or set(segment) != {"name", "type", "start", "vram", "exclusive_ram_id"}
+            or segment["start"] != 0x148460 or segment["vram"] != 0x148460 or segment["exclusive_ram_id"] != "rom_tail_storage"):
         raise ValueError("Unsupported opaque binary storage VMA declaration")
     return True
 
 
-def linked_image_records(directory: Path, inventory: ImageInventory, reference: bytes, *, graph: dict[str, dict[str, str]] | None = None) -> dict[str, Any]:
+def linked_image_records(directory: Path, inventory: ImageInventory, reference: bytes) -> dict[str, Any]:
     """Bind actual initialized ELF bytes and NOLOAD extents to loader authority."""
     data = (directory / "shiren2.elf").read_bytes()
     elf = Elf32File(data)
@@ -569,9 +713,6 @@ def linked_image_records(directory: Path, inventory: ImageInventory, reference: 
         if len(body) != section.size or body != reference[start:end]:
             raise ValueError("Actual initialized image bytes disagree with original storage")
         record = {"section": f".{segment['name']}", "rom_start": start, "rom_end": end, "vram_start": section.addr, "vram_end": section.addr + section.size, "sha256": hashlib.sha256(body).hexdigest()}
-        if image.image_id == "overlay_136dc0":
-            declared_sections, _ = splat_bindings(directory / "source", inventory)
-            record["binary_storage"] = binary_storage_record(directory, image, record["section"], graph if graph is not None else build_graph(directory), storage_elf_layout(directory / "shiren2.elf"), reference, allowed_sections={f".{name}" for name in declared_sections})
         result[image.image_id]["initialized"].append(record)
         bss = sections.get(f".{segment['name']}_bss")
         if bss is not None and bss.size:
@@ -607,8 +748,7 @@ def splat_bindings(source_root: Path, inventory: ImageInventory) -> tuple[dict[s
             if isinstance(segment, dict):
                 next_segment = segments[index + 1]
                 end = next_segment[0] if isinstance(next_segment, list) else next_segment["start"]
-                expected_end = 0x136DC0 if segment["name"] == "overlay_1339f0_opaque" else 0x2000000
-                if end != expected_end:
+                if end != 0x2000000:
                     raise ValueError("Opaque storage bin omits exact original ROM interval")
                 segment = [segment["start"], "bin", segment["name"]]
             if len(segment) != 3 or segment[1] != "bin":
@@ -628,10 +768,19 @@ def splat_bindings(source_root: Path, inventory: ImageInventory) -> tuple[dict[s
             raise ValueError(f"Splat section lacks an exact active image mapping: {name}")
         if name in sections or f"{name}_bss" in sections:
             raise ValueError("Duplicate splat image/section owner")
-        if image.image_id == "overlay_136dc0":
-            allowed = {"name", "type", "start", "vram", "bss_size", "subsegments", "exclusive_ram_id"}
-            if name != "overlay_b_136dc0_storage" or start != image.rom_start or end != image.rom_end or set(segment) - allowed or segment.get("bss_size", 0) != 0 or segment.get("exclusive_ram_id", "overlay_136dc0") != "overlay_136dc0" or segment["subsegments"] != [[image.rom_start, "bin", "overlay_136dc0_initialized_opaque"]]:
-                raise ValueError("Unsupported B binary-only Splat layout or alignment override")
+        if image.image_id in OVERLAY_IMAGES:
+            bss = sum(part.vram_end - part.vram_start for part in image.bss_ranges)
+            allowed = {"name", "type", "start", "vram", "exclusive_ram_id", "symbol_name_format", "subalign", "bss_size", "subsegments"}
+            # Optional `align`: splat ends each section (and the segment) with `. = ALIGN(., align)`, 16 for
+            # code by default. A smaller power of two lets a byte-placed section end stay put (overlay A
+            # .data ends at 0x801E7EA4); the full-ROM link still has to prove every address.
+            align = segment.get("align", 16)
+            if (name != image.image_id or start != image.rom_start or end != image.rom_end or set(segment) - {"align"} != allowed
+                    or segment["exclusive_ram_id"] != image.load_slot or segment["symbol_name_format"] != "$VRAM_$ROM"
+                    or segment["subalign"] != 1 or segment["bss_size"] != bss or type(align) is not int or align not in {1, 2, 4, 8, 16}):
+                raise ValueError(f"Unsupported overlay splat layout: {name} needs its image name and exact ROM interval, "
+                                 "the shared slot id, ROM-qualified names, subalign 1, the reviewed BSS size and an optional "
+                                 "power-of-two align of at most 16")
         sections[name] = sections[f"{name}_bss"] = image.image_id
         for part in segment["subsegments"]:
             if isinstance(part, list) and len(part) >= 3 and part[1] in COMPILED_KINDS:
@@ -698,9 +847,6 @@ def build_graph(directory: Path) -> dict[str, dict[str, str]]:
         graph[name] = {"source": canonical, "input": source, "source_kind": source_kind, "image_id": owner}
     if {item["source"] for item in graph.values() if item["source_kind"] in COMPILED_KINDS} != set(c_sources):
         raise ValueError("Declared C/C++ translation unit is absent from object graph")
-    b_objects = {name: item for name, item in graph.items() if item["image_id"] == "overlay_136dc0"}
-    if b_objects and (len(b_objects) != 1 or next(iter(b_objects)) != "obj/generated/assets/overlay_136dc0_initialized_opaque.o" or next(iter(b_objects.values()))["source_kind"] != "binary"):
-        raise ValueError("Active B graph must contain only its one complete binary storage input")
     return graph
 
 
@@ -740,6 +886,7 @@ def intermediate_keys(graph: dict[str, dict[str, str]], matches: list[dict[str, 
         unit = Path(match["source"]).relative_to("src").with_suffix("")
         generated.add((Path("asm/matchings") / unit / f"{match['symbol']}.s").as_posix())
     if source_root is not None:
+        generated.update(tail_generated_keys(source_root))
         config = yaml.safe_load((source_root / "config/shiren2.jp.yaml").read_text())
         c_units = {Path(item["source"]).relative_to("src").with_suffix("").as_posix() for item in graph.values() if item["source_kind"] in COMPILED_KINDS}
         for segment in config["segments"]:
@@ -773,20 +920,85 @@ def object_commands(name: str, item: dict[str, str], profile: dict[str, Any]) ->
     assigned = profile["profiles"][key]
     driver, assembler = profile_toolchain(profile, key)
     compiled = str(Path("compiled") / Path(item["source"]).with_suffix(".s"))
+    flags = [*assigned["compiler_flags"], *toolchain_library.extra_flags(item["source"])]
     return [
-        [*driver, *assigned["compiler_flags"], "-M", source],
-        [*driver, *assigned["compiler_flags"], "-S", source, "-o", compiled],
+        [*driver, *flags, "-M", source],
+        [*driver, *flags, "-S", source, "-o", compiled],
         [assembler, *assigned["assembler_flags"], "-o", name, compiled],
     ]
 
 
+def split_commands() -> list[list[str]]:
+    """Split, then rebuild the stored tail from decoded Yay0 sidecars (tools/assets.py pack)."""
+    return [[python_command(), "-m", "splat", "split", "source/config/shiren2.jp.yaml", "splat.override.yaml", "--disassemble-all"],
+            [python_command(), "-B", "source/tools/assets.py", "pack", "splat.override.yaml"]]
+
+
+def validate_asset_recipe(source_root: Path, recipe: list[list[str]]) -> None:
+    """Allow only reviewed split/preserve plus frozen-source pack, never import.
+
+    Exact argv rejects extract, custom decoders and identity wrappers. Binding
+    executed tooling to the independent verifier prevents a substituted pack
+    implementation from reading the ROM and merely claiming frozen-source use.
+    Splat and pack still read reference bytes for preserved ranges and equality;
+    those ranges are explicit passthrough, not editable-source provenance.
+    """
+    trusted_root = Path(__file__).resolve().parent.parent
+    if trusted_root.is_relative_to(source_root.resolve()):
+        raise ValueError("Verifier must execute outside the snapshot under test from trusted tools")
+    approved = [
+        [python_command(), "-m", "splat", "split", "source/config/shiren2.jp.yaml", "splat.override.yaml", "--disassemble-all"],
+        [python_command(), "-B", "source/tools/assets.py", "pack", "splat.override.yaml"],
+    ]
+    if recipe != approved:
+        raise ValueError("Editable-source recipe must split then pack frozen sources; extraction/decoding at build or replay is forbidden")
+    # Complete local closure reachable from assets.main -> pack. rommap's lazy
+    # progress import is confined to account(), which pack never calls.
+    # Installed yaml/spimdisasm/crunch64 and stdlib remain runtime-pinned inputs.
+    for name in ("assets.py", "rommap.py", "rspaudio.py", "rom.py", "images.py", "evidence.py", "toolchain_library.py", "generated_symbols.py"):
+        frozen = checked_path(source_root, "tools/" + name)
+        trusted = Path(__file__).resolve().parent / name
+        if sha256(frozen) != sha256(trusted):
+            raise ValueError(f"Editable-source recipe tool differs from the independent verifier: {name}")
+    # The script directory precedes installed packages on sys.path. Reject added
+    # top-level names/packages that could shadow the audited imports, and reject
+    # bytecode/native loaders. -B prevents pack from adding caches after this gate.
+    trusted_tools = trusted_root / "tools"
+    namespace = {(path.name, path.is_dir()) for path in trusted_tools.iterdir()}
+    for path in (source_root / "tools").iterdir():
+        if path.name == "__pycache__" or (path.name, path.is_dir()) not in namespace:
+            raise ValueError(f"Unreviewed snapshot import namespace: {path.name}")
+    for path in (source_root / "tools").rglob("*"):
+        if path.is_symlink() or path.name == "__pycache__" or path.suffix in {".pyc", ".pyo", ".so", ".dylib", ".pyd"}:
+            raise ValueError(f"Snapshot Python must execute reviewed source, not alternate loaders: {path.name}")
+
+
+def source_provenance_report(directory: Path, reference: bytes, recipe: list[list[str]]) -> dict[str, Any]:
+    """Read-only frozen-input preflight, not a build, roundtrip or acceptance."""
+    from assets import SOURCE_MANIFEST, read_source_manifest
+    from workspace import verify_manifest
+    source = directory / "source"
+    validate_asset_recipe(source, recipe)
+    manifest = read_json(directory / "input-manifest.json")
+    verify_manifest(source, manifest)
+    rom_map = rommap.load(source, reference)
+    read_source_manifest(source, rom_map, reference)
+    return {"status": "DECLARED_PROVENANCE_ONLY_NOT_EDITABILITY", "accepted": False, "build_source_bytes": 0,
+            "editability_verified": False, "credit_requires_exact_reencode_and_accepted_replay": True,
+            "map_id": rom_map.map_id, "partition_sha256": rom_map.partition_sha256,
+            "evidence_policy_sha256": rom_map.evidence_policy_sha256,
+            "input_manifest_sha256": manifest["sha256"],
+            "source_manifest_sha256": sha256(source / SOURCE_MANIFEST),
+            "recipe": recipe, "full_rom_build_or_replay_performed": False}
+
+
 def expected_commands(graph: dict[str, dict[str, str]], profile: dict[str, Any]) -> list[list[str]]:
-    commands = [[python_command(), "-m", "splat", "split", "source/config/shiren2.jp.yaml", "splat.override.yaml", "--disassemble-all"]]
+    commands = split_commands()
     for name, item in graph.items():
         commands.extend(object_commands(name, item, profile))
     commands.extend([
         # symbol_aliases.ld PROVIDEs library names (e.g. libgcc __udivdi3) for catalogued functions.
-        [profile["tools"]["ld"]["path"], "-m", profile["ld_emulation"], "-e", "entrypoint", "-T", "shiren2.ld", "-T", "generated/undefined_funcs_auto.txt", "-T", "generated/undefined_syms_auto.txt", "-T", "source/config/symbol_aliases.ld", "-Map", "shiren2.map", "-o", "shiren2.elf"],
+        [profile["tools"]["ld"]["path"], "-m", profile["ld_emulation"], "-e", "entrypoint", "-T", "shiren2.ld", "-T", "generated/undefined_funcs_auto.txt", "-T", "generated/undefined_syms_auto.txt", "-T", "source/config/symbol_aliases.ld", *generated_symbols.linker_flags(profile, graph), "-Map", "shiren2.map", "-o", "shiren2.elf"],
         [profile["tools"]["objcopy"]["path"], "-O", "binary", "shiren2.elf", "shiren2.z64"],
     ])
     return commands
@@ -819,6 +1031,15 @@ def symbol_table(path: Path, profile: dict[str, Any]) -> dict[str, tuple[int, in
     return symbols
 
 
+def linked_code_section(image_id: str) -> str | None:
+    """The linked output section of an image's code, when VRAM alone is ambiguous.
+
+    The two overlays share VRAM 0x801E4EA0+, so their code is read from the output
+    section splat names after the image (its code parent); other images have unique VRAM.
+    """
+    return f".{image_id}" if image_id in OVERLAY_IMAGES else None
+
+
 def elf_code(path: Path, address: int, size: int, *, section_name: str | None = None, allow_relocations: bool = False) -> tuple[bytes, int]:
     """Read actual executable section bytes and return their file offset.
 
@@ -827,11 +1048,30 @@ def elf_code(path: Path, address: int, size: int, *, section_name: str | None = 
     complete linked ELF with the pinned linker; relocations are never ignored in
     the final original-byte comparison.
     """
-    data = path.read_bytes()
+    return _elf_code(path.read_bytes(), address, size, section_name=section_name, allow_relocations=allow_relocations)
+
+
+class _LinkedElfMemo:
+    """One invocation's last immutable ELF image, compared directly without hashing."""
+
+    def __init__(self) -> None:
+        self._data: bytes | None = None
+        self._elf: Elf32File | None = None
+
+    def __call__(self, data: bytes) -> Elf32File:
+        if self._elf is None or data != self._data:
+            elf = Elf32File(data)
+            self._data, self._elf = data, elf
+        return self._elf
+
+
+def _elf_code(data: bytes, address: int, size: int, *, section_name: str | None = None,
+              allow_relocations: bool = False, parse=Elf32File) -> tuple[bytes, int]:
+    """Check each range independently; parsing may be memoized by immutable bytes."""
     if data[:6] != b"\x7fELF\x01\x02":
         raise ValueError("Code evidence must be ELF32 big-endian")
     try:
-        elf = Elf32File(data)
+        elf = parse(data)
         selected = [(index, section) for index, section in enumerate(elf.sectionHeaders)
                     if section.type == 1 and section.flags & 4
                     and (section_name is None or elf.shstrtab[section.name] == section_name)
@@ -872,6 +1112,28 @@ def check_elf_rom(directory: Path, profile: dict[str, Any]) -> None:
             raise ValueError("ELF extraction disagrees with the certified ROM")
 
 
+def validate_compiled_graph_profiles(graph: dict[str, dict[str, str]], profile: dict[str, Any]) -> None:
+    """Check the complete compiled-TU assignment without compiling or linking."""
+    sources = {item["source"] for item in graph.values() if item["source_kind"] in COMPILED_KINDS}
+    if set(profile["tu_profiles"]) != sources:
+        raise ValueError("C graph and translation-unit profile assignments disagree")
+
+
+def generated_table_discards(directory: Path, graph: dict[str, dict[str, str]], profile: dict[str, Any], reference: bytes) -> dict[str, list[dict[str, Any]]]:
+    """Re-derive every compiled object's table-discard permission before linking."""
+    from match import Elf
+    units = profile.get("symbol_identities", {}).get("active_units", {})
+    proofs = {}
+    for name, item in graph.items():
+        if item["source_kind"] not in COMPILED_KINDS:
+            continue
+        obj = Elf(checked_path(directory, name).read_bytes())
+        records = generated_symbols.table_discards(directory / "source", obj, units.get(item["source"], {}), reference)
+        if records:
+            proofs[name] = records
+    return proofs
+
+
 def reproduce_c_objects_and_link(directory: Path, graph: dict[str, dict[str, str]], profile: dict[str, Any], reference: Path = CANONICAL_ROM) -> dict[str, Any]:
     """Regenerate the split, reproduce all objects and independently relink.
 
@@ -884,9 +1146,7 @@ def reproduce_c_objects_and_link(directory: Path, graph: dict[str, dict[str, str
     """
     from workspace import verify_manifest
     manifest = read_json(directory / "input-manifest.json")
-    sources = {item["source"] for item in graph.values() if item["source_kind"] in COMPILED_KINDS}
-    if set(profile["tu_profiles"]) != sources:
-        raise ValueError("C graph and translation-unit profile assignments disagree")
+    validate_compiled_graph_profiles(graph, profile)
     evidence: dict[str, Any] = {"c_objects": {}, "objects": {}, "split": {}, "linked": {}, "method": "fresh frozen-source split, all-object reproduction and full pinned-linker replay"}
     with retained_trial(directory, "full-link") as temporary:
         trial = Path(temporary)
@@ -913,7 +1173,10 @@ def reproduce_c_objects_and_link(directory: Path, graph: dict[str, dict[str, str
         (trial / "tmp").mkdir()
         environment = compiler_environment(trial, profile)
         (trial / "splat.override.yaml").write_text(yaml.safe_dump(splat_options(trial, reference)), encoding="utf-8")
-        run_replay([python_command(), "-m", "splat", "split", "source/config/shiren2.jp.yaml", "splat.override.yaml", "--disassemble-all"])
+        recipe = split_commands()
+        validate_asset_recipe(trial / "source", recipe)
+        for operation in recipe:
+            run_replay(operation)
         if (trial / "shiren2.ld").read_bytes() != (directory / "shiren2.ld").read_bytes():
             raise ValueError("Frozen YAML does not reproduce the linker script/split placement")
         generated = file_inventory(trial / "generated")
@@ -937,6 +1200,7 @@ def reproduce_c_objects_and_link(directory: Path, graph: dict[str, dict[str, str
             evidence["objects"][name] = {"source_kind": item["source_kind"], "sha256": sha256(destination)}
             if item["source_kind"] in COMPILED_KINDS:
                 evidence["c_objects"][name] = {"source": item["source"], "profile_id": profile["tu_profiles"][item["source"]], "compiler_assembly_sha256": sha256(trial / compiled), "object_sha256": sha256(destination)}
+        generated_table_discards(trial, graph, profile, reference.read_bytes())
         for operation in expected_commands(graph, profile)[-2:]:
             run_replay(operation)
         for name in ["shiren2.elf", "shiren2.map", "shiren2.z64"]:
@@ -1016,10 +1280,22 @@ def global_symbol_names(path: Path) -> list[str]:
 def c_attributions(directory: Path, matches: list[dict[str, Any]], graph: dict[str, dict[str, str]], profile: dict[str, Any], reference: bytes, *, reproduction: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Bind every accepted C/C++ function to its object, map contribution and original bytes.
 
-    A C++ object may define and reference only extern "C" names: any g++ C++-linkage
-    symbol (mangled function, vtable, typeinfo) forbids credit for the whole object.
+    C++ linkage is forbidden except for declared, independently proven generated
+    identities. Catalogue aliases carry no credit without their emitting object.
     """
     attest(reference)
+    from match import Elf, cxx_object_problems
+    identities = generated_symbols.load(directory / "source", reference)
+    units = generated_symbols.active_units(identities, matches)
+    generated_symbols.validate_active(directory / "source", units, reference)
+    linked_elf = Elf((directory / "shiren2.elf").read_bytes()) if units else None
+    if units:
+        recorded = profile.get("symbol_identities")
+        if recorded != {"declaration": identities, "active_units": units}:
+            raise ValueError("Generated identity profile disagrees with frozen config")
+    discarded_tables = generated_table_discards(directory, graph, profile, reference)
+    for name, records in discarded_tables.items():
+        generated_symbols.prove_linker_discard((directory / "shiren2.map").read_text(), name, records)
     actual = (directory / "shiren2.z64").read_bytes()
     linked = symbol_table(directory / "shiren2.elf", profile)
     sections = {}
@@ -1033,15 +1309,41 @@ def c_attributions(directory: Path, matches: list[dict[str, Any]], graph: dict[s
     if {match["source"] for match in matches} != {item["source"] for item in graph.values() if item["source_kind"] in COMPILED_KINDS}:
         raise ValueError("C manifest does not agree with declared C objects")
     for name, item in graph.items():
+        if item["source_kind"] not in COMPILED_KINDS:
+            continue
+        unit = units.get(item["source"], {"generated": {}, "runtime_names": []})
+        globals_used = global_symbol_names(directory / name)
+        if (set(globals_used) & set(generated_symbols.REVIEWED_RUNTIME)) - set(unit["runtime_names"]):
+            raise ValueError(f"Undeclared compiler runtime name: {name}")
         if item["source_kind"] == "cpp":
-            mangled = [symbol for symbol in global_symbol_names(directory / name) if GXX_MANGLED.search(symbol)]
+            mangled = [symbol for symbol in globals_used if GXX_MANGLED.search(symbol) and symbol not in unit["generated"]]
             if mangled:
                 raise ValueError(f"C++ object uses C++-linkage symbols (export/import through extern \"C\"): {name}: {mangled}")
+        if item["source"] in units:
+            obj = Elf((directory / name).read_bytes())
+            text = obj.section(".text")
+            if text is None:
+                raise ValueError("Generated TU has no .text")
+            problems = generated_symbols.object_problems(obj, text, unit["rows"], unit, cxx=item["source_kind"] == "cpp")
+            problems += cxx_object_problems(obj, text, unit["generated"])
+            if problems:
+                raise ValueError("; ".join(problems))
+            known = {s.name: s.value for s in linked_elf.symbols if s.bind == 1 and s.shndx != 0}
+            generated_symbols.runtime_addresses(identities, unit, known)
+            for runtime in unit["runtime_names"]:
+                if known.get(runtime) != identities["runtime_bindings"][runtime]["vram_start"]:
+                    raise ValueError(f"Runtime name not bound at link time: {runtime}")
     policy = source_policy_violations(directory / "source")
     if policy:
         raise ValueError("Source policy forbids C credit: " + "; ".join(policy))
     result = []
     object_symbols = {}
+    declared_symbols = {}
+    for match in matches:
+        declared_symbols.setdefault((match.get("image_id", "resident"), match["source"]), set()).add(match.get("generated", match["symbol"]))
+    # Re-read every attribution: path/stat identity cannot detect same-size tampering.
+    # Only this invocation can reuse the last byte-identical linked ELF parse.
+    parse_linked = _LinkedElfMemo()
     for match in matches:
         image = match.get("image_id", "resident")
         name = by_source[(image, match["source"])]
@@ -1049,13 +1351,23 @@ def c_attributions(directory: Path, matches: list[dict[str, Any]], graph: dict[s
         if name not in object_symbols:
             object_symbols[name] = symbol_table(directory / name, profile)
         symbols = object_symbols[name]
-        if match["symbol"] not in symbols or symbols[match["symbol"]][1] != match["size"]:
-            raise ValueError(f"C symbol not defined by declared object: {match['symbol']}")
+        emitted = match.get("generated", match["symbol"])
+        if emitted not in symbols or symbols[emitted][1] != match["size"]:
+            raise ValueError(f"C symbol not defined by declared object: {match['symbol']} ({emitted})")
         if name not in sections:
             raise ValueError("C object has no unique .text map contribution")
         base, section_size = sections[name]
-        offset, size = symbols[match["symbol"]]
-        if offset + size > section_size or base + offset != match["vram_start"] or linked.get(match["symbol"]) != (match["vram_start"], size):
+        offset, size = symbols[emitted]
+        linked_identity = linked.get(match["symbol"]) == (match["vram_start"], size)
+        if "generated" in match:
+            section = linked_code_section(image)
+            emitted_hits = [s for s in linked_elf.symbols if s.name == emitted and s.type == 2
+                            and s.value == match["vram_start"] and s.size == size
+                            and 0 < s.shndx < len(linked_elf.sections)
+                            and (section is None or linked_elf.sections[s.shndx].name == section)]
+            aliases = [s for s in linked_elf.symbols if s.name == match["symbol"] and s.bind == 1 and s.shndx == 0xFFF1]
+            linked_identity = len(emitted_hits) == 1 and len(aliases) == 1 and aliases[0].value == match["vram_start"]
+        if offset + size > section_size or base + offset != match["vram_start"] or not linked_identity:
             raise ValueError("C object/map/linked symbol attribution disagrees")
         start = match["rom_start"]
         expected = reference[start:start + size]
@@ -1066,12 +1378,19 @@ def c_attributions(directory: Path, matches: list[dict[str, Any]], graph: dict[s
         if relocation_records and (reproduction is None or reproduction["c_objects"].get(name, {}).get("object_sha256") != sha256(directory / name) or reproduction["linked"].get("shiren2.elf") != sha256(directory / "shiren2.elf")):
             raise ValueError("Relocated C needs a fresh frozen-source object and full linker reproduction")
         object_body, object_file_offset = elf_code(directory / name, offset, size, section_name=".text", allow_relocations=bool(relocation_records))
-        linked_body, elf_file_offset = elf_code(directory / "shiren2.elf", base + offset, size)
+        linked_body, elf_file_offset = _elf_code((directory / "shiren2.elf").read_bytes(), base + offset, size, parse=parse_linked, section_name=linked_code_section(image))
         if (not relocation_records and object_body != linked_body) or linked_body != expected:
             raise ValueError("C object/ELF/original instruction bytes disagree")
         result.append({"image_id": image, "symbol": match["symbol"], "source": match["source"], "object": name, "vram_start": base + offset, "size": size, "object_symbol_offset": offset, "object_file_offset": object_file_offset, "elf_file_offset": elf_file_offset, "map_section": {"vram_start": base, "size": section_size}, "reference_sha256": hashlib.sha256(expected).hexdigest(), "linked_sha256": hashlib.sha256(linked_body).hexdigest(), "object_sha256": hashlib.sha256(object_body).hexdigest(), "profile_id": profile["tu_profiles"][match["source"]], "text_relocations": relocation_records, "relocation_proof": "fresh full object and pinned-linker reproduction" if relocation_records else "raw object/linked/original equality"})
+        if "generated" in match:
+            result[-1]["generated"] = match["generated"]
+        unit = units.get(match["source"])
+        if unit and unit["runtime_names"]:
+            result[-1]["runtime_bindings"] = {runtime: identities["runtime_bindings"][runtime] for runtime in unit["runtime_names"]}
+        if name in discarded_tables:
+            result[-1]["discarded_tables"] = discarded_tables[name]
     for name, symbols in object_symbols.items():
-        declared = {match["symbol"] for match in matches if match["source"] == graph[name]["source"] and match.get("image_id", "resident") == graph[name]["image_id"]}
+        declared = declared_symbols[(graph[name]["image_id"], graph[name]["source"])]
         if set(symbols) != declared:
             raise ValueError("C object contains undeclared text functions")
     return result

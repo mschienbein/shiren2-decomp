@@ -4,7 +4,9 @@ typedef unsigned short u16;
 typedef struct { s32 kind; void *owner; u8 rest[0x18]; } Event;
 typedef struct { u8 pad_00[0x38]; short delta_38, index_3A; s32 (*event_3C)(void *, Event *); } Methods;
 typedef struct { u8 field_00, kind_01; u8 pad_02[6]; Methods *table_08; } Item;
-typedef struct { u8 bytes[0x14]; } Action;
+/* 0x14-byte throw action built by func_800C4BC0 over func_800C4840 and run by func_800C4864:
+   actor, u16 flags, s32 count, method table, thrown item. */
+typedef struct { void *actor_00; u16 flags_04; u16 pad_06; s32 count_08; void *vtable_0C; void *item_10; } Action;
 extern s32 func_800EE504(void *);
 extern s32 func_800E1CC4(void *, s32);
 extern s32 func_800A692C(void *, s32);
@@ -24,6 +26,9 @@ static inline Event *event_init(Event *event, s32 kind, void *owner) {
 }
 
 s32 func_8010AEB8(void *actor, void *selected, Item *item) {
+    /* ODD_C: one stack object (sp+0x10), used as an Event (kind/owner) on the immediate path and
+       as an Action (actor, u16 flags at +0x04) on the throw path; the two paths are exclusive.
+       Separate block-scoped Event/Action locals give a 0x68-byte frame instead of 0x50. */
     union { Event event; Action action; } message;
     u8 direction;
     s32 blocked = 0;

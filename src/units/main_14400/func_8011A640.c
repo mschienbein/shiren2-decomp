@@ -1,11 +1,10 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef struct { s32 x, y; } Position;
 typedef struct Obj800E8A68 { Position position; u8 pad_08[0x16]; u8 field_1E; } Obj800E8A68;
-typedef struct Item Item;
 extern void *func_800E8A68(Obj800E8A68 *obj, u8 arg1);
-extern char *func_800AE674(void *obj);
 extern s32 func_8010BAE8(Item *, s32);
 extern s32 func_80049CB4(s32 id, ...);
 extern void func_800498E4(s32 id, ...);

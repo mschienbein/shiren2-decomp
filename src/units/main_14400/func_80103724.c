@@ -1,42 +1,36 @@
-#include "common.h"
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+#include "map_position_iterator.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 
 typedef unsigned char u8;
 typedef unsigned short u16;
-typedef struct { s32 x, y; } Point;
-typedef struct { Point min, max; } Rect;
-typedef struct { Point current, start, end; } Iter;
 typedef union { u16 value; struct { u8 high, low; } bytes; } Flags;
 typedef struct { u8 pad_00[0x10]; short delta_10; short index_12; s32 (*method_14)(void *); } Methods;
 typedef struct Obj Obj;
-struct Obj { Point field_00; u8 field_08, field_09; u8 pad_0A[0x12]; Flags field_1C; u8 field_1E; u8 pad_1F[5]; Methods *field_24; u8 pad_28[0x30]; Obj *field_58; u8 pad_5C[0x16]; u8 field_72; };
+struct Obj { MapPos field_00; u8 field_08, field_09; u8 pad_0A[0x12]; Flags field_1C; u8 field_1E; u8 pad_1F[5]; Methods *field_24; u8 pad_28[0x30]; Obj *field_58; u8 pad_5C[0x16]; u8 field_72; };
 
 extern s32 func_800E0F40(Obj *obj);
-/* Returns its rectangle by value through the hidden result pointer. */
-extern Rect func_800B3080(void *pos);
 extern s32 func_80049CB4(s32 id, ...);
 extern char *func_800A3B20(Obj *obj);
 extern void func_800497F0(s32 id, ...);
-extern void func_800AC6F8(Rect *rect, s32 allow_special);
+extern void func_800AC6F8(MapRect *rect, s32 allow_special);
 extern s32 func_800A8F6C(s32 *iterator);
 extern void *func_800A910C(s32 *iterator);
-extern Point *func_800A3610(Point *out, Iter *iterator);
-extern void *func_800B4928(Point *pos);
-extern u32 func_800B1C6C(Point *pos);
-extern s32 func_800A5D2C(void *obj, Point *out, s32 flags);
+extern void *func_800B4928(MapPos *pos);
+extern u32 func_800B1C6C(MapPos *pos);
+extern s32 func_800A5D2C(void *obj, MapPos *out, s32 flags);
 extern void func_800E20F0(Obj *obj);
-extern void func_800A58FC(void *actor, Point *pos);
+extern void func_800A58FC(void *actor, MapPos *pos);
 extern s32 func_800B4FF0(void *pos, s32 kind);
 extern s32 func_800A7A1C(Obj *obj);
 extern void func_800A7BA4(Obj *obj, s32 value);
 s32 func_80103724(Obj *obj, Obj *other)
 {
-    Point origin;
-    Rect range;
-    Iter it;
-    Point current;
-    Point destination;
+    MapPos origin;
+    MapRect range;
+    MapPositionIterator it;
+    MapPos current;
+    MapPos destination;
     s32 list_iterator;
     s32 event;
     s32 allowed;
@@ -74,12 +68,12 @@ s32 func_80103724(Obj *obj, Obj *other)
         current.x = range.min.x;
         current.y = range.min.y;
         it.start = current;
-        it.current = it.start;
+        it.cur = it.start;
         current.x = range.max.x;
         current.y = range.max.y;
         it.end = current;
         while (1) {
-            s32 more = it.current.x <= it.end.x;
+            s32 more = it.cur.x <= it.end.x;
             if (!more) {
                 break;
             }

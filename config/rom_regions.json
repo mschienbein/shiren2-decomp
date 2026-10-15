@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "kind": "shiren2-rom-region-rules",
+  "target_sha256": "4073a9f6516ef5d15cdd8b259a952a7d07633a2815f2a738fb5d98415d30a458",
+  "target_size": 33554432,
+  "ipl3_md5": "e24dd796b2fa16511521139d28c8356b",
+  "tail_start": 1344608,
+  "content_end": 30457540,
+  "tables": [
+    {"id": "T1", "rom_start": 1100032, "rom_end": 1100272, "record_size": 12, "pair_offsets": [0],
+     "note": "20 records at 0x10C900; first pair is null; +8 is type, not an endpoint"},
+    {"id": "T2", "rom_start": 1108756, "rom_end": 1110212, "record_size": 52, "pair_offsets": [24, 32, 40],
+     "note": "28 scene records at 0x10EB14; raw, Yay0 and distinct segment-6 roles"},
+    {"id": "T2_alias", "rom_start": 1110212, "rom_end": 1111044, "record_size": 52, "pair_offsets": [24, 32, 40],
+     "note": "16 scene records at 0x10F0C4; aliases retain their separate owner entries"},
+    {"id": "T3", "rom_start": 1111356, "rom_end": 1111968, "record_size": 36, "pair_offsets": [20, 28],
+     "note": "17 model-group records; raw and paired Yay0 fields"},
+    {"id": "T4", "rom_start": 1112128, "rom_end": 1112528, "record_size": 16, "pair_offsets": [0, 8],
+     "note": "25 records: HVQ2 picture and independently consumed RLE mask pair"},
+    {"id": "T6", "rom_start": 1172964, "rom_end": 1173636, "record_size": 8, "pair_offsets": [0],
+     "note": "84 music-sequence owner records; marker 0x215 is not complete format proof"},
+    {"id": "T6_alias", "rom_start": 1173636, "rom_end": 1173684, "record_size": 8, "pair_offsets": [0],
+     "note": "6 additional music-sequence records; preserve all aliases"}
+  ],
+  "chains": [
+    {"id": "T5", "rom_start": 1169596, "rom_end": 1169620, "stride": 10240,
+     "note": "Six starts; end is start plus capacity word 0x2800 at ROM 0x12722C, not logical recording length"}
+  ],
+  "immediate_windows": [
+    {"id": "I_raw_157460", "start_site": 205348, "end_site": 205340, "note": "ROM 0x32234 calls func_8006ABC4 with endpoint-minus-start at 0x32238"},
+    {"id": "I_raw_1575c0", "start_site": 336680, "end_site": 336688, "note": "ROM 0x52338 calls func_8006ABC4 with endpoint-minus-start at 0x5233C"},
+    {"id": "I_raw_157840", "start_site": 336716, "end_site": 336724, "note": "func_8007F2D8 passes 0x157840..0x157B80 to func_8006ABC4"},
+    {"id": "I_audio_ptr1", "start_site": 150376, "end_site": 150384, "note": "audio init: 'N64 PtrTablesV2' bank"},
+    {"id": "I_audio_ptr2", "start_site": 150416, "end_site": 150424, "note": "audio init: 'N64 PtrTablesV2' bank"},
+    {"id": "I_audio_e4f660", "start_site": 150448, "end_site": 150456, "note": "audio init window"},
+    {"id": "I_audio_e53b20", "start_site": 150480, "end_site": 150488, "note": "audio init window"},
+    {"id": "I_scene_309cd0", "start_site": 329048, "end_site": 329056, "note": "loader pair"},
+    {"id": "I_scene_30c830", "start_site": 329076, "end_site": 329084, "note": "loader pair"}
+  ],
+  "inferred_windows": [
+    {"id": "N_audio_wave1", "start_site": 150552, "end_rom": 11447808, "end_basis": "I_audio_ptr2",
+     "note": "'N64 WaveTables'; end is the next referenced window start (I_audio_ptr2)"},
+    {"id": "N_audio_wave2", "start_site": 150676, "end_rom": 14085488, "end_basis": "T6",
+     "note": "'N64 WaveTables'; end is the first T6 window start"},
+    {"id": "N_e53db0_block", "start_site": 150488, "end_rom": 15187568, "end_basis": "N_palette_e7be70",
+     "note": "segment base 0xE53DB0 (11 loads); end is the palette immediate 0xE7BE70 (ROM 0x454AC)"},
+    {"id": "N_palette_e7be70", "start_site": 283820, "end_rom": 15187600, "end_basis": "first image-archive Yay0 stream",
+     "note": "16-entry RGBA16 palette preceding the image-archive Yay0 streams"}
+  ],
+  "code_bases": [
+    {"id": "B_157b80", "site": 200056, "note": "func_8005DCEC: ROM 0x30D80 calls PI reader func_8006AAF0 with indexed base"},
+    {"id": "B_175150", "site": 200184, "note": "func_8005DD80: ROM 0x30E08 calls PI reader func_8006AAF0 with indexed base"},
+    {"id": "B_177150", "site": 200320, "note": "func_8005DE08: ROM 0x30E90 calls PI reader func_8006AAF0 with indexed base"},
+    {"id": "B_179560", "site": 111952, "note": "func_80048480 adds D_8014D430 offsets to ROM base, aligns to 8, then calls func_8006AAF0"},
+    {"id": "B_194fc0", "site": 97476, "note": "func_80044C60 passes base to func_8006AC30; that translator masks segment offset and calls func_8006AAF0"},
+    {"id": "B_1c6cb0", "site": 1274388, "note": "ROM 0x137250 adds index to base, aligns at 0x137254, passes it in a1 at 0x137258 to func_8006AAF0 at 0x13726C"},
+    {"id": "B_23e210", "site": 1275864, "note": "ROM 0x1377D8 materializes base in a1; 0x1377F0 calls func_8006AAF0"}
+  ],
+  "iff_archive": {"id": "IFF_efat", "site": 398032, "first_form": 27622632,
+    "note": "'EFAT' directory of (offset, size) pairs relative to the first FORM; FORM/ESFC/EGRP/EGRF/EOM chunks; EGRF chunks wrap Yay0 streams"}
+}

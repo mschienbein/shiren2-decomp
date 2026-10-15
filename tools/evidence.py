@@ -11,6 +11,9 @@ import re
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 
+from toolchain_library import match_family
+from generated_symbols import GENERATED
+
 
 ROM_SIZE = 0x2000000
 ADDRESS_LIMIT = 0x100000000
@@ -38,6 +41,7 @@ class _Match:
     rom_start: int
     vram_start: int
     size: int
+    generated: str | None = None
 
     @property
     def key(self) -> tuple[str, str]:
@@ -157,7 +161,10 @@ def _matches(matches: list[dict[str, object]]) -> list[_Match]:
         source = _source(record["source"], f"{label} source")
         rom_start, size = _extent(record["rom_start"], record["size"], f"{label} ROM", ROM_SIZE)
         vram_start, _ = _extent(record["vram_start"], record["size"], f"{label} VRAM", ADDRESS_LIMIT)
-        match = _Match(image_id, symbol, source, rom_start, vram_start, size)
+        generated = record.get("generated")
+        if "generated" in record and (not isinstance(generated, str) or not GENERATED.fullmatch(generated) or not source.endswith(".cpp")):
+            raise ValueError(f"{label}: invalid generated C++ identity")
+        match = _Match(image_id, symbol, source, rom_start, vram_start, size, generated)
         if match.key in keys:
             raise ValueError(f"Duplicate C match identity: {image_id}/{symbol}")
         keys.add(match.key)
@@ -219,12 +226,16 @@ def validate_matches(
             raise ValueError(f"C match has inconsistent ROM/VRAM mapping: {match.image_id}/{match.symbol}")
     counts = {"matched_c_functions": 0, "matched_c_bytes": 0}
     for match in parsed:
-        kind = compiled_kind(match.source)
+        kind = match_family(vars(match))
         counts[f"matched_{kind}_functions"] = counts.get(f"matched_{kind}_functions", 0) + 1
         counts[f"matched_{kind}_bytes"] = counts.get(f"matched_{kind}_bytes", 0) + match.size
     if "matched_cpp_functions" in counts:
-        counts["matched_c_and_cpp_functions"] = len(parsed)
-        counts["matched_c_and_cpp_bytes"] = sum(match.size for match in parsed)
+        counts["matched_c_and_cpp_functions"] = counts["matched_c_functions"] + counts["matched_cpp_functions"]
+        counts["matched_c_and_cpp_bytes"] = counts["matched_c_bytes"] + counts["matched_cpp_bytes"]
+    generated = [match for match in parsed if match.generated is not None]
+    if generated:
+        counts["matched_generated_cpp_functions"] = len(generated)
+        counts["matched_generated_cpp_bytes"] = sum(match.size for match in generated)
     return counts
 
 
@@ -283,6 +294,8 @@ def validate_attributions(
         vram_start, size = _extent(record["vram_start"], record["size"], f"{label} VRAM", ADDRESS_LIMIT)
         if source != match.source or vram_start != match.vram_start or size != match.size:
             raise ValueError(f"C attribution disagrees with the match manifest: {image_id}/{symbol}")
+        if record.get("generated") != match.generated:
+            raise ValueError(f"C attribution generated identity disagrees: {image_id}/{symbol}")
         declared_object = c_objects.get((image_id, source))
         if declared_object is None or object_path != declared_object:
             raise ValueError(f"C attribution disagrees with the declared C object: {image_id}/{symbol}")

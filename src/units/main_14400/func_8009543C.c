@@ -3,8 +3,8 @@
 typedef struct { s32 a; s32 b; } Pair;
 typedef struct {
     s32 count;
-    char pad4[2];
-    unsigned short field_6;
+    /* Callers store a full word at +4; the widget retains its low halfword. */
+    s32 field_4;
     s32 field_8;
     s32 field_C;
 } Desc;
@@ -38,7 +38,7 @@ void func_8009543C(Obj *obj, Desc *desc) {
         obj->field_20 = 1;
     }
     obj->field_24 = 1;
-    obj->field_30 = desc->field_6;
+    obj->field_30 = (unsigned short)desc->field_4;
     obj->field_28 = desc->field_8;
     obj->field_2C = desc->field_C;
     obj->field_34 = 0;

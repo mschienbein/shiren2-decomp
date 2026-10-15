@@ -1,9 +1,8 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 
-typedef struct Table Table;
-typedef struct Item Item;
 typedef struct Entry800D01B8 Entry800D01B8;
 
 /* Embedded entry list appended to by func_800D05E0. */
@@ -19,18 +18,16 @@ typedef struct {
     Obj800D05E0 list_B0;
 } S;
 
-void *func_800AF818(u32 index);
-Item *func_800AFD78(Table *table, u8 index);
 void *func_800DAB68(void *item);
 void func_800D05E0(Obj800D05E0 *obj, void *arg1, void *arg2);
 
-/* ids[0] selects the table; each following byte adds that table entry to the list at +0xB0. */
+/* ids[0] selects the item pool; each following byte adds that pool entry to the list at +0xB0. */
 void func_800DDC0C(S *s, unsigned char *ids, s32 count)
 {
-    Table *table;
+    ItemPool *pool;
     s32 remaining;
 
-    table = func_800AF818(*ids++);
+    pool = func_800AF818(*ids++);
     remaining = count;
     for (;;) {
         Item *item;
@@ -38,7 +35,7 @@ void func_800DDC0C(S *s, unsigned char *ids, s32 count)
         if (remaining-- <= 0) {
             break;
         }
-        item = func_800AFD78(table, *ids++);
+        item = func_800AFD78(pool, *ids++);
         func_800D05E0(&s->list_B0, func_800DAB68(item), item);
     }
 }

@@ -1,35 +1,29 @@
-#include "common.h"
-typedef struct { s32 x, y; } Pair;
-typedef struct { Pair corner[2]; } Rectangle;
-/* Row-major cursor walked by func_800A3610: current, start and end corners. */
-typedef struct { Pair current; Pair start; Pair end; } PairIter;
+#include "map_position_iterator.h"
 /* g++ vtable entry; entry 1 (+0x08) is the destructor, void (receiver, s32 flags). */
 typedef struct { short delta; short index; void (*destroy)(void *self, s32 flags); } VtEntry;
-typedef struct { Pair position; char fields_08[0x1C]; VtEntry *vtable; } Object;
+typedef struct { MapPos position; char fields_08[0x1C]; VtEntry *vtable; } Object;
 typedef struct { unsigned char kind; char fields_01[7]; VtEntry *vtable; } Item;
 typedef struct Owner Owner;
 extern Object *func_800AA684(void);
-extern s32 func_800A5D2C(void *object, Pair *output, s32 flags);
+extern s32 func_800A5D2C(void *object, MapPos *output, s32 flags);
 extern s32 func_80049CB4(s32 id, ...);
-extern s32 func_800A251C(Pair *a, Pair *b);
+extern s32 func_800A251C(MapPos *a, MapPos *b);
 extern void func_800A5A70(void *object, u32 value);
-extern void func_800A58FC(void *actor, Pair *position);
+extern void func_800A58FC(void *actor, MapPos *position);
 extern void func_800498E4(s32 id, ...);
 extern void *func_800B1F90(void *pos);
-extern void func_800A30AC(Pair *output, void *input, unsigned char index);
-extern Pair *func_800A3610(Pair *out, PairIter *it);
-extern void *func_800B4D80(Pair *p);
-extern s32 func_800A4314(Object *object, Pair *position);
-extern void func_800AD868(Pair *pos);
-static inline void copy_pair(Pair *destination, const Pair *source) {
+extern void *func_800B4D80(MapPos *p);
+extern s32 func_800A4314(Object *object, MapPos *position);
+extern void func_800AD868(MapPos *pos);
+static inline void copy_pair(MapPos *destination, const MapPos *source) {
     destination->x = source->x;
     destination->y = source->y;
 }
-static inline s32 pairs_differ(Pair *a, Pair *b) { return func_800A251C(a, b) ^ 1; }
+static inline s32 pairs_differ(MapPos *a, MapPos *b) { return func_800A251C(a, b) ^ 1; }
 static inline void destroy(void *receiver, VtEntry *vtable) {
     vtable[1].destroy((char *)receiver + vtable[1].delta, 3);
 }
-static inline s32 iter_more(PairIter *it) { return it->current.x <= it->end.x; }
+static inline s32 iter_more(MapPositionIterator *it) { return it->cur.x <= it->end.x; }
 /* Item kinds 0x0F, 0x10 and 0x13 are never picked up by this effect. */
 static inline s32 usable_item(Item *item) {
     s32 result = 0;
@@ -46,11 +40,11 @@ static inline s32 usable_item(Item *item) {
 }
 /* Trap slot +0x44: s32 (self, actor, source position, effect position, direction,
  * target unit, item). This handler reads only the effect position and the item. */
-s32 func_80125F6C(Owner *self, void *actor, void *source_position, Pair *target,
+s32 func_80125F6C(Owner *self, void *actor, void *source_position, MapPos *target,
                   void *direction, void *target_unit, Item *item) {
-    Pair position;
-    Rectangle bounds;
-    PairIter it;
+    MapPos position;
+    MapRect bounds;
+    MapPositionIterator it;
     s32 changed, message;
     if (item) {
         Object *object = func_800AA684();
@@ -78,17 +72,17 @@ s32 func_80125F6C(Owner *self, void *actor, void *source_position, Pair *target,
         }
         message = 0x223;
     } else {
-        Rectangle *area;
+        MapRect *area;
         changed = 0;
         area = func_800B1F90(target);
         if (area) bounds = *area;
-        else func_800A30AC(bounds.corner, target, 1);
-        position.x = bounds.corner[0].x;
-        position.y = bounds.corner[0].y;
+        else func_800A30AC(&bounds, target, 1);
+        position.x = bounds.min.x;
+        position.y = bounds.min.y;
         it.start = position;
-        it.current = it.start;
-        position.x = bounds.corner[1].x;
-        position.y = bounds.corner[1].y;
+        it.cur = it.start;
+        position.x = bounds.max.x;
+        position.y = bounds.max.y;
         it.end = position;
         while (iter_more(&it)) {
             Item *found;

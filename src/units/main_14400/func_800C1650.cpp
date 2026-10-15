@@ -18,16 +18,16 @@ extern u8 D_8014344C;
 extern u8 D_80143392;
 }
 
-struct Cell { u8 kind, attr, x, y; };
+struct Cell_800C1650 { u8 kind, attr, x, y; };
 
 /* Partial view of the grid floor generator. */
-struct Board {
+struct Board_800C1650 {
     u8 pad0[0x10];
     u8 grid_rows;
     u8 grid_cols;
     u8 field_12;
     /* Complete grids shared with func_800B8628, including border cells. */
-    Cell cells[11][8];
+    Cell_800C1650 cells[11][8];
     u8 pad173;
     s32 available[11][8];
     s8 *row_edges;
@@ -38,15 +38,15 @@ struct Board {
 };
 
 extern "C" {
-void func_800B8628(Board *board, u8 mode);
-void func_800BA04C(Board *board, u8 kinds[][6], u8 attrs[][6]);
+void func_800B8628(Board_800C1650 *board, u8 mode);
+void func_800BA04C(Board_800C1650 *board, u8 kinds[][6], u8 attrs[][6]);
 void func_800BA188(void *map, u8 x, u8 y, s32 dir_a, s32 dir_b);
-void func_800B95DC(Board *board);
+void func_800B95DC(Board_800C1650 *board);
 void func_800B17A4(void);
 }
 
 /* Clamps the grid size to 3..8 x 3..5, picks the edge tables, then lays out the cells. */
-inline void Board::setup(u8 rows, u8 cols, u8 extra, u8 mode)
+inline void Board_800C1650::setup(u8 rows, u8 cols, u8 extra, u8 mode)
 {
     if (rows < 3) {
         rows = 3;
@@ -75,7 +75,7 @@ extern u8 D_80153DFC[][6];
 extern u8 D_80153E14[][6];
 }
 
-extern "C" void func_800C1650(Board *board)
+extern "C" void func_800C1650(Board_800C1650 *board)
 {
     board->setup(6, 4, 12, 2);
     func_800BA04C(board, D_80153DFC, D_80153E14);

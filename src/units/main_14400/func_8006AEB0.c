@@ -2,7 +2,7 @@
 
 typedef unsigned char u8;
 typedef struct RenderContext RenderContext;
-typedef struct { u8 pad0[0x9EC]; s32 (*callback)(void); s32 retraces; u8 rate, divisor, flags[6]; u8 tail9FC[4]; } Scheduler;
+typedef struct { u8 pad0[0x9EC]; s32 (*callback)(void); s32 retraces; u8 rate, retrace_interval, flags9F6, flags9F7, flags9F8, flags9F9, flags9FA, flags9FB; u8 tail9FC[4]; } Scheduler;
 typedef struct { unsigned long long storage[0x36]; } Thread;
 typedef struct { void *receive, *send; long valid, first, capacity; void **messages; } Queue;
 typedef struct { void *image; u32 flags; } Buffer;
@@ -54,7 +54,7 @@ extern u8 D_80195138[0x4000];
 extern u8 D_13CA50[];
 extern TaskRecord D_80199138[];
 extern s32 func_8006B4E4(void);
-extern void func_8006B1DC(void *), D_8006B334(void *);
+extern void func_8006B1DC(void *), func_8006B334(void *);
 extern void func_8006B910(s32, s32, s32, s32);
 extern void func_80027EA0(Queue *, void **, long);
 extern void func_80027ED0(Thread *, s32, void (*)(void *), void *, void *, s32);
@@ -113,13 +113,13 @@ void func_8006AEB0(s32 count, void *buffers, void *depthbuffer) {
     func_80027ED0(thread1, 0x1FE, func_8006B1DC, state, D_80191138 + sizeof(D_80191138), 0x5A);
     func_80032B50(thread1);
     thread2 = &state->consumer;
-    func_80027ED0(thread2, 0x200, D_8006B334, state, D_80195138 + sizeof(D_80195138), 0x46);
+    func_80027ED0(thread2, 0x200, func_8006B334, state, D_80195138 + sizeof(D_80195138), 0x46);
     func_80032B50(thread2);
     end = commands;
     end = emit(end, 0xDE000000, (u32)D_13CA50);
     end = emit(end, 0xE9000000, 0);
     end = emit(end, 0xDF000000, 0);
-    ++D_801D85D0.flags[3];
+    ++D_801D85D0.flags9F9;
     func_8006B7F8(commands, (u8 *)end - (u8 *)commands, 0, 0,
         manager_buffers(&D_80190D80)[state->cursor].image, state->depthbuffer, 0, 0);
     func_8006CC80();

@@ -1,19 +1,13 @@
 #include "common.h"
+#include "collection_iterator.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef signed char s8;
 typedef signed short s16;
 
-typedef struct {
-    u8 kind;
-    u8 pad1;
-    u8 flags;
-    u8 pad3[2];
-    u8 slot;
-} Item;
 
 /* The iterator stores its collection and yielded item as genuine pointers. */
-typedef struct { s32 index; void *collection; s32 reverse; Item *current; } Iter;
 
 /* Container vtable (D_80154390 family): count at 0x24, item at 0x3C. */
 typedef struct {
@@ -61,11 +55,7 @@ s32 func_800A44F4(void *self, void *target);
 s32 func_800FB7AC(Unit *self, Unit *target);
 u8 func_800C57CC(void *rng, s32 limit);
 extern s32 func_800AE9AC(Item *, s32, s32);
-char *func_800AE674(void *obj);
 void *func_8011422C(u8 *);
-Iter *func_800CEB20(Iter *it, void *list);
-extern s32 func_800CEBA0(Iter *);
-extern void *func_800CEC68(Iter *);
 void func_800D3650(void *arg);
 void func_800CD468(void *list);
 void func_8011541C(Item *obj);
@@ -131,15 +121,15 @@ s32 func_800FB9B0(Unit *self, Unit *target) {
 
                 item = items->vtable->item((u8 *)items + items->vtable->item_delta,
                                            func_800C57CC(D_80147620, (u8)(count - 1)));
-                if (item->flags & 4) {
+                if (item->flags02 & 4) {
                     return 0;
                 }
-                slot = item->slot;
+                slot = item->owner05;
                 before = func_800AE9AC(item, 0, 0);
                 item_name = func_800AE674(item);
-                if (item->kind == 9) {
+                if (item->field00 == 9) {
                     void *contents = func_8011422C((u8 *)item);
-                    Iter it;
+                    CollectionIterator it;
 
                     func_800CEB20(&it, contents);
                     while (func_800CEBA0(&it)) {
@@ -151,7 +141,7 @@ s32 func_800FB9B0(Unit *self, Unit *target) {
                 func_8011FEF0(func_800AC5F4(0xC, item));
                 func_800AE974(item, (s8)slot);
                 /* Slot byte 0xFF (-1) means unequipped. */
-                if (~(s8)item->slot) {
+                if (~(s8)item->owner05) {
                     func_800D3698((s8)slot, before - func_800AE9AC(item, 0, 0));
                 }
                 func_80049CB4(0x1131);

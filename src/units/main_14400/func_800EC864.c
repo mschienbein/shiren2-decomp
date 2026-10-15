@@ -1,4 +1,5 @@
 #include "common.h"
+#include "collection_iterator.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -9,7 +10,6 @@ typedef struct {
 } Ent;
 
 /* Word-aligned 16-byte stack storage; the constructor stores a collection pointer at +4. */
-typedef struct { s32 index; void *collection; s32 active; Ent *current; } Iter;
 
 typedef struct {
     u8 pad0[7];
@@ -32,9 +32,6 @@ extern const u8 D_8015488C[8];
 
 void func_800ECA18(Obj *obj);
 Status *func_800C9E10(void);
-Iter *func_800CEB20(Iter *it, void *list);
-extern s32 func_800CEBA0(Iter *);
-extern Ent *func_800CEC68(Iter *);
 void *func_8011422C(u8 *);
 void func_800EC9D0(Obj *obj, u8 id);
 void func_800CF834(void *list);
@@ -47,8 +44,8 @@ void func_800EC864(Obj *obj, u8 kind, s32 refresh) {
         obj->flags_94 |= 6;
         obj->flags_E4 &= ~0x20;
     } else if (kind == 1 && !(func_800C9E10()->flags_07 & D_8015488C[3])) {
-        Iter outer;
-        Iter inner;
+        CollectionIterator outer;
+        CollectionIterator inner;
 
         obj->flags_94 |= 1;
         func_800CEB20(&outer, obj->list_CC);
@@ -59,7 +56,7 @@ void func_800EC864(Obj *obj, u8 kind, s32 refresh) {
             if (ent->kind == 9) {
                 func_800CEB20(&inner, func_8011422C((u8 *)ent));
                 while (func_800CEBA0(&inner)) {
-                    func_800EC9D0(obj, func_800CEC68(&inner)->id);
+                    func_800EC9D0(obj, ((Ent *)func_800CEC68(&inner))->id);
                 }
             }
         }

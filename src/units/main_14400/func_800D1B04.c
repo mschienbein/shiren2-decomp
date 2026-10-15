@@ -16,7 +16,9 @@ extern SharedMenu D_80140080;
 extern void func_80047A90(void *);
 extern s32 func_80047AF4(void *, s32);
 extern void func_80047AC0(void *);
-s32 func_800D1B04(void) {
+/* ROM caller 0x141918 supplies func_800C9E00()'s result. The provider instead
+ * uses D_80140080 (VRAM 0x800D1B1C); the supplied receiver remains explicit. */
+s32 func_800D1B04(void *unused_receiver) {
     s32 r;
     func_80047A90(&D_80140080);
     r = func_80047AF4(&D_80140080, 1);

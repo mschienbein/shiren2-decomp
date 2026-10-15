@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef signed char s8;
 typedef unsigned char u8;
@@ -56,7 +57,7 @@ typedef struct {
 
 typedef struct {
     Inv800F8060 *owner;
-    void *item;
+    Item *item;
 } Slot800F8060;
 
 typedef struct {
@@ -81,13 +82,12 @@ s32 func_80049CB4(s32 id, ...);
 s32 func_8005EF08(char *buf, const char *fmt, ...);
 Menu800F8060 *func_800953C0(Menu800F8060 *menu);
 s32 func_800957C0(void *menu, Result800F8060 *result, s32 a, void *b, s32 c);
-void func_80097B90(List800F8060 *list, Inv800F8060 *inv, void *a, s32 b, void *c, s32 d);
+void func_80097B90(List800F8060 *list, Inv800F8060 *inv, void *a, s32 b, const void *c, s32 d);
 void func_80099E50(List800F8060 *list);
 s32 func_8009A038(List800F8060 *list);
 Slot800F8060 func_8009A054(List800F8060 *list, s32 index);
 void func_8009D610(Menu800F8060 *menu, char *buf, void *a, void *b);
 char *func_800A3B20(void *self);
-char *func_800AE674(void *item);
 s32 func_800AEC2C(void *item);
 void func_800D05A4(void *dst, Slot800F8060 *slot);
 void *func_800D8FB0(u32 size);
@@ -161,7 +161,7 @@ retry:
         if (count >= 2) {
             func_8005EF08(buf, func_80048480(0x1E4), count, total);
         } else {
-            void *item;
+            Item *item;
 
             slot = func_8009A054(&D_801404E0, 0);
             item = slot.item;

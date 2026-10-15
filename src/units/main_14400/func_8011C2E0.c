@@ -1,12 +1,9 @@
-#include "common.h"
+#include "map_rect.h"
 typedef struct { s32 x, y; } Pos;
-typedef struct { s32 unk[4]; } Area;
 typedef struct { short delta; short index; s32 (*fn)(void *, s32, s32, unsigned char, s32); } VEntry;
 typedef struct { char pad[0x24]; VEntry *vtbl; } Obj;
 extern u32 D_8013960C;
-/* Returns its rectangle by value through the hidden result pointer. */
-Area func_800B3080(Pos *pos);
-s32 func_800B2A14(Area *, s32);
+s32 func_800B2A14(MapRect *, s32);
 s32 func_80049CB4(s32 id, ...);
 void func_800498E4(s32, ...);
 s32 func_800A8FC8(s32 *, s32);
@@ -19,7 +16,7 @@ static inline void Pos_copy(Pos *dst, Pos *src) {
 /* Item-effect slot +0x44 supplies self, actor and item; self and item are unused here. */
 void func_8011C2E0(void *self, Pos *src, void *item) {
     Pos pos;
-    Area area;
+    MapRect area;
     Pos_copy(&pos, src);
     area = func_800B3080(&pos);
     if (func_800B2A14(&area, 0)) {

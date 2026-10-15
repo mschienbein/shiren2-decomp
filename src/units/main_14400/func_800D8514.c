@@ -10,7 +10,7 @@ extern Loader D_801404E0;
 extern s32 D_8013906C[2];
 s32 func_8009A364(void *item);
 s32 func_800CE46C(void *list, s32 (*pred)(void *));
-void func_80097B90(void *obj, void *owner, void *holder, s32 mode, void *desc, s32 flag);
+void func_80097B90(void *obj, void *owner, void *holder, s32 mode, const void *desc, s32 flag);
 s32 func_800957C0(void *obj, void *out, s32 a2, void *a3, s32 a4);
 s32 func_8009A038(Loader *l);
 Item func_8009A054(void *obj, s32 index);

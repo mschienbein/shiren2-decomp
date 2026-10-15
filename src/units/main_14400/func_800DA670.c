@@ -14,7 +14,7 @@ typedef struct Unit {
 typedef struct Rng Rng;
 extern Rng D_80147620;
 extern Unit *D_801476B8;
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 /* Direction offsets probed in preference order (front first, back last). */
 extern const s32 D_80158334[];

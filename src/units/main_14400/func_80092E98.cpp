@@ -7,14 +7,14 @@ typedef unsigned char u8;
 typedef short s16;
 
 /* Container/item link produced by the struct-returning queries. */
-typedef struct { void *container; void *item; } Pair;
+typedef struct { void *container; void *item; } Pair_80092E98;
 
-typedef struct MenuBase { char pad0[0x4C]; const void *vtbl; } MenuBase;
+typedef struct MenuBase_80092E98 { char pad0[0x4C]; const void *vtbl; } MenuBase_80092E98;
 /* 0x40C-byte menu panels (D_801404E0, D_801408EC, D_80141104). */
-typedef struct MenuPanel {
-    MenuBase base;
+typedef struct MenuPanel_80092E98 {
+    MenuBase_80092E98 base;
     char pad50[0xC8 - 0x50];
-    MenuBase second;
+    MenuBase_80092E98 second;
     char pad118[0x128 - 0x118];
     char unk128[0x194 - 0x128];
     const void *unk194;
@@ -23,11 +23,11 @@ typedef struct MenuPanel {
     char pad2A4[0x2CC - 0x2A4];
     s32 field_2CC, field_2D0;
     char pad2D4[0x40C - 0x2D4];
-} MenuPanel;
+} MenuPanel_80092E98;
 
-typedef struct { void *entries[8]; s32 count; } Selection;
+typedef struct { void *entries[8]; s32 count; } Selection_80092E98;
 /* Field (main) menu owner: selection history at +0x64, chosen item at +0x88. */
-typedef struct { u8 pad_0[0x64]; Selection selection_64; void *item_88; } Object;
+typedef struct { u8 pad_0[0x64]; Selection_80092E98 selection_64; void *item_88; } Object_80092E98;
 
 /* Unit command menu built by func_80096140 (0x1A4 bytes): own vtable at +0x4C, the
  * list member at +0x64 with its vtable at +0xB0. */
@@ -35,51 +35,51 @@ typedef struct Unit Unit;
 extern "C" const unsigned char D_80151E38[144];
 extern "C" s32 D_80151F30[];
 extern "C" char D_80151350[], D_80149F30[];
-struct Menu;
-extern "C" Menu *func_80096140(Menu *menu, Unit *unit);
+struct Menu_80092E98;
+extern "C" Menu_80092E98 *func_80096140(Menu_80092E98 *menu, Unit *unit);
 /* Widget base: method table at +0x4C; its destructor reinstalls the root table. */
-struct Widget {
+struct Widget_80092E98 {
     char pad0[0x4C];
     const void *vtable;
-    ~Widget() { vtable = D_80151E38; }
+    ~Widget_80092E98() { vtable = D_80151E38; }
 };
 
 /* 0x140-byte list member (vtable at +0x4C). */
-struct ListMenu : Widget {
+struct ListMenu_80092E98 : Widget_80092E98 {
     char pad50[0x140 - 0x50];
 };
 
 /* Unit command menu built by func_80096140 (0x1A4 bytes). */
-struct Menu : Widget {
+struct Menu_80092E98 : Widget_80092E98 {
     char pad50[0x64 - 0x50];
-    ListMenu sub64;
-    Menu() {}
-    ~Menu() { vtable = D_80151F30; }
+    ListMenu_80092E98 sub64;
+    Menu_80092E98() {}
+    ~Menu_80092E98() { vtable = D_80151F30; }
 };
 
 /* Cursor menu (root table D_80151350, vptr at +0xC). */
-struct MenuCursor {
+struct MenuCursor_80092E98 {
     s32 index;
     void *records;
     s32 done;
     const void *vtable_0C;
-    MenuCursor() { vtable_0C = D_80151350; }
-    ~MenuCursor() { vtable_0C = D_80151350; }
+    MenuCursor_80092E98() { vtable_0C = D_80151350; }
+    ~MenuCursor_80092E98() { vtable_0C = D_80151350; }
 };
 
 /* Cursor menu over the field options (method table D_80149F30). */
-struct OptionCursor : MenuCursor {
-    OptionCursor() { records = 0; vtable_0C = D_80149F30; }
+struct OptionCursor_80092E98 : MenuCursor_80092E98 {
+    OptionCursor_80092E98() { records = 0; vtable_0C = D_80149F30; }
 };
 
-typedef struct { s16 delta, index; void *(*call)(void *self, u32 index); } ItemSlot;
-typedef struct { u8 pad_00[0x38]; ItemSlot item; } ItemSetVtbl;
-typedef struct { s32 unk_00; ItemSetVtbl *vtbl; } ItemSet;
+typedef struct { s16 delta, index; void *(*call)(void *self, u32 index); } ItemSlot_80092E98;
+typedef struct { u8 pad_00[0x38]; ItemSlot_80092E98 item; } ItemSetVtbl_80092E98;
+typedef struct { s32 unk_00; ItemSetVtbl_80092E98 *vtbl; } ItemSet_80092E98;
 
 typedef struct Command Command;
 
 extern "C" Unit *D_801476B8;
-extern "C" MenuPanel D_801404E0, D_801408EC, D_80141104;
+extern "C" MenuPanel_80092E98 D_801404E0, D_801408EC, D_80141104;
 
 
 extern "C" void func_80048380(void);
@@ -95,23 +95,23 @@ extern "C" Command *func_800DA010(void *obj);
 extern "C" Command *func_800D9F20(void *obj);
 extern "C" Command *func_800DFC80(void *obj);
 extern "C" Command *func_800DD970(void *obj, void *context);
-extern "C" Command *func_800DB7DC(void *obj, Pair *source, Pair *target);
+extern "C" Command *func_800DB7DC(void *obj, Pair_80092E98 *source, Pair_80092E98 *target);
 /* Original call sites explicitly supply these otherwise-unused receivers. */
-extern "C" void func_800480A0(MenuCursor *unused_receiver);
-extern "C" s32 func_800918B0(MenuCursor *self);
+extern "C" void func_800480A0(MenuCursor_80092E98 *unused_receiver);
+extern "C" s32 func_800918B0(MenuCursor_80092E98 *self);
 extern "C" void func_800480EC(void *unused_receiver);
-extern "C" void func_80094DAC(Object *unused_receiver);
-extern "C" void func_80094E10(Object *unused_receiver);
-extern "C" void func_80094F30(Object *unused_receiver);
-extern "C" Pair func_80097F20(MenuPanel *menu);
+extern "C" void func_80094DAC(Object_80092E98 *unused_receiver);
+extern "C" void func_80094E10(Object_80092E98 *unused_receiver);
+extern "C" void func_80094F30(Object_80092E98 *unused_receiver);
+extern "C" Pair_80092E98 func_80097F20(MenuPanel_80092E98 *menu);
 extern "C" s32 func_800D0248(void *object);
-extern "C" void func_80095CC0(Selection *self, s32 count);
-extern "C" void *func_80093944(void *unused, s32 type, Pair *ctx, void *source);
-extern "C" void *func_80093530(void *unused, s32 type, Pair *ctx);
-extern "C" ItemSet *func_800EBA54(Unit *unit);
+extern "C" void func_80095CC0(Selection_80092E98 *self, s32 count);
+extern "C" void *func_80093944(void *unused, s32 type, Pair_80092E98 *ctx, void *source);
+extern "C" void *func_80093530(void *unused, s32 type, Pair_80092E98 *ctx);
+extern "C" ItemSet_80092E98 *func_800EBA54(Unit *unit);
 extern "C" void *func_800D0190(void *output, void *helper, void *item);
 
-extern "C" void *func_80092E98(Object *self)
+extern "C" void *func_80092E98(Object_80092E98 *self)
 {
     Unit *unit = D_801476B8;
     s32 choices[8];
@@ -120,13 +120,13 @@ extern "C" void *func_80092E98(Object *self)
 
     func_80048380();
     for (i = 7; i >= 0; i--) choices[i] = 0;
-    Menu menu;
-    Menu *active = &menu;
+    Menu_80092E98 menu;
+    Menu_80092E98 *active = &menu;
     func_80096140(active, unit);
     selected = func_800957C0(active, choices, 1, &self->selection_64, 0) == 1;
     if (!selected) return 0;
-    Pair ctx;
-    MenuPanel *work;
+    Pair_80092E98 ctx;
+    MenuPanel_80092E98 *work;
     func_800D0180(&ctx);
     switch (choices[0]) {
     case 0x44:
@@ -138,7 +138,7 @@ extern "C" void *func_80092E98(Object *self)
         case 0x2E:
             return func_800DF740(func_800D8FB0(0xC));
         case 0x47: {
-            OptionCursor cursor;
+            OptionCursor_80092E98 cursor;
 
             func_800480A0(&cursor);
             func_800918B0(&cursor);
@@ -207,8 +207,8 @@ extern "C" void *func_80092E98(Object *self)
             if (choices[3] == 0) return 0;
             return func_80093944(self, 0x2C, &ctx, work);
         case 0x4C: {
-            ItemSet *set = func_800EBA54(D_801476B8);
-            Pair source;
+            ItemSet_80092E98 *set = func_800EBA54(D_801476B8);
+            Pair_80092E98 source;
 
             func_800D0190(&source, set, set->vtbl->item.call((u8 *)set + set->vtbl->item.delta, 0));
             return func_800DB7DC(func_800D8FB0(0x18), &source, &ctx);

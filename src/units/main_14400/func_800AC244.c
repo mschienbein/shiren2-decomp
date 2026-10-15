@@ -1,10 +1,9 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
 typedef void *(*Factory800AC244)(void);
-extern s32 D_80143094[];
 extern u8 D_8015374C[];
 extern Factory800AC244 *D_80153860[];
-extern s32 func_800AF950(s32 *state);
 extern u8 func_800AC1AC(u8 id);
 extern void *func_800AC5B4(s32 size, s32 alternate);
 extern void *func_8010EA20(void *obj, s32 id);
@@ -14,7 +13,7 @@ extern void *func_8010DE30(void *obj, s32 id);
 extern void *func_8010DD70(void *obj, s32 id);
 extern s32 func_800AC670(void *obj);
 static __inline__ s32 unavailable(void) {
-    return func_800AF950(D_80143094) ^ 1;
+    return func_800AF950(&D_80143094) ^ 1;
 }
 void *func_800AC244(u8 id) {
     s32 item_id;

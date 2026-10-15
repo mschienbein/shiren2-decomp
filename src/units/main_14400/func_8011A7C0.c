@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 
@@ -13,10 +14,8 @@ typedef struct {
     u8 flags_1E;
 } Obj8011A7C0;
 
-typedef struct Item Item;
 
 extern void *func_800E8A68(Obj8011A7C0 *obj, u8 arg1);
-extern char *func_800AE674(void *obj);
 extern s32 func_8010BAE8(Item *, s32);
 extern s32 func_80049CB4(s32 id, ...);
 extern void func_800498E4(s32 id, ...);
@@ -28,7 +27,7 @@ static inline void copy_pos(Pos8011A7C0 *to, Pos8011A7C0 *from) {
 
 /* Item vtable slot 8 (use on target): `self` and the third argument are unused here. */
 void func_8011A7C0(void *self, Obj8011A7C0 *target, void *arg2) {
-    void *item;
+    Item *item;
     char *name;
 
     if ((target->flags_1E >> 2) & 1) {

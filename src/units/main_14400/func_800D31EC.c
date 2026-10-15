@@ -1,39 +1,36 @@
 #include "common.h"
+#include "map_position_iterator.h"
 typedef unsigned char u8;
 typedef signed char s8;
-typedef struct { s32 x; s32 y; } Point;
-typedef struct { Point begin; Point end; } Rect;
-typedef struct { Point current; Point begin; Point end; } RectIter;
 typedef struct { s32 index; } EntityIter;
 typedef struct { u8 pad_0[0x98]; short delta_98; short pad_9A; void *(*field_9C)(void *); } Methods;
 typedef struct { u8 pad_0[0x24]; Methods *methods; u8 pad_28[0x64]; void *field_8C; } Entity;
 typedef struct { u8 kind; u8 pad_1[4]; s8 owner; } Item;
-typedef struct { s32 field_0; Rect *field_4; s32 field_8; s32 field_C; } Obj;
+typedef struct { s32 field_0; MapRect *field_4; s32 field_8; s32 field_C; } Obj;
 extern Entity *D_801476B8;
-extern Rect D_801429C0;
+extern MapRect D_801429C0;
 extern s32 func_800D2BD4(Obj *);
 extern void func_800CDCC8(void *, s8);
 extern s32 func_800A8FC8(EntityIter *, s32);
 extern void *func_800A910C(EntityIter *);
-extern Point *func_800A3610(Point *, RectIter *);
-extern s32 func_800A31C8(Rect *, Point *);
-extern void *func_800B4D80(Point *);
+extern s32 func_800A31C8(MapRect *, MapPos *);
+extern void *func_800B4D80(MapPos *);
 extern void *func_8011422C(u8 *);
 static inline void *inventory(Entity *entity) {
     return entity->methods->field_9C((u8 *)entity + entity->methods->delta_98);
 }
-static inline Point *copy_point(Point *out, Point *in) {
+static inline MapPos *copy_point(MapPos *out, MapPos *in) {
     out->x = in->x;
     out->y = in->y;
     return out;
 }
-static inline void init_rect(RectIter *it, Rect *bounds, Point *point) {
-    it->begin = *copy_point(point, &bounds->begin);
-    it->current = it->begin;
-    it->end = *copy_point(point, &bounds->end);
+static inline void init_rect(MapPositionIterator *it, MapRect *bounds, MapPos *point) {
+    it->start = *copy_point(point, &bounds->min);
+    it->cur = it->start;
+    it->end = *copy_point(point, &bounds->max);
 }
-static inline s32 has_next(RectIter *it) {
-    return it->current.x <= it->end.x;
+static inline s32 has_next(MapPositionIterator *it) {
+    return it->cur.x <= it->end.x;
 }
 void func_800D31EC(Obj *obj) {
     EntityIter entities;
@@ -52,8 +49,8 @@ void func_800D31EC(Obj *obj) {
         if (entity->field_8C) func_800CDCC8(entity->field_8C, (s8)owner);
     }
     if (obj->field_4) {
-        RectIter it;
-        Point point;
+        MapPositionIterator it;
+        MapPos point;
         init_rect(&it, &D_801429C0, &point);
         while (has_next(&it)) {
             Item *item;

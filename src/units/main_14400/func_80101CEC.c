@@ -1,9 +1,8 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef struct { u8 pad_00[0x72]; u8 field_72; } Obj;
-typedef struct { u8 pad_00[8]; short delta_08; short index_0A; void (*method_0C)(void *, s32); } ItemMethods;
-typedef struct { u8 pad_00[8]; ItemMethods *field_08; } Item;
 typedef struct { s32 field_00, field_04; } Entry;
 typedef struct { s32 field_00; u8 pad_04[12]; Entry *field_10; } Message;
 extern u8 D_801531A0[];
@@ -31,7 +30,7 @@ s32 func_80101CEC(Obj *obj, Message *message)
                 if (func_800AD714(item, obj)) {
                     func_800AD8AC(item, obj);
                 } else {
-                    item->field_08->method_0C((u8 *)item + item->field_08->delta_08, 3);
+                    item->field08->method0C((u8 *)item + item->field08->delta08, 3);
                 }
             }
         }

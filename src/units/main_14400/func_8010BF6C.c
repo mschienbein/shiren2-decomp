@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 /* func_800CEC90 and func_800CE658 initialize this embedded collection. */
@@ -17,14 +18,14 @@ s32 func_8010C38C(void*);
 void *func_800CF058(Collection*, u8);
 char *func_800AC990(void*);
 void func_800498E4(s32, ...);
-s32 func_800AE498(void*);
+s32 func_800AE498(Item*);
 void func_800AE518(void*, Map*, s32, s32);
 s32 func_8010BF6C(u8 *obj, Map *mapArg, s32 check){
     Map *map;
     s32 notSet;
     u8 kind;
-    void *first;
-    void *second;
+    Item *first;
+    Item *second;
     s32 found;
     s32 ok;
     notSet = ((mapArg->flags >> 2) & 1) ^ 1;

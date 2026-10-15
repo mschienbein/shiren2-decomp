@@ -1,4 +1,5 @@
 #include "common.h"
 
-extern void func_80130FE0(void *, s32);
-void func_80058E20(void *object, s32 value) { func_80130FE0(object, value); }
+typedef struct OSPfsState OSPfsState;
+extern void func_80130FE0(void *, OSPfsState *);
+void func_80058E20(void *object, OSPfsState *state) { func_80130FE0(object, state); }

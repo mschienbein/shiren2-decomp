@@ -1,43 +1,36 @@
-#include "common.h"
+#include "map_rect.h"
 
-typedef struct {
-    s32 left;
-    s32 top;
-    s32 right;
-    s32 bottom;
-} Rect;
-
-Rect *func_800A324C(Rect *out, Rect *a, Rect *b) {
-    Rect r;
+MapRect *func_800A324C(MapRect *out, const MapRect *a, const MapRect *b) {
+    MapRect r;
 
     s32 top;
     s32 left;
     s32 bottom;
     s32 right;
 
-    top = b->top;
-    if (top < a->top) {
-        top = a->top;
+    top = b->min.y;
+    if (top < a->min.y) {
+        top = a->min.y;
     }
-    r.top = top;
-    left = b->left;
-    if (left < a->left) {
-        left = a->left;
+    r.min.y = top;
+    left = b->min.x;
+    if (left < a->min.x) {
+        left = a->min.x;
     }
-    r.left = left;
-    bottom = b->bottom;
-    if (a->bottom < bottom) {
-        bottom = a->bottom;
+    r.min.x = left;
+    bottom = b->max.y;
+    if (a->max.y < bottom) {
+        bottom = a->max.y;
     }
-    r.bottom = bottom;
-    right = b->right;
-    if (a->right < right) {
-        right = a->right;
+    r.max.y = bottom;
+    right = b->max.x;
+    if (a->max.x < right) {
+        right = a->max.x;
     }
-    r.right = right;
-    out->left = r.left;
-    out->top = r.top;
-    out->right = r.right;
-    out->bottom = r.bottom;
+    r.max.x = right;
+    out->min.x = r.min.x;
+    out->min.y = r.min.y;
+    out->max.x = r.max.x;
+    out->max.y = r.max.y;
     return out;
 }

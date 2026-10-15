@@ -4,8 +4,8 @@ typedef struct {
     char pad0[0x20];
     s32 unit_20;
     char pad24[0x3B4 - 0x24];
-    s32 ids_3B4[3];
-    s32 count_3C0;
+    /* Three groups plus the end boundary; +0x3C0 is ids_3B4[3]. */
+    s32 ids_3B4[4];
     s32 offsets_3C4[4];
     s32 starts_3D4[4];
 } Obj80098E34;

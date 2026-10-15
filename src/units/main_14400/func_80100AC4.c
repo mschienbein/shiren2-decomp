@@ -5,7 +5,7 @@ typedef struct { u8 field_00[0x8A]; u8 field_8A; } Actor;
 typedef struct { u8 field_00[0x10]; Actor *field_10; } Object;
 /* Whole 12-byte selection record; the mode is the byte at +8. */
 typedef struct {
-    unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode;
+    unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode;
     signed char coordinates[2], status;
 } SelectionRecord;
 extern SelectionRecord D_80142F18;

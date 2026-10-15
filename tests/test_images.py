@@ -38,8 +38,9 @@ class ImageInventoryTests(unittest.TestCase):
         self.assertEqual(main.size, 0x11F5F0)
         self.assertEqual(main.vram_rom_delta, 0x8002CFC0)
         self.assertEqual([(part.vram_start, part.vram_end) for part in main.bss_ranges], [(0x801609B0, 0x801E4EA0)])
-        self.assertEqual(self.inventory.images["overlay_1339f0"].bss_status, "unknown")
-        self.assertEqual(self.inventory.images["overlay_1339f0"].bss_ranges, ())
+        overlay_a = self.inventory.images["overlay_1339f0"]
+        self.assertEqual(overlay_a.bss_status, "reviewed")
+        self.assertEqual([(part.vram_start, part.vram_end) for part in overlay_a.bss_ranges], [(0x801E8270, 0x801E8700)])
 
     def test_incomplete_inventory_has_no_code_denominator(self) -> None:
         self.assertFalse(self.inventory.inventory_complete)
@@ -90,7 +91,8 @@ class ImageInventoryTests(unittest.TestCase):
 
     def test_original_rom_storage_overlap_is_rejected(self) -> None:
         self.document["images"][3]["rom_start"] = 0x136DBC
-        self.document["images"][3]["vram_end"] += 4
+        # Keep the initialized RAM clear of B's reviewed BSS, which now follows it directly.
+        self.document["images"][3]["vram_start"] -= 4
         with self.assertRaisesRegex(ValueError, "Overlapping original ROM image storage"):
             validate_inventory(self.document)
 
@@ -181,6 +183,56 @@ class ImageInventoryTests(unittest.TestCase):
             with self.subTest(key=key), self.assertRaises(ValueError):
                 validate_inventory(altered)
 
+    def test_rsp_components_preserve_fixed_partitions_and_endpoint_confidence(self) -> None:
+        components = {part.component_id: part for part in self.inventory.components}
+        self.assertEqual(set(components), {"rsp_boot", "rsp_gfx_text", "rsp_audio_text", "rsp_gfx_data", "rsp_audio_data"})
+        gfx = components["rsp_gfx_text"]
+        self.assertEqual((gfx.rom_start, gfx.rom_end, gfx.execution_start, gfx.execution_end),
+                         (0x109B20, 0x10AEB0, 0x04001080, 0x04002000))
+        self.assertTrue(all(part.cpu_c_excluded and part.parent_image_id == "main_14400" for part in components.values()))
+        for name in ("rsp_audio_text", "rsp_audio_data"):
+            self.assertEqual(components[name].confidence, "provisional-component-extent")
+        altered = copy.deepcopy(self.document)
+        altered["components"][2]["confidence"] = "reviewed-component-extent"
+        with self.assertRaises(ValueError):
+            validate_inventory(altered)
+        with self.assertRaisesRegex(ValueError, "includes confirmed non-CPU component"):
+            require_cpu_range("main_14400", 0x11D4C0, 8, self.inventory)
+        for index, key, value in [(1, "rom_end", 0x10AEC0), (2, "execution_end", 0x04001CD4), (3, "component_id", "rsp_other")]:
+            altered = copy.deepcopy(self.document)
+            altered["components"][index][key] = value
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                validate_inventory(altered)
+        altered = copy.deepcopy(self.document)
+        del altered["components"][4]
+        with self.assertRaisesRegex(ValueError, "identities and extents"):
+            validate_inventory(altered)
+
+    def test_historical_bootstrap_inventory_keeps_all_known_cpu_exclusions(self) -> None:
+        historical = copy.deepcopy(self.document)
+        historical["components"] = [historical["components"][0]]
+        inventory = validate_inventory(historical)
+        self.assertEqual([part.component_id for part in inventory.components], ["rsp_boot"])
+        for start in (0x109A50, 0x109B20, 0x10AEB0, 0x11D0A0, 0x11D4C0):
+            with self.subTest(start=start), self.assertRaisesRegex(ValueError, "includes confirmed non-CPU component"):
+                require_cpu_range("main_14400", start, 4, inventory)
+        for start, end in ((0x10AEB0, 0x10BB10), (0x11D4C0, 0x11D770)):
+            altered = copy.deepcopy(historical)
+            hint = altered["images"][1]["provisional_cpu_ranges"][0]
+            hint["rom_start"], hint["rom_end"] = start, end
+            with self.subTest(start=start), self.assertRaisesRegex(ValueError, "confirmed RSP exclusion"):
+                validate_inventory(altered)
+        for change in ("absent", "forged-extent", "unknown"):
+            altered = copy.deepcopy(historical)
+            if change == "absent":
+                altered["components"] = []
+            elif change == "forged-extent":
+                altered["components"][0]["execution_end"] += 4
+            else:
+                altered["components"][0]["component_id"] = "rsp_forged"
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, "identities and extents"):
+                validate_inventory(altered)
+
     def test_provisional_cpu_hints_cannot_claim_rsp_or_final_boundaries(self) -> None:
         for change in ("rsp", "outside", "confidence"):
             altered = copy.deepcopy(self.document)
@@ -229,60 +281,79 @@ class ImageInventoryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Ambiguous splat segment"):
             validate_inventory(self.document)
 
-    def test_main_split_can_be_promoted_without_enabling_overlay_linkage(self) -> None:
-        self.document["images"][1]["split_status"] = "active"
-        self.assertEqual(validate_inventory(self.document).images["main_14400"].split_status, "active")
-        self.document["images"][2]["splat_segments"] = ["overlay_1339f0"]
-        self.document["images"][2]["split_status"] = "active"
-        with self.assertRaisesRegex(ValueError, "Overlay split/linkage is unsupported"):
-            validate_inventory(self.document)
-
-    def test_storage_only_b_has_exact_mapping_and_no_cpu_or_bss_claim(self) -> None:
-        overlay = self.inventory.images["overlay_136dc0"]
-        self.assertEqual(overlay.split_status, "active")
-        self.assertEqual(overlay.splat_segments, ("overlay_b_136dc0_storage",))
-        self.assertEqual((overlay.rom_start, overlay.rom_end), (0x136DC0, 0x148460))
-        self.assertEqual((overlay.vram_start, overlay.vram_end), (0x801E4EA0, 0x801F6540))
-        self.assertEqual(overlay.size, 71328)
-        self.assertEqual(overlay.vram_rom_delta, 0x800AE0E0)
-        self.assertEqual(overlay.bss_status, "unknown")
-        self.assertEqual(overlay.bss_ranges, ())
-        self.assertEqual(overlay.provisional_cpu_ranges, ())
-        self.assertEqual(self.inventory.images["overlay_1339f0"].split_status, "opaque")
+    def test_overlays_are_two_active_code_parents_with_reviewed_bss(self) -> None:
+        for name, rom, vram_end, bss, cpu in [
+            ("overlay_1339f0", (0x1339F0, 0x136DC0), 0x801E8270, (0x801E8270, 0x801E8700), (0x1339F0, 0x136380)),
+            ("overlay_136dc0", (0x136DC0, 0x148460), 0x801F6540, (0x801F6540, 0x801F7200), (0x136DC0, 0x147030)),
+        ]:
+            with self.subTest(image=name):
+                overlay = self.inventory.images[name]
+                self.assertEqual((overlay.split_status, overlay.splat_segments), ("active", (name,)))
+                self.assertEqual((overlay.rom_start, overlay.rom_end), rom)
+                self.assertEqual((overlay.vram_start, overlay.vram_end), (0x801E4EA0, vram_end))
+                self.assertEqual(overlay.load_slot, "overlay_801e4ea0")
+                self.assertEqual(overlay.bss_status, "reviewed")
+                self.assertEqual([(part.vram_start, part.vram_end) for part in overlay.bss_ranges], [bss])
+                self.assertEqual([(part.rom_start, part.rom_end, part.confidence) for part in overlay.provisional_cpu_ranges], [(*cpu, "provisional")])
+        self.assertEqual(self.inventory.images["overlay_136dc0"].vram_rom_delta, 0x800AE0E0)
         self.assertFalse(self.inventory.cpu_inventory_complete)
         self.assertIsNone(self.inventory.code_denominator_bytes)
 
-    def test_opaque_b_remains_supported_without_segment_identity(self) -> None:
-        self.document["images"][3]["split_status"] = "opaque"
-        self.document["images"][3]["splat_segments"] = []
-        inventory = validate_inventory(self.document)
-        self.assertEqual(inventory.images["overlay_136dc0"].split_status, "opaque")
-        self.assertIsNone(image_for_segment("overlay_b_136dc0_storage", inventory))
-
-    def test_other_b_linkage_shapes_are_rejected(self) -> None:
-        for status, segments in [
-            ("planned", ["overlay_b_136dc0_storage"]),
-            ("active", ["overlay_136dc0"]),
-            ("active", ["overlay_b_136dc0_storage", "extra_b_segment"]),
-        ]:
+    def test_overlays_may_remain_opaque_without_segment_identity(self) -> None:
+        for index, name in ((2, "overlay_1339f0"), (3, "overlay_136dc0")):
             altered = copy.deepcopy(self.document)
-            altered["images"][3]["split_status"] = status
-            altered["images"][3]["splat_segments"] = segments
-            with self.subTest(status=status, segments=segments), self.assertRaisesRegex(ValueError, "storage-only overlay B"):
-                validate_inventory(altered)
+            altered["images"][index]["split_status"] = "opaque"
+            altered["images"][index]["splat_segments"] = []
+            altered["source_bindings"] = {
+                source: image for source, image in altered["source_bindings"].items()
+                if image != name
+            }
+            inventory = validate_inventory(altered)
+            with self.subTest(image=name):
+                self.assertEqual(inventory.images[name].split_status, "opaque")
+                self.assertIsNone(image_for_segment(name, inventory))
 
-    def test_shared_slot_does_not_allow_active_a_with_b(self) -> None:
-        self.document["images"][2]["split_status"] = "active"
-        self.document["images"][2]["splat_segments"] = ["overlay_a_storage"]
-        with self.assertRaisesRegex(ValueError, "unsupported for overlay_1339f0"):
+    def test_other_overlay_linkage_shapes_are_rejected(self) -> None:
+        for index, name in ((2, "overlay_1339f0"), (3, "overlay_136dc0")):
+            for status, segments in [
+                ("planned", [name]),
+                ("active", ["overlay_b_136dc0_storage" if index == 3 else "overlay_1339f0_opaque"]),
+                ("active", [name, f"{name}_extra"]),
+                ("active", ["overlay_a"]),
+            ]:
+                altered = copy.deepcopy(self.document)
+                altered["images"][index]["split_status"] = status
+                altered["images"][index]["splat_segments"] = segments
+                with self.subTest(image=name, status=status, segments=segments), self.assertRaisesRegex(ValueError, "named after its image"):
+                    validate_inventory(altered)
+
+    def test_overlays_cannot_swap_segment_identities(self) -> None:
+        self.document["images"][2]["splat_segments"] = ["overlay_136dc0"]
+        self.document["images"][3]["splat_segments"] = ["overlay_1339f0"]
+        with self.assertRaisesRegex(ValueError, "named after its image"):
             validate_inventory(self.document)
 
-    def test_storage_only_overlays_cannot_bind_c_sources(self) -> None:
+    def test_overlay_sources_bind_only_active_image_units(self) -> None:
         for name in ("overlay_1339f0", "overlay_136dc0"):
+            source = f"src/units/{name}/func_801E4EA0_unit.c"
             altered = copy.deepcopy(self.document)
-            altered["source_bindings"]["src/overlay_binding.c"] = name
-            with self.subTest(image=name), self.assertRaisesRegex(ValueError, "Overlay source bindings are unsupported"):
-                validate_inventory(altered)
+            altered["source_bindings"][source] = name
+            with self.subTest(image=name):
+                self.assertEqual(image_for_source(source, validate_inventory(altered)).image_id, name)
+            for path, status in [
+                ("src/overlay_binding.c", "active"),
+                (f"src/units/main_14400/{name}_unit.c", "active"),
+                (f"src/units/{'overlay_136dc0' if name == 'overlay_1339f0' else 'overlay_1339f0'}/unit.c", "active"),
+                (source, "opaque"),
+            ]:
+                altered = copy.deepcopy(self.document)
+                index = 2 if name == "overlay_1339f0" else 3
+                if status == "opaque":
+                    altered["images"][index]["split_status"] = "opaque"
+                    altered["images"][index]["splat_segments"] = []
+                altered["source_bindings"][path] = name
+                with self.subTest(image=name, path=path, status=status), self.assertRaisesRegex(ValueError, "Overlay source bindings must be active-image units"):
+                    validate_inventory(altered)
 
     def test_cpp_sources_bind_and_cannot_share_a_c_unit_object(self) -> None:
         self.document["source_bindings"]["src/units/main_14400/cxx_unit.cpp"] = "main_14400"
@@ -294,14 +365,24 @@ class ImageInventoryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "ending in .c or .cpp"):
             image_for_source("src/units/main_14400/cxx_unit.cc", inventory)
 
-    def test_b_clear_leads_cannot_be_promoted_into_bss(self) -> None:
+    def test_overlay_bss_must_equal_the_reviewed_extent(self) -> None:
+        for index, change in [(2, "end"), (3, "end"), (3, "split"), (3, "empty")]:
+            altered = copy.deepcopy(self.document)
+            overlay = altered["images"][index]
+            if change == "end":
+                overlay["bss_ranges"][0]["vram_end"] += 0x10
+            elif change == "split":
+                first = overlay["bss_ranges"][0]
+                overlay["bss_ranges"] = [dict(first, vram_end=0x801F6800), dict(first, vram_start=0x801F6800)]
+            else:
+                overlay["bss_status"], overlay["bss_ranges"] = "unknown", []
+            with self.subTest(index=index, change=change), self.assertRaisesRegex(ValueError, "reviewed BSS mapping"):
+                validate_inventory(altered)
+
+    def test_overlay_bss_cannot_overlap_main_or_initialized_ram(self) -> None:
         overlay = self.document["images"][3]
-        overlay["bss_status"] = "reviewed"
-        overlay["bss_ranges"] = [{
-            "vram_start": 0x801F6540, "vram_end": 0x801F6544,
-            "evidence": ["overlay_later_transfer"],
-        }]
-        with self.assertRaisesRegex(ValueError, "reviewed BSS mapping"):
+        overlay["bss_ranges"][0]["vram_start"] = 0x801F653C
+        with self.assertRaisesRegex(ValueError, "initialized/BSS RAM"):
             validate_inventory(self.document)
 
     def test_image_digest_shape_is_not_original_byte_proof(self) -> None:
@@ -369,9 +450,10 @@ class ImageHelperTests(unittest.TestCase):
         for segment, expected in [("entry", "resident"), ("main", "resident"), ("main_14400", "main_14400")]:
             self.assertEqual(image_for_segment(segment, self.inventory).image_id, expected)
         self.assertIsNone(image_for_segment("remaining", self.inventory))
-        self.assertIsNone(image_for_segment("overlay_1339f0", self.inventory))
-        self.assertEqual(image_for_segment("overlay_b_136dc0_storage", self.inventory).image_id, "overlay_136dc0")
-        self.assertIsNone(image_for_segment("overlay_136dc0_initialized_opaque", self.inventory))
+        self.assertEqual(image_for_segment("overlay_1339f0", self.inventory).image_id, "overlay_1339f0")
+        self.assertEqual(image_for_segment("overlay_136dc0", self.inventory).image_id, "overlay_136dc0")
+        self.assertIsNone(image_for_segment("overlay_b_136dc0_storage", self.inventory))
+        self.assertIsNone(image_for_segment("overlay_1339f0_opaque", self.inventory))
         self.assertEqual(image_for_source("src/hardware_ai_length.c", self.inventory).image_id, "resident")
         self.assertIsNone(image_for_source("src/unbound.c", self.inventory))
         for segment in ("../main", "main/child", "main\\child"):
@@ -381,7 +463,8 @@ class ImageHelperTests(unittest.TestCase):
             image_for_source("src/../outside.c", self.inventory)
 
     def test_cpu_policy_rejects_rsp_intersections_and_invalid_ranges(self) -> None:
-        for start, size in [(0x109A50, 4), (0x109B1C, 8), (0x109A4C, 8), (0x109A40, 0xF0)]:
+        for start, size in [(0x109A50, 4), (0x109B1C, 8), (0x109A4C, 8), (0x109A40, 0xF0),
+                            (0x109B20, 16), (0x10AEB0, 16), (0x11D0A0, 16), (0x11D4C0, 16)]:
             with self.subTest(start=hex(start)), self.assertRaisesRegex(ValueError, "confirmed non-CPU"):
                 require_cpu_range("main_14400", start, size, self.inventory)
         for image, start, size in [
@@ -396,9 +479,6 @@ class ImageHelperTests(unittest.TestCase):
     def test_provisional_hints_never_become_authoritative_text_boundaries(self) -> None:
         self.assertEqual(require_cpu_range("resident", 0x12C0, 16, self.inventory).image_id, "resident")
         self.assertEqual(require_cpu_range("main_14400", 0x109A40, 16, self.inventory).image_id, "main_14400")
-        # Immediately after the RSP blob is outside the provisional CPU hint.
-        # The helper permits storage policy only; independent text proof is needed.
-        self.assertEqual(require_cpu_range("main_14400", 0x109B20, 16, self.inventory).image_id, "main_14400")
         self.assertEqual(require_cpu_range("overlay_136dc0", 0x136DC0, 16, self.inventory).image_id, "overlay_136dc0")
 
 

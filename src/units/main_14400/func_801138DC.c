@@ -1,11 +1,11 @@
 #include "common.h"
+#include "item_records.h"
 
-typedef struct { unsigned char pad[0xC]; unsigned char fC; } Timer;
-void func_8011391C(Timer *t, void *entity);
-void func_801138DC(Timer *t, void *entity) {
-    if (t->fC != 0) {
-        t->fC--;
-        if (t->fC == 0) {
+void func_8011391C(Item *t, void *entity);
+void func_801138DC(Item *t, void *entity) {
+    if (t->payload.timer.turns0C != 0) {
+        t->payload.timer.turns0C--;
+        if (t->payload.timer.turns0C == 0) {
             func_8011391C(t, entity);
         }
     }

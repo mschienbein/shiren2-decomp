@@ -1,4 +1,5 @@
 #include "common.h"
+#include "collection_iterator.h"
 
 typedef signed char s8;
 typedef unsigned char u8;
@@ -8,12 +9,6 @@ typedef unsigned short u16;
 typedef struct Entry800EB7C4 Entry800EB7C4;
 typedef struct List800EB7C4 List800EB7C4;
 
-typedef struct {
-    s32 index;
-    List800EB7C4 *list;
-    s32 reverse;
-    Entry800EB7C4 *current;
-} Iter800EB7C4;
 
 struct Entry800EB7C4 {
     u8 type;
@@ -38,12 +33,9 @@ typedef struct {
     List800EB7C4 listCC;
 } Obj800EB7C4;
 
-void *func_800CEB20(Iter800EB7C4 *it, List800EB7C4 *list);
-s32 func_800CEBA0(Iter800EB7C4 *it);
-Entry800EB7C4 *func_800CEC68(Iter800EB7C4 *it);
 
 Entry800EB7C4 *func_800EB7C4(Obj800EB7C4 *obj) {
-    Iter800EB7C4 it;
+    CollectionIterator it;
 
     func_800CEB20(&it, &obj->listCC);
     while (func_800CEBA0(&it)) {

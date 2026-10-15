@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef short s16;
@@ -21,7 +22,6 @@ typedef struct {
 } Obj800C9CC4;
 
 extern u8 D_801541CC[];
-extern u8 D_80143094[];
 extern Obj800C9CC4 *D_801476B8;
 
 void func_800CA4E8(Ctx800C9CC4 *ctx, void *table);
@@ -52,7 +52,7 @@ void func_800C9CC4(Ctx800C9CC4 *ctx) {
     if (ctx->done_14 != 0) {
         return;
     }
-    func_800B0164(D_80143094, ctx);
+    func_800B0164(&D_80143094, ctx);
     if (ctx->done_14 != 0) {
         return;
     }

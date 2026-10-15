@@ -1,4 +1,5 @@
 #include "common.h"
+#include "map_ray_iterator.h"
 
 typedef unsigned char u8;
 typedef signed char s8;
@@ -9,7 +10,6 @@ typedef struct ShirenDirection { s8 value; } ShirenDirection;
 typedef struct { s16 delta; s16 pad; void *func; } VEntry;
 typedef struct { u8 pad0[0x24]; VEntry *vtable; } Sub;
 typedef struct { s32 a; s32 b; } Pair;
-typedef struct { u8 data[0x28]; } Ray;
 typedef struct {
     u8 pad0[8];
     u8 field_8;
@@ -24,16 +24,16 @@ typedef struct {
 } Obj;
 s32 func_800E20CC(void *obj);
 void func_800E8FAC(Obj *obj);
-void *func_800A6CC0(void *out_position, void *obj);
-void *func_800C5150(void *self, void *position, ShirenDirection direction, s32 limit, u32 mask);
-void *func_800C51B8(void *iterator);
+void *func_800A6CC0(MapPos *out_position, void *obj);
+void *func_800C5150(MapRayIterator *self, MapPos *position, ShirenDirection direction, s32 limit, u32 mask);
+void *func_800C51B8(MapRayIterator *iterator);
 s32 func_800A44F4(void *self, void *target);
 void *func_800A65E4(void *out_direction, void *obj, void *target);
 void func_800A665C(Obj *obj, Pair *pos);
 s32 func_800EF210(Obj *obj);
 s32 func_80109CC0(Obj *obj) {
-    Ray ray;
-    Pair pos;
+    MapRayIterator ray;
+    MapPos pos;
     Pair dest;
     Sub *sub;
     Obj *target;

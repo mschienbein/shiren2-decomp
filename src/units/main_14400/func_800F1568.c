@@ -1,13 +1,10 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef signed char s8;
 typedef unsigned short u16;
 
-typedef struct {
-    u8 pad0[0xC];
-    u32 count;
-} Item800F1568;
 
 typedef struct {
     u8 pad0[0x72];
@@ -22,16 +19,16 @@ extern u8 D_80147620[];
 typedef struct { u16 min; u16 max; } RollBounds;
 extern RollBounds D_8015690C;
 s32 func_800C587C(void *table, u8 key);
-Item800F1568 *func_800AACE0(s32 arg);
-Item800F1568 *func_801239D4(void);
-s32 func_800AC670(Item800F1568 *item);
+Item *func_800AACE0(s32 arg);
+Item *func_801239D4(void);
+s32 func_800AC670(Item *item);
 u16 func_800AB044(void);
-Item800F1568 *func_800AADB4(u8 id, s32 arg);
-Item800F1568 *func_800AADF8(s8 id, u8 arg);
-Item800F1568 *func_800AAEB4(s8 id);
+Item *func_800AADB4(u8 id, s32 arg);
+Item *func_800AADF8(s8 id, u8 arg);
+Item *func_800AAEB4(s8 id);
 
-Item800F1568 *func_800F1568(Obj800F1568 *obj, s32 force) {
-    Item800F1568 *item = 0;
+Item *func_800F1568(Obj800F1568 *obj, s32 force) {
+    Item *item = 0;
     s32 allowed = 0;
     u16 id;
     s32 ok;
@@ -54,7 +51,8 @@ Item800F1568 *func_800F1568(Obj800F1568 *obj, s32 force) {
                 if (count > D_8015690C.max) {
                     count = D_8015690C.max;
                 }
-                item->count = count;
+                /* func_801239D4 constructs a kind-0xE item in a full pool slot. */
+                item->payload.amount.amount0C = count;
             } else {
                 item = 0;
             }

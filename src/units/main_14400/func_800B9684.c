@@ -1,13 +1,15 @@
 #include "common.h"
+#include "map_rect.h"
 
 typedef unsigned char u8;
 typedef signed char s8;
 
+/* Grid-cell edge-table indices, not map coordinates. */
 typedef struct { s32 x; s32 y; } Point;
-typedef struct { Point min; Point max; } Rect;
 /* Grid cell bounds in cell units. */
 typedef struct { Point min; Point max; } Cell;
-/* Partial view of the grid generator: per-axis edge tables (D_80153BDC/D_80153BF8 rows). */
+/* Borrowed grid-generator prefix: per-axis edge tables (D_80153BDC/D_80153BF8 rows).
+   The constructor/caller owns the complete foreign generator, not this view. */
 typedef struct {
     u8 pad[0x2D4];
     s8 *rowEdges;
@@ -20,7 +22,6 @@ typedef struct {
 
 extern u8 D_80147620[];
 s32 func_800C5844(void *rng, u8 base, u8 top);
-void func_800B7948(void *self, s32 index, Rect *rect);
 
 
 /* ODD_C: corner accessors perform actual Point component reads and keep
@@ -91,8 +92,8 @@ void func_800B9684(Grid *g, s32 idx)
         }
     }
     {
-        Rect rc;
-        Point p0, p1;
+        MapRect rc;
+        MapPos p0, p1;
         p0.x = left + 10;
         p0.y = top + 10;
         p1.x = right + 10;

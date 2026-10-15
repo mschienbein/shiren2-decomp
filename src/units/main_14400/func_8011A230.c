@@ -1,4 +1,6 @@
 #include "common.h"
+#include "collection_iterator.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef short s16;
@@ -8,14 +10,6 @@ typedef struct {
     s32 y;
 } Pos;
 
-typedef struct {
-    u8 pad0;
-    u8 kind;        /* 0x01 */
-    u8 pad2[0xB];
-    u8 flagsD;      /* 0x0D */
-    u8 padE[3];
-    u8 charges;     /* 0x11 */
-} Item;
 
 typedef struct {
     u8 pad0[0x98];
@@ -33,24 +27,14 @@ typedef struct {
 } Unit;
 
 /* Item-list iterator (func_800CEB20 family): index, collection, direction, current element. */
-typedef struct {
-    s32 index;
-    void *collection;
-    s32 reverse;
-    void *current;
-} ListIter;
 
 extern u8 D_80147620[]; /* random number generator state */
 extern u8 D_801569C3;
 
 s32 func_80049CB4(s32 id, ...);
 s32 func_800C587C(void *rng, u8 limit);
-ListIter *func_800CEB20(ListIter *it, void *list);
-s32 func_800CEBA0(ListIter *it);
-Item *func_800CEC68(ListIter *it);
 void func_800ACD34(Item *obj);
 void func_800498E4(s32 id, ...);
-char *func_800AE674(Item *item);
 s32 func_800ACEB4(Item *item);
 
 static inline void copy_pos(Pos *dst, Pos *src)
@@ -63,7 +47,7 @@ static inline void copy_pos(Pos *dst, Pos *src)
 void func_8011A230(void *self, Unit *unit, Item *item)
 {
     Pos pos;
-    ListIter it;
+    CollectionIterator it;
     char *name;
     s32 lost;
     s32 kind;
@@ -89,14 +73,14 @@ void func_8011A230(void *self, Unit *unit, Item *item)
         return;
     }
     name = func_800AE674(item);
-    kind = item->kind;
+    kind = item->field01;
     cursed = 1;
     if (kind == 0x99) {
-        cursed = item->charges != 0;
+        cursed = item->payload.charges.childEnabled11 != 0;
     } else if (kind == 0x98) {
-        cursed = item->charges != 0;
+        cursed = item->payload.charges.childEnabled11 != 0;
     } else if (kind == 0xF2) {
-        cursed = item->flagsD >> 7;
+        cursed = item->payload.appearance.flags0D >> 7;
     }
     if (cursed && func_800ACEB4(item) == 2) {
         func_800498E4(0xCC, name);

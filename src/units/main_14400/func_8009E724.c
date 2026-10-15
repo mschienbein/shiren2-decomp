@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef signed char s8;
 typedef unsigned char u8;
@@ -17,12 +18,6 @@ typedef struct {
     u8 flags;
 } Equip8009E724;
 
-typedef struct {
-    u8 pad0[0xD];
-    u8 unkD;
-    u8 padE;
-    s8 unkF;
-} Unit8009E724;
 
 /* The 0x68-byte record at Save+0x54 is consumed by func_800CC728/74C/7EC. */
 typedef struct {
@@ -58,22 +53,22 @@ char *func_80048480(u16 textId);
 void func_80048764(Save8009E724 *self);
 void func_800487EC(Save8009E724 *self, s32 row, s32 col, char *text);
 void func_80048870(Save8009E724 *self, s32 color);
-char *func_800514F0(Unit8009E724 *unit, char *buf, s32 a, s32 b, s32 c, s32 d, s32 e);
+char *func_800514F0(Item *unit, char *buf, s32 a, s32 b, s32 c, s32 d, s32 e);
 s32 func_8005EF30(char *buf, const char *fmt, ...);
 char *func_80083C90(char *dst, char *src);
 char *func_80083D04(char *dst, char *src);
 char *func_80083F34(void *src, s32 len, char *dst);
 void func_8009DE8C(Save8009E724 *self);
-Unit8009E724 *func_800AC3CC(u8 id, void *storage);
-void func_800ACD34(Unit8009E724 *unit);
-void func_800AE55C(Unit8009E724 *unit, s32 arg);
+Item *func_800AC3CC(u8 id, void *storage);
+void func_800ACD34(Item *unit);
+void func_800AE55C(Item *unit, s32 arg);
 char *func_800CC728(void *data);
 char *func_800CC74C(void *data, u8 index);
 char *func_800CC7EC(void *data);
-void func_8010BC98(Unit8009E724 *unit, u8 arg);
-s32 func_8010BD00(Unit8009E724 *unit, u8 skill);
-char *func_8010C60C(Unit8009E724 *unit, char *buf, u8 arg);
-void func_801138BC(Unit8009E724 *unit);
+void func_8010BC98(Item *unit, u8 arg);
+s32 func_8010BD00(Item *unit, u8 skill);
+char *func_8010C60C(Item *unit, char *buf, u8 arg);
+void func_801138BC(Item *unit);
 
 void func_8009E724(Save8009E724 *self) {
     char line[0x80];
@@ -147,7 +142,7 @@ void func_8009E724(Save8009E724 *self) {
         i = 2;
         for (;;) {
             Member8009E724 *member;
-            Unit8009E724 *unit;
+            Item *unit;
             s32 j;
 
             i--;
@@ -158,7 +153,7 @@ void func_8009E724(Save8009E724 *self) {
             if (member->id != 0) {
             unit = func_800AC3CC(member->id, storage);
             func_800ACD34(unit);
-            unit->unkD = member->unk1;
+            unit->payload.seals.field0D = member->unk1;
             func_8010BC98(unit, member->unk2);
             for (j = 0; j < 16; j++) {
                 if (member->skills[j] == 0) {
@@ -166,7 +161,7 @@ void func_8009E724(Save8009E724 *self) {
                 }
                 func_8010BD00(unit, member->skills[j]);
             }
-            if (unit->unkF != 0) {
+            if ((s8)unit->payload.seals.count0F != 0) {
                 func_80048870(self, 0x28000000);
             }
             func_800514F0(unit, line, 0, 0, -1, 0, 0);
@@ -189,8 +184,8 @@ void func_8009E724(Save8009E724 *self) {
             }
 equip = &self->equips[i];
             if (equip->id != 0) {
-                Unit8009E724 *unit = func_800AC3CC(equip->id, storage);
-                Unit8009E724 *base = unit;
+                Item *unit = func_800AC3CC(equip->id, storage);
+                Item *base = unit;
 
                 func_800ACD34(unit);
                 if (equip->flags & 1) {

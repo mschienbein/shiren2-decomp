@@ -1,19 +1,15 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
-/* Item-set member (family D_80154300, vptr at member+4): slot +0x1C is void (void *self, s32 value). */
-typedef struct { u8 pad0[0x18]; short delta18, pad1A; void (*set1C)(void *self, s32 value); } MemberVTable;
-typedef struct { void *owner; MemberVTable *vtable; } Member;
-typedef struct { u8 pad0[0x10]; short delta10, pad12; s32 (*locked14)(void *); } ItemVTable;
-typedef struct { u8 type, field1, flags, field3, count; u8 pad5[3]; ItemVTable *vtable; Member member; } Item;
 typedef struct { u8 pad0[0x98]; short delta98, pad9A; void *(*inventory9C)(void *); } UnitVTable;
 typedef struct { u8 pad0[0x1E]; u8 flags; u8 pad1F[5]; UnitVTable *vtable; } Unit;
 extern u32 D_8013960C;
 extern s32 func_800A99D0(void);
-extern void func_800ACDD8(void *item);
+extern void func_800ACDD8(Item *item);
 extern s32 func_800CD2BC(void *container, void *item);
-extern void *func_8011422C(u8 *item);
+extern void *func_8011422C(Item *item);
 extern s32 func_800CD5C0(void *container, Item *item);
-extern s32 func_800CD278(Member *member);
+extern s32 func_800CD278(ItemList *member);
 extern void *func_800CF058(void *container, u8 kind);
 extern s32 func_8010C38C(Item *item);
 extern void func_800498E4(s32 id, ...);
@@ -28,8 +24,8 @@ extern void *func_80127C28(void);
 extern s32 func_800AC670(void *item);
 extern s32 func_800CD1FC(void *container);
 static __inline__ s32 active(Unit *unit) { return (unit->flags >> 2) & 1; }
-static __inline__ void set_count(Member *member, s32 count) {
-    member->vtable->set1C((char *)member + member->vtable->delta18, count);
+static __inline__ void set_count(ItemList *member, s32 count) {
+    member->methods->set1C((char *)member + member->methods->delta18, count);
 }
 Item *func_80121048(Item *item, Unit *unit, Item *element) {
     s32 missing;
@@ -41,8 +37,8 @@ Item *func_80121048(Item *item, Unit *unit, Item *element) {
     container = unit->vtable->inventory9C((char *)unit + unit->vtable->delta98);
     func_800ACDD8(item);
     func_800CD2BC(container, element);
-    func_800CD5C0(func_8011422C((u8 *)item), element);
-    if (func_800CD278(&item->member) <= 0) {
+    func_800CD5C0(func_8011422C(item), element);
+    if (func_800CD278(&item->payload.pot.list) <= 0) {
         func_800498E4(0xB2);
         return 0;
     }
@@ -55,8 +51,8 @@ Item *func_80121048(Item *item, Unit *unit, Item *element) {
         }
     }
     if (selected != 0) {
-        if (selected->vtable->locked14((char *)selected + selected->vtable->delta10)) {
-            func_800498E4(selected->type == 3 ? 0xB3 : 0xB4);
+        if (selected->field08->test14((char *)selected + selected->field08->delta10)) {
+            func_800498E4(selected->field00 == 3 ? 0xB3 : 0xB4);
             func_800A08D8(1, -1, 0);
             return 0;
         }
@@ -68,16 +64,16 @@ Item *func_80121048(Item *item, Unit *unit, Item *element) {
         func_800CD538(container, item);
         func_800AD868(unit);
     }
-    item->flags |= 4;
+    item->flags02 |= 4;
     func_80049CB4(0x84, unit, item);
     func_800498E4(0xB1);
     func_80049BF0(1);
     selected = func_80127C28();
     missing = func_800AC670(selected) != 1;
     if (missing) {
-        set_count(&item->member, func_800CD1FC(func_8011422C((u8 *)item)) + selected->count);
+        set_count(&item->payload.pot.list, func_800CD1FC(func_8011422C(item)) + selected->field04);
     } else {
-        set_count(&item->member, func_800CD1FC(func_8011422C((u8 *)item)));
+        set_count(&item->payload.pot.list, func_800CD1FC(func_8011422C(item)));
         return 0;
     }
     return selected;

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef short s16;
@@ -21,8 +22,8 @@ s32 func_80049CB4(s32, ...);
 char *func_800A3B20(void *obj);
 void func_800497F0(s32 message_id, ...);
 Obj *func_8011422C(void *);
-void func_80122A80(void *, void *);
-s32 func_80114E28(void *, Msg *);
+void func_80122A80(Item *, void *);
+s32 func_80114E28(Item *, Msg *);
 static inline void Event_init(Event *event, Target *target, void *sender, s32 kind) {
     event->type = 0x1B;
     event->target = target;

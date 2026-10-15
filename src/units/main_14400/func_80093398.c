@@ -25,7 +25,7 @@ extern Obj800EBA54 *D_801476B8;
 extern Work D_801404E0, D_801408EC, D_80141104;
 extern u8 D_80138F98[];
 extern Member800EBA54 *func_800EBA54(Obj800EBA54 *obj);
-extern void func_80097B90(void *obj, void *owner, void *holder, s32 mode, void *desc, s32 flag);
+extern void func_80097B90(void *obj, void *owner, void *holder, s32 mode, const void *desc, s32 flag);
 extern s32 func_800957C0(Work *work, void *out, s32 a2, void *a3, s32 a4);
 extern Entry800D01B8 *func_800D0180(Entry800D01B8 *sub);
 /* Struct return: the caller passes the hidden result pointer, as for func_8009AB34. */

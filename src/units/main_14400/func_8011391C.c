@@ -1,25 +1,8 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 
-typedef struct {
-    short delta;
-    short index;
-    void (*fn)(void *self, s32 flags);
-} DtorEntry;
-
-typedef struct {
-    u8 pad0[0x8];
-    DtorEntry dtor;
-} TimerVTable;
-
-typedef struct {
-    u8 field_0;
-    u8 kind;
-    u8 pad2[0x6];
-    TimerVTable *vt;
-    u8 turns;
-} Timer;
 
 typedef struct {
     u8 pad0[0x98];
@@ -38,7 +21,6 @@ typedef struct {
 /* Bit stack pushed and popped around the messages below. */
 extern u32 D_8013960C;
 
-char *func_800AE674(void *obj);
 char *func_800A3B20(Unit *u);
 void func_800498E4(s32 id, ...);
 s32 func_80049CB4(s32 id, ...);
@@ -47,7 +29,7 @@ s32 func_800CD2BC(void *object, void *element);
 void func_800D3650(void *arg);
 
 /* Report the timer, detach it from the unit's list (vtable slot 19) and delete it. */
-void func_8011391C(Timer *t, Unit *unit)
+void func_8011391C(Item *t, Unit *unit)
 {
     D_8013960C = (D_8013960C << 1) | 1;
     if ((unit->flags_1E >> 2) & 1) {
@@ -69,6 +51,6 @@ void func_8011391C(Timer *t, Unit *unit)
     }
     func_800D3650(t);
     if (t != 0) {
-        t->vt->dtor.fn((u8 *)t + t->vt->dtor.delta, 3);
+        t->field08->method0C((u8 *)t + t->field08->delta08, 3);
     }
 }

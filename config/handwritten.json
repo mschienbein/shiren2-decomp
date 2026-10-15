@@ -1,0 +1,1445 @@
+{
+  "schema_version": 1,
+  "target_sha256": "4073a9f6516ef5d15cdd8b259a952a7d07633a2815f2a738fb5d98415d30a458",
+  "functions": [
+    {
+      "image_id": "resident",
+      "symbol": "entrypoint",
+      "rom_start": 4096,
+      "size": 64,
+      "expected_sha256": "e4f29b4ffa293838468ccd3e9848503dda1744a896070d6d10f0dad8c155352a",
+      "sdk_routines": [
+        "resident boot entry"
+      ],
+      "sdk_source": null,
+      "evidence": [
+        "Re-read the canonical ROM header entry word at ROM 0x8 (0x80025C00) and all 16 instruction words in ROM [0x1000,0x1040), VRAM [0x80025C00,0x80025C40). The lui/addiu pairs at 0x80025C00/04 and 0x80025C08/0C produce t0=0x80039000 and t1=0x83C0. The two sw zero instructions at 0x80025C10/14 and the eight-byte loop step clear exactly RAM [0x80039000,0x800413C0), in 4216 iterations.",
+        "0x80025C18 is 0x21080008 (addi t0,t0,8) and 0x80025C1C is 0x2129FFF8 (addi t1,t1,-8): trapping opcode 0x08, not addiu opcode 0x09. In the inspected GCC 2.7.2 and Paper Mario GCC 2.8.1 backends, addsi3_internal emits the nontrapping addu template, including its immediate macro form. Sources: https://github.com/decompals/mips-gcc-2.7.2/blob/e6271f14b095d7d8b2638c2b5e07d0d5cd05bc14/config/mips/mips.md#L376 and https://github.com/pmret/gcc-papermario/blob/a6afc2afbcaf6682930141d526afdc95801fc2fd/config/mips/mips.md#L506 . This is a source-level challenge to the current GP32 GCC profiles, not a fresh compilation sweep.",
+        "0x80025C28/2C are 0x3C1D8004/0x27BD0E20: sp is replaced by the absolute value 0x80040E20, not adjusted relative to the incoming stack. 0x80025C30/34 set t2=0x80025C60, followed by 0x01400008 (jr t2) at 0x80025C38 and a nop delay slot. There is no ra save, link or return in this span. Ordinary ABI C does not install an unrelated absolute machine stack; that startup operation together with trapping addi is the non-C evidence. An indirect jr alone would not exclude a C tail call.",
+        "Positive non-C boot-entry classification from the verified header and instructions, not an asserted libultra source identity. The original bootstrap filename/tool generator remains unidentified. No compiler, assembler, linker, build, adopt/accept or debugger was run for this follow-up; attempts/profile/source fields remain unchanged.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/hw-review/f2/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/f2/results.json",
+          "sha256": "1ef19772f29b6c3071f4745fcd1188e46e67628ad4eb7cd0c58b893a2dfb5de6"
+        }
+      ]
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_800261B0",
+      "rom_start": 5552,
+      "size": 272,
+      "expected_sha256": "44d38cf51b9d9f008e5245f63723219224ec20e1bc04fb0010af395b86016dd4",
+      "sdk_routines": [
+        "bcmp",
+        "_bcmp"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/libc/bcmp.s",
+      "evidence": [
+        "0x800261D8 copies incoming v1 into v0, then 0x800261DC/1E0 execute two standalone lwl instructions. The untouched partial-word lanes deliberately share the incoming register contents; this is not a defined C local initialization.",
+        "The SDK _bcmp sequence has the same xor alignment test, t8=-a0, partial-word prefix, aligned word path, lwl/lwr unaligned path at 0x8002626C/270, and return 0/1 blocks at 0x800262B0/2B8.",
+        "Read wave4/a16, wave5/b16 and wave8/e15 notes; their bytewise/alignment C misses are superseded by the positively identified SDK assembly. No C candidate retained.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/wave12/r1/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_800262C0",
+      "rom_start": 5824,
+      "size": 796,
+      "expected_sha256": "7a8576245f42a86f8db2583eda5f1e2ae908120fa2abda59d18eb9e53c614ad5",
+      "sdk_routines": [
+        "bcopy",
+        "_bcopy"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/libc/bcopy.s",
+      "evidence": [
+        "0x800262DC, 0x80026460 and 0x80026464 use trapping add for pointer-end arithmetic; the supported C profiles lower pointer arithmetic with nontrapping addu/addiu.",
+        "The SDK forward/backward overlap dispatcher, 3/2/1-byte alignment cases, eight-register 32-byte copy groups and a3-preserved destination return correspond instruction-for-instruction in shape to the ROM.",
+        "Identified the explicit handwritten SDK overlap-safe bcopy implementation, not a guessed compiler memcpy. No C attempted.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/wave12/r1/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_800265E0",
+      "rom_start": 6624,
+      "size": 160,
+      "expected_sha256": "1c6198ec810303f71baaf1c5fa044a8e0eea9446ac383854d910c4fee4fffcf3",
+      "sdk_routines": [
+        "bzero",
+        "_bzero",
+        "_blkclr"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/libc/bzero.s",
+      "evidence": [
+        "0x800265FC executes a standalone swl zero,0(a0) to clear only a variable alignment prefix. This is not a complete packed-word C store, which would require the matching swr.",
+        "SDK _bzero has the same length<12 branch, -a0 & 3 alignment, 32-byte bulk stores with a0 advanced midway, then word and byte tails; the ROM store at 0x8002663C fills the eight-word loop delay slot.",
+        "Read prior byte-tail and aligned-endpoint C attempts (best historical 8 words); primary SDK assembly establishes the original mechanism. No C retained.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/wave12/r1/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002A010",
+      "rom_start": 21520,
+      "size": 1420,
+      "expected_sha256": "ade5120cd30033e9a936937d015cc3a2999e54fccd0b9ca7b0911cc43016fab4",
+      "sdk_routines": [
+        "__osExceptionPreamble",
+        "__osException"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/exceptasm.s",
+      "evidence": [
+        "0x8002A010..1C loads k0=0x8002A020 and jr k0: the four-word __osExceptionPreamble. Initialization at 0x8002ACF4..AD94 copies this preamble into the exception vectors.",
+        "0x8002A028 sd at,0x20(k0), 0x8002A02C mfc0 k1,Status and 0x8002A03C mtc0 k1,Status precede saving interrupted GPRs, LO/HI and FPRs. k0/k1 context ownership and privileged CP0 access cannot be ordinary supported C.",
+        "The SDK exception dispatch, counter acknowledgement and send_mesg calls agree with the ROM, including 0x8002A27C/280 reading/writing Compare and 0x8002A214 branching to handle_CpU at 0x8002A658.",
+        "Keep the catalogue span unchanged: it includes a 16-byte preamble plus __osException. Positive SDK final-ROM exception assembly; no C attempted.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/wave12/r1/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002A59C",
+      "rom_start": 22940,
+      "size": 504,
+      "expected_sha256": "25413a906473370ae93889f9fcec29549ce5925d667643172ef363af45d936a7",
+      "sdk_routines": [
+        "send_mesg",
+        "handle_CpU",
+        "__osEnqueueAndYield"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/exceptasm.s",
+      "evidence": [
+        "The fresh boundary-patched catalogue owns ROM [0x599C,0x5B94), VRAM [0x8002A59C,0x8002A794), as one 504-byte row. This is accounting ownership, NOT one semantic routine or a single-entry CFG.",
+        "send_mesg [0x8002A59C,0x8002A658) saves ra in s2 without preserving incoming s2, calls PopThread/EnqueueThread, and returns via jr s2 at A650 plus nop A654. handle_CpU [A658,A68C) is reached by the exception branch A214; its exits return to exception blocks A56C and A554. Neither falls through into A68C.",
+        "A68C is __osEnqueueAndYield with SEVEN external jal entries: 8002B19C,8002FEFC,80031DBC,800320E0,80032C40,80032CE4,80035F28; each word is 0C00A9A3. It reads CP0 Status, saves live s0-s7/gp/sp/fp/ra, stores ra as resume PC at +0x11C, saves FCSR/FPRs, optionally enqueues, and tail-dispatches at A78C. A later dispatch can resume its caller: it is not universally noreturn.",
+        "Retain the earlier independently reviewed 240-byte send_mesg/handle_CpU evidence plus all 264 bytes of independently reviewed EnqueueAndYield evidence. Their concatenation is exactly this 504-byte ROM identity. Remove only the separate catalogue row to prevent double accounting; keep the real callable entry explicit.",
+        "Published exceptasm.s at e24c836796df4bf520ff8b11a5c9d2cea3a66cbd identifies these three assembly routines. Privileged CP0 access, k0/k1 exception state, context capture and the send_mesg private return convention exclude ordinary ABI C. No C candidate or new C credit is claimed."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/entry-final-review/review.json",
+          "sha256": "1488cb8926892d0dc65e92070a9e467ac8ccdb289a08879a7dbfe42a3828e9a9",
+          "family": "gpt",
+          "items": "functions"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13-review/r4/opus-confirmation.json",
+          "sha256": "63957637125ed0683c05fde607d9c46bce3180d43aaa4216eff1616e18246b27",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/classification-source.json",
+        "sha256": "86d4b88685b272d13b2c9521a07210f2d2b89ab6969de49fa5f847d65d3b4e0b"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+          "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/rom-review/verdict.json",
+          "sha256": "6f5559f5e472df9c086a11b841ca02ce613296bb9837abbb941d7a0d8fc2a335"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/rom-review/rom-evidence.json",
+          "sha256": "9c128409451f4ba2c9085817e94c28cb43b780a83683e0807367711b94ebdb9c"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/f2/results.json",
+          "sha256": "1ef19772f29b6c3071f4745fcd1188e46e67628ad4eb7cd0c58b893a2dfb5de6"
+        }
+      ]
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002A794",
+      "rom_start": 23444,
+      "size": 72,
+      "expected_sha256": "482c149f613482f79eda678641c3b4a0a160a6346976865d6055c4494c476ad9",
+      "sdk_routines": [
+        "__osEnqueueThread"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/exceptasm.s",
+      "evidence": [
+        "All 18 ROM words agree with SDK exceptasm.s:1146-1172 after pseudo-instruction expansion and return-delay scheduling. 0x8002A794..0x8002A7A0 sets predecessor=t9, current=t8, new priority=t7 (SDK ta3), current priority=t6 (SDK ta2). The comparisons at 0x8002A7A4/0x8002A7BC use slt at,t6,t7; bnez/beqz have nop slots at 0x8002A7AC/0x8002A7C4. The last word, 0xACA40008 at 0x8002A7D8, stores the queue pointer at thread+8 in the jr ra delay slot.",
+        "Profile challenge: GCC's default hard-register search is ascending, so free, unconstrained integer temporaries encounter v0/v1 before a2/a3 and t-registers. Inspected MIPS target headers define no REG_ALLOC_ORDER override and reserve zero/at, not v0/v1. See GCC 2.7.2 local-alloc.c:2158-2176 at https://github.com/decompals/mips-gcc-2.7.2/blob/e6271f14b095d7d8b2638c2b5e07d0d5cd05bc14/local-alloc.c#L2158 and GCC 2.8.1 local-alloc.c:2264-2282 at https://github.com/pmret/gcc-papermario/blob/a6afc2afbcaf6682930141d526afdc95801fc2fd/local-alloc.c#L2264 . Conflicts and copy preferences qualify this ordering; it is not an unconditional theorem about every C spelling.",
+        "The retained plain-C challenge scratch/omp/wave8/e15/results/func_8002A794/result.json uses gcc272-kmc26-O2-signed and reports status=policy, differing_words=18. Its verified candidate bytes use current=v1 (lw v1,0(a0)), new priority=a3, current priority/comparison=v0 and predecessor=a2, rather than t8/t7/t6/t9. The source hash and original.bin were rechecked, and the named register instructions were checked in candidate.bin. The receipt additionally reports 68 function bytes versus the original 72 and 16-byte object alignment; these are retained observations, not new trials.",
+        "Contiguity: the preceding __osEnqueueAndYield ends at 0x8002A794; this exact 72-byte span ends at 0x8002A7DC (__osPopThread), followed immediately by __osNop at 0x8002A7EC and __osDispatchThread at 0x8002A7F4. All seven catalogue slices from 0x8002A010 through 0x8002A97C form one gap-free 603-word sequence in exceptasm.s source order. ROM jal words at 0x8002A648 and 0x8002A784 target this enqueue entry.",
+        "Positive SDK assembly provenance, supported by the fixed register roles, retained C challenge and surrounding exception module. [INFERENCE] The ordered contiguous ROM sequence is the exceptasm.o .text contribution; no original object/map is available to inspect. A separate C TU cannot be inserted into the middle of one input object's .text without splitting that contribution. Register preferences or a failed alignment policy alone are not proof that arbitrary C can never emit an instruction sequence. No new compilation was performed.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/hw-review/f2/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/f2/results.json",
+          "sha256": "1ef19772f29b6c3071f4745fcd1188e46e67628ad4eb7cd0c58b893a2dfb5de6"
+        }
+      ]
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002A7DC",
+      "rom_start": 23516,
+      "size": 16,
+      "expected_sha256": "9cfacc440af965d2989166dd711ef58ae5a92e68c6ef3cf399a0403e1fd36afe",
+      "sdk_routines": [
+        "__osPopThread"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/exceptasm.s",
+      "evidence": [
+        "The complete ROM body is 0x8C820000 (lw v0,0(a0)), 0x8C590000 (lw t9,0(v0)), 0x03E00008 (jr ra), 0xAC990000 (sw t9,0(a0)). SDK exceptasm.s:1180-1185 explicitly selects t9 for the next-pointer temporary; its store fills the return delay slot in the ROM.",
+        "Profile challenge: the inspected GCC 2.7.2 and GCC 2.8.1 default allocators scan hard registers in ascending order unless constraints/preferences intervene, with zero/at fixed. With v0 holding the returned head and no pressure requiring t9, v1 is the first free scratch candidate. The retained gcc272-kmc26-O2-signed plain-C pop confirms this: scratch/omp/wave8/e15/results/func_8002A7DC/candidate.bin contains lw v0,0(a0); lw v1,0(v0); jr ra; sw v1,0(a0), preceded by a four-byte linker-alignment gap. result.json reports status=policy, differing_words=4 and '.text alignment 16 would move vram 0x8002A7DC'. The two scratch-register words are 0x8C430000/0xAC830000, not ROM 0x8C590000/0xAC990000; the reported four-word metric includes placement effects.",
+        "Contiguity: __osEnqueueThread occupies [0x8002A794,0x8002A7DC), this pop occupies [0x8002A7DC,0x8002A7EC), __osNop occupies [0x8002A7EC,0x8002A7F4), and dispatch starts at 0x8002A7F4, with no intervening alignment words. This is the same order as the adjacent LEAF blocks in exceptasm.s. ROM jal instructions at 0x8002A634 and 0x8002A7F8 both target 0x8002A7DC; the containing exception-module catalogue spans cover [0x8002A010,0x8002A97C) continuously.",
+        "The four-instruction algorithm is C-plausible; the classification identifies the SDK's specific t9 implementation inside the exception assembly, not an intrinsically non-C opcode. The v1 challenge is backed by the retained source hash, ROM bytes and candidate bytes, and by both compiler allocator sources (GCC 2.7.2 local-alloc.c:2158-2176; Paper Mario GCC 2.8.1 local-alloc.c:2264-2282). [INFERENCE] The contiguous source-corresponding module is one exceptasm.o text contribution, not a separately interleaved C object. No new compiler-profile run or universal allocator-impossibility claim is made.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/hw-review/f2/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/f2/results.json",
+          "sha256": "1ef19772f29b6c3071f4745fcd1188e46e67628ad4eb7cd0c58b893a2dfb5de6"
+        }
+      ]
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002A7EC",
+      "rom_start": 23532,
+      "size": 8,
+      "expected_sha256": "78aa5094d5ec7291c79f799c009d04f06c2f20187988e3dcc8d35ee5efdbb378",
+      "sdk_routines": [
+        "__osNop"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/exceptasm.s",
+      "evidence": [
+        "Canonical ROM [0x5BEC,0x5BF4), VRAM [0x8002A7EC,0x8002A7F4), is exactly 0x03E00008; 0x00000000 (jr ra; nop). The cited exceptasm.s:1187-1191 contains LEAF(__osNop) under BUILD_VERSION >= VERSION_K, immediately after __osPopThread and before __osDispatchThread. These two words also describe an empty C function, so they provide no impossible-opcode argument.",
+        "Historical-slice contiguity was rechecked directly against the ROM and immutable assignment sizes: [0x8002A010,0x8002A59C) preamble/exception; [0x8002A59C,0x8002A68C) send_mesg/handle_CpU; [0x8002A68C,0x8002A794) enqueue/yield; [0x8002A794,0x8002A7DC) enqueue; [0x8002A7DC,0x8002A7EC) pop; [0x8002A7EC,0x8002A7F4) nop; [0x8002A7F4,0x8002A97C) dispatch/cleanup. These are 603 consecutive words, with no gaps between those historical slices (the current catalogue unites A59C..A68C and A68C..A794 as one 504-byte multi-entry accounting row), matching the _FINALROM, VERSION_K-or-later LEAF order in the single .text section of exceptasm.s. The word at 0x8002A97C, after cleanup's final delay slot, is zero.",
+        "The containing assembly's internal transfers are also bound to the ROM: 0x8002A634 jal 0x8002A7DC, 0x8002A648 and 0x8002A784 jal 0x8002A794, 0x8002A78C j 0x8002A7F4, and 0x8002A7F8 jal 0x8002A7DC. The nop entry is 4-byte aligned but neither 8- nor 16-byte aligned (address residues 4 and 12); that fact corroborates the uninterrupted label sequence but is not by itself a non-C argument.",
+        "Classification rests on the positive exceptasm.s module correspondence. [INFERENCE] The contiguous original text is one exceptasm.o contribution, with __osNop strictly inside it; ordinary linking cannot interleave a separately compiled C TU inside an unsplit input .text section. This is a provenance inference from verified source order, bytes and internal targets, not an inspected original-object receipt. Empty-function opcodes and alignment failures alone do not distinguish C from assembly. No C padding, boundary changes or new compilation were used.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/hw-review/f2/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/f2/results.json",
+          "sha256": "1ef19772f29b6c3071f4745fcd1188e46e67628ad4eb7cd0c58b893a2dfb5de6"
+        }
+      ]
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002A7F4",
+      "rom_start": 23540,
+      "size": 380,
+      "expected_sha256": "1147548e251f20949d871c72d99f7f6d35f90c052f731e11815881cc9dad3982",
+      "sdk_routines": [
+        "__osDispatchThread"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/exceptasm.s",
+      "evidence": [
+        "The 380-byte dispatch span is ROM [0x5BF4,0x5D70), VRAM [0x8002A7F4,0x8002A970). Known incoming transfers are jal 80028054/80032C0C and j 8002A54C/A564/A594/A78C.",
+        "Dispatch pops the run queue, installs __osRunningThread, restores Status/GPRs/LO/HI, loads saved PC into EPC at A8C8/A8CC, restores FCSR/FPRs and the MI interrupt mask, then executes four nops A95C..A968 and eret at A96C. The only conditional branch A8D4 -> A924 is internal.",
+        "ERET has no delay slot. No dispatch CFG edge enters A970. The following 12-byte cleanup entry is not fallthrough, not part of this row and not an eret delay slot. The final word of dispatch is 42000018.",
+        "The original cross-family review explicitly compared these 95 dispatch words plus three cleanup words; this revision retains only the 95 dispatch words. CP0 writes, exception return and raw context restoration cannot be expressed as ordinary supported C."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/entry-final-review/review.json",
+          "sha256": "1488cb8926892d0dc65e92070a9e467ac8ccdb289a08879a7dbfe42a3828e9a9",
+          "family": "gpt",
+          "items": "functions"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13-review/r4/opus-confirmation.json",
+          "sha256": "63957637125ed0683c05fde607d9c46bce3180d43aaa4216eff1616e18246b27",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/classification-source.json",
+        "sha256": "86d4b88685b272d13b2c9521a07210f2d2b89ab6969de49fa5f847d65d3b4e0b"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+          "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/rom-review/verdict.json",
+          "sha256": "6f5559f5e472df9c086a11b841ca02ce613296bb9837abbb941d7a0d8fc2a335"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/rom-review/rom-evidence.json",
+          "sha256": "9c128409451f4ba2c9085817e94c28cb43b780a83683e0807367711b94ebdb9c"
+        }
+      ]
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002A970",
+      "rom_start": 23920,
+      "size": 12,
+      "expected_sha256": "99b62dd6f4583516ea02e7d5d92f812f3cf03e225f2d38f3981e198ea3dae0f8",
+      "sdk_routines": [
+        "__osCleanupThread"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/exceptasm.s",
+      "evidence": [
+        "ROM [0x5D70,0x5D7C) is exactly 00002021 0C009FE8 00000000: addu a0,zero,zero; jal 80027FA0/osDestroyThread; nop. The next zero word at 5D7C is padding, not a fourth instruction in this identity.",
+        "osCreateThread constructs A970 at 27EE4/27EE8 and stores sign-extended FFFFFFFF8002A970 in context.ra at thread+100/+104. Its initial PC is separately the supplied thread entry at +11C. Dispatch restores both fields, so returning from a thread body enters cleanup indirectly.",
+        "For NULL, osDestroyThread disables interrupts, selects __osRunningThread, removes it from the active list and calls dispatch at 28054. With valid OS list/thread state it does not return to A97C. The entry/boundary proof does not depend on claiming that corrupt lists or faulting memory always terminate.",
+        "Pinned public ultralib exceptasm.s lines 1326..1343 contains .set reorder and LEAF(__osCleanupThread): move a0,zero; conditional non-SGI nop; jal osDestroyThread; END. LEAF/END add metadata, not a prologue or return. The non-SGI explicit nop can be moved to the jal delay slot; a necessarily-16-byte source-order argument is invalid. No historical assembler identification is asserted.",
+        "Executed byte-identity proof: extracted that exact non-SGI/non-BBPLAYER LEAF, preprocessed the published asm.h macros, assembled with the pinned GNU291 MIPS2 profile and relocated osDestroyThread to 0x80027FA0. The linked __osCleanupThread symbol and complete text section are exactly 12 bytes 000020210c009fe800000000, SHA-256 99b62dd6f4583516ea02e7d5d92f812f3cf03e225f2d38f3981e198ea3dae0f8. See sdk-byte-identity/result.json and its three command logs. This is reference assembly, not a C match.",
+        "GCC 2.7.2/2.8.1 calls.c reserves at least 16 outgoing argument bytes before processing a noreturn barrier; ordinary MIPS prologues must therefore write sp, which none of these three target words does. This is a backend invariant, not an inference from failed examples. GCC 2.7.2's installed naked attribute is ignored and the resident profile's measured ordinary/noreturn/naked wrapper remains 28 function bytes with a 24-byte stack frame.",
+        "The PM 2.8.1 fork's naked attribute is a genuine exception to the ordinary-frame proof and is not silently excluded. Measured naked+noreturn C/C++ emits an 8-byte jal;daddu-a0-zero slot, not the ROM's 12-byte addu;jal;nop. Forty successfully linked profile/candidate cases (after fixing 15 legacy syntax errors) produce no exact 12-byte match. These measurements are not an exhaustive proof over every conceivable attribute or C spelling. Positive SDK provenance and the source-backed ordinary-profile invariant establish the proposed handwritten classification; no matching C target or C credit is claimed.",
+        "The new symbol requires an actual symbol-specific cross-family confirming review before the strict r4 record can be published. Historical parent reviews and provisional handwritten_annotation=false do not by themselves provide that approval."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13-review/r4/opus-confirmation.json",
+          "sha256": "63957637125ed0683c05fde607d9c46bce3180d43aaa4216eff1616e18246b27",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/classification-source.json",
+        "sha256": "86d4b88685b272d13b2c9521a07210f2d2b89ab6969de49fa5f847d65d3b4e0b"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+          "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/rom-review/verdict.json",
+          "sha256": "6f5559f5e472df9c086a11b841ca02ce613296bb9837abbb941d7a0d8fc2a335"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/rom-review/rom-evidence.json",
+          "sha256": "9c128409451f4ba2c9085817e94c28cb43b780a83683e0807367711b94ebdb9c"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/cleanup-review/review.json",
+          "sha256": "9fce2ba69472266f0e7b541837687fcaff6c6f772329869f08f210c6c6518aa6"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/cleanup-review/source-evidence.json",
+          "sha256": "4f3ad0671e29a75b98e21f86bc05528b1bd6876c5a21b16f0975f084f1ede8de"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/sdk-byte-identity/result.json",
+          "sha256": "4e61c7668296462dc109d529dd6b16cea8bebaf91296702d6aa29107fe2b3eb9"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/profile-measurements.json",
+          "sha256": "8348637cf99ee1da7d80359a4eaa7e9598363bc8a6c98b16db027f6fcd8f9818"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/harness/h13/ident-update/cleanup-final-review/review.json",
+          "sha256": "1efe6a0115f334ce7e61b4bdd856d47a720611b571f62f44b1d9b34c557a9ce2"
+        }
+      ]
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002A9A0",
+      "rom_start": 23968,
+      "size": 12,
+      "expected_sha256": "974544a72c7c790c5bf1d0ac8efb349bc7c0a15650913c5f22f6c5ebefff225f",
+      "sdk_routines": [
+        "__osGetCause"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/getcause.s",
+      "evidence": [
+        "func_8002A9A0 starts with 40026800 (mfc0 v0,Cause ($13)), then jr ra; nop. This exactly identifies the SDK register getter, and privileged CP0 reads are not expressible in the permitted plain C profiles.",
+        "Positive three-instruction SDK assembly identification; no C attempted.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/wave12/r1/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002A9B0",
+      "rom_start": 23984,
+      "size": 12,
+      "expected_sha256": "923a8ad5844532bc55f28624d13567c9795c3f893ebf07353f29b4ea1df8bc84",
+      "sdk_routines": [
+        "osGetCount"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/getcount.s",
+      "evidence": [
+        "func_8002A9B0 starts with 40024800 (mfc0 v0,Count ($9)), then jr ra; nop. This exactly identifies the SDK register getter, and privileged CP0 reads are not expressible in the permitted plain C profiles.",
+        "Positive three-instruction SDK assembly identification; no C attempted.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/wave12/r1/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002AA60",
+      "rom_start": 24160,
+      "size": 12,
+      "expected_sha256": "2ea7fc1f266eee7e59be3d8ffee2aebda5c74a4e6765e268c725a9a6a9f50ddf",
+      "sdk_routines": [
+        "__osGetSR"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/getsr.s",
+      "evidence": [
+        "func_8002AA60 starts with 40026000 (mfc0 v0,Status ($12)), then jr ra; nop. This exactly identifies the SDK register getter, and privileged CP0 reads are not expressible in the permitted plain C profiles.",
+        "Positive three-instruction SDK assembly identification; no C attempted.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/wave12/r1/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002AF70",
+      "rom_start": 25456,
+      "size": 112,
+      "expected_sha256": "c55f3d954210aef826e9c62cfd6871885e342bb3a024b1bec6bf0a175f36046d",
+      "sdk_routines": [
+        "__osDisableInt"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/interrupt.s",
+      "evidence": [
+        "0x8002AF80 mfc0 t0,Status; 0x8002AF8C mtc0 t1,Status after masking ~1; 0x8002AF90 returns old IE in v0. These privileged instructions cannot be ordinary C.",
+        "The VERSION_J-and-later SDK sequence checks __OSGlobalIntMask twice and contains the same unusual la __osRunningThread split across the 0x8002AF9C branch delay slot (lui at 0x8002AFA0, addiu at AFA4); lw t1,0x118(t2) at AFA8 follows. Upstream explicitly documents the la-versus-lw SDK bug, providing a particularly strong fingerprint.",
+        "Identified the SDK assembly including its documented race-path bug; no source repair or C substitute is appropriate to this classification.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/wave12/r1/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002AFE0",
+      "rom_start": 25568,
+      "size": 28,
+      "expected_sha256": "b6f58a0412d63a52440645623c5a49320459a39befc7ea4359a374051eceb105",
+      "sdk_routines": [
+        "__osRestoreInt"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/interrupt.s",
+      "evidence": [
+        "0x8002AFE0 mfc0 t0,Status; 0x8002AFE4 or t0,t0,a0; 0x8002AFE8 mtc0 t0,Status, followed by two hazard nops and jr ra/nop. SDK .set noreorder __osRestoreInt spells this seven-word sequence.",
+        "Positive CP0 interrupt-state assembly identification; no C attempted.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/wave12/r1/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002B000",
+      "rom_start": 25600,
+      "size": 176,
+      "expected_sha256": "8ae1ab78f7b451eff125bd297f76cbcc5f2e3c7a54c6c1497d3f3c0b281f886f",
+      "sdk_routines": [
+        "osInvalDCache"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/invaldcache.s",
+      "evidence": [
+        "0x8002B040 and B064 execute cache 0x15 (Hit Writeback Invalidate D) for partial endpoint lines; 0x8002B074 uses cache 0x11 (Hit Invalidate D); 0x8002B098 uses cache 0x01 (Index Writeback Invalidate D). These cache operations have no permitted ordinary C lowering.",
+        "The SDK 0x2000-byte cache-size decision, 16-byte line alignment and two endpoint writeback paths agree with the original control flow.",
+        "Positive SDK cache-instruction classification; no volatile C wrapper, inline assembly or forced match.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/wave12/r1/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002B0B0",
+      "rom_start": 25776,
+      "size": 116,
+      "expected_sha256": "b868489aa115fdc2f51ebae88065f21a34d22bfd3e4c0f14ab431fe181859810",
+      "sdk_routines": [
+        "osInvalICache"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/invalicache.s",
+      "evidence": [
+        "0x8002B0E8 cache 0x10 (Hit Invalidate I) and 0x8002B10C cache 0x00 (Index Invalidate I) are privileged cache instructions unavailable in permitted plain C.",
+        "The 0x4000-byte whole-cache threshold and 32-byte step/mask match SDK osInvalICache, including the loop increment in the branch delay slot.",
+        "Positive SDK cache-instruction classification; no C attempted.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/wave12/r1/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002C7C0",
+      "rom_start": 31680,
+      "size": 88,
+      "expected_sha256": "faf6c1366ff17c109e9fde902f3c1520ad4afa1d1c95ec9819b045cf211ddd60",
+      "sdk_routines": [
+        "osMapTLBRdb"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/os/maptlbrdb.s",
+      "evidence": [
+        "0x8002C7C0 saves EntryHi; writes Index=31, PageMask=0, EntryHi=0xC0000000, EntryLo0=(0x80000000>>6)|0x17 and EntryLo1=1; tlbwi is at 0x8002C7F8.",
+        "Four nops follow tlbwi, then 0x8002C80C restores EntryHi. This precise privileged register/TLB sequence is SDK osMapTLBRdb, not osUnmapTLBAll and not a C implementation.",
+        "Positive mapping fingerprint from the SDK RDB TLB entry routine; no C attempted.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/wave12/r1/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002CBC0",
+      "rom_start": 32704,
+      "size": 240,
+      "expected_sha256": "67997834f0ff8e984db1d02069d6be1d0ef693a45f5f1a88dde6d1b6360237a6",
+      "sdk_routines": [
+        "guMtxCatF"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/mgu/mtxcatf.s",
+      "evidence": [
+        "All 60 ROM words/240 bytes were rechecked. 0x8002CBC0 allocates 64 stack bytes; 0x8002CBC4/08 put the left-row end in v0 and right-column end in v1, while 0x8002CBCC makes t2 the stack-result cursor even though t0/t1 are unused during the dot products. The only FPRs in this body are f4/f6/f8/f10/f16/f18 (ft0-ft5); f0/f2/f12/f14 do not occur. The final sum stays in f8, including swc1 f8,60(a2) at 0x8002CC2C. These roles and the instruction schedule agree with cited MONEGI mgu/mtxcatf.s:32-65.",
+        "0x8002CC30..0x8002CC68 performs fifteen lw operations from sp+0..56 into t0,t1,t2,t3,t4,t5,t6,t7,t8,t9,v0,v1,a0,a1,a3 before any corresponding sw. 0x8002CC6C..0x8002CCA4 writes those same registers to a2+0..56 in the same order. The decoded register/base/offset fields of all thirty words were checked directly. This exactly follows mgu/mtxcatf.s:66-96; jr ra at 0x8002CCA8 restores sp in its delay slot.",
+        "Measured profile challenge, reused without recompilation: scratch/omp/wave8/e16/results/func_8002CBC0/result.json binds the plain-C row-bounded dot-product plus __builtin_memcpy implementation to gcc272-kmc26-O2-signed, status=policy, differing_words=47, 192 function/text bytes versus the original 240. Its complete diff was checked against candidate.bin and original.bin against the ROM. The candidate starts dot products with f2/f0, uses v0/v1 as inner input/output cursors, and copies four words at a time through v0/v1/a0/a1, rather than retaining the final f8 value and using the SDK's fifteen-register copy.",
+        "Source-level profile challenge: gcc272-kmc26-O2-signed, gcc272-kmc26-O3-signed and gcc272-modern237-O2-unsigned share the inspected GCC 2.7.2 allocator; the other current registry entries use that backend or Paper Mario GCC 2.8.1 C/C++ with assembler/scheduling variants. Both default hard-register searches start with the lowest eligible free registers: v0/v1 for unconstrained integer temporaries and f0/f2 in FP32 mode. Neither inspected MIPS header set defines REG_ALLOC_ORDER. The fixed SDK ft0-ft5/t2 roles are therefore a concrete challenge to ordinary compiler output, corroborated by the retained candidate, not a proof that register pressure can never select those registers. Sources: GCC 2.7.2 local-alloc.c:2158-2176 and config/mips/mips.c:3449-3453; Paper Mario GCC 2.8.1 local-alloc.c:2264-2282 and config/mips/mips.c:3811-3815, at the source revisions cited in the helper records.",
+        "Retain the positively identified MONEGI assembly variant. The record does not claim that it uses only t-registers: v0/v1 are explicitly loop endpoints and later copy registers. Source inspection plus the retained O2 challenge strengthens the profile argument; no fresh O2/O3/all-profile sweep was run, and default allocation order alone does not prove universal C impossibility. SDK source blob 4b96124b46c3feac5763e9f8287e425fb89a632e and the existing 240-byte ROM hash were recomputed.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/hw-review/f2/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/f2/results.json",
+          "sha256": "1ef19772f29b6c3071f4745fcd1188e46e67628ad4eb7cd0c58b893a2dfb5de6"
+        }
+      ]
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002CD40",
+      "rom_start": 33088,
+      "size": 100,
+      "expected_sha256": "0ec1c8e451e2aa4e77599d0aea02d5b338957ffa874d03a3ff434d6f4ea226c3",
+      "sdk_routines": [
+        "guMtxF2L"
+      ],
+      "sdk_source": "https://github.com/decompals/ultralib/blob/e24c836796df4bf520ff8b11a5c9d2cea3a66cbd/src/mgu/mtxf2l.s",
+      "evidence": [
+        "All 25 ROM words/100 bytes were rechecked. 0x8002CD40/44 are 0x3C014780/0x44810000, materializing 65536.0 (0x47800000) in f0 via at. 0x8002CD48 puts 0xFFFF0000 in t9; 0x8002CD4C puts destination+32 in t8. These are exactly SDK mgu/mtxf2l.s:35-48 roles ptr_fl=a0, ptr_mtx=a1, end_mtx=t8, mask_hi=t9, magni=fv0. Thus 'only f4-f18' would be incorrect: f0 is the scale invariant, while f2/f12/f14 are absent.",
+        "The two conversions use f4 -> f6 -> f8 and f10 -> f16 -> f18 (lwc1, mul.s, trunc.w.s). mfc1 at 0x8002CD68/6C places the integer results in t0/t1; and/srl/or builds the integral pair through t2/t3/t4 and stores it at a1+0, then sll/andi/or builds the fractional pair through t5/t6/t7 and stores it at a1+32. The routine never uses v0/v1. addiu a0,a0,8 at 0x8002CD98 fills the loop branch delay slot. All roles, offsets and operation order agree with mgu/mtxf2l.s:50-77.",
+        "Measured profile challenge, reused without recompilation: scratch/omp/wave8/e16/results/func_8002CD40/result.json binds the plain-C paired 16.16 conversion/packing implementation to gcc272-kmc26-O2-signed, status=policy, differing_words=26, 108 function bytes/112 text bytes versus the original 100. The retained candidate uses f6 for the 65536.0 invariant, f2/f0 for the products, a0/a1 for the converted integers, v0/v1 for packing, and t0/t1 for end/mask. Its complete diff was checked against candidate.bin, original.bin against the ROM, and the candidate source hash against the receipt. The retained C output itself contains li.s expansion and trunc.w.s, so neither operation is intrinsically non-C.",
+        "Source-level profile challenge covers resident gcc272-kmc26-O2-signed/O3-signed and gcc272-modern237-O2-unsigned, plus the GCC 2.7.2/2.8.1 backend families used by the remaining configured C/C++ profiles. Their default ascending free-register searches and FP32 even-FPR eligibility favor v0/v1 and f0/f2 unless conflicts/preferences intervene; there is no MIPS REG_ALLOC_ORDER override in either inspected source. This differs from the explicit SDK t8/t9 invariants and ft0-ft5 conversion chains. The argument is the exact fixed-role assembly correspondence plus the measured plain-C counterexample, not an unsupported claim that GCC cannot emit trunc.w.s or can never use t-registers.",
+        "Positive identification of the MONEGI mgu/mtxf2l.s implementation, not a claim that equivalent fixed-point conversion cannot be written in C. The f0 scale-register exception and actual policy status of the historical receipt are explicit. No new profile compilation or exhaustive impossibility proof is claimed. SDK source blob 43bbe7ebe7ec728c16f05eca60e25ca6b83bf69b and the existing 100-byte ROM hash were recomputed.",
+        "Classifier: GPT (Astra); source: docs/evidence/handwritten/omp/hw-review/f2/results.json."
+      ],
+      "classifier_family": "gpt",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/02/review.json",
+          "sha256": "2c3a5ec2bd40acbc22a37c75005ba4d69d64d741f7bd1a118dc5961a8ea695c5",
+          "family": "claude",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r1/results.json",
+        "sha256": "97bedade498c3e68843f7de382ece93c930727555623e538e5c91b4d23bcd007"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/f2/results.json",
+          "sha256": "1ef19772f29b6c3071f4745fcd1188e46e67628ad4eb7cd0c58b893a2dfb5de6"
+        }
+      ]
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002CDC0",
+      "rom_start": 33216,
+      "size": 76,
+      "expected_sha256": "59e6d4522a13e13ead4e9c2f30dbe00221a0546793a4c1a0ca07eabd151c337c",
+      "sdk_routines": [
+        "guMtxIdent"
+      ],
+      "sdk_source": "libultra mgu/mtxident.s (LEAF guMtxIdent, .set reorder); reference copy scratch/omp/wave12/r2/sdk_ref/mgu_mtxident.s (from decompals/ultralib src/mgu/mtxident.s)",
+      "evidence": [
+        "ROM [0x81C0,0x820C), RAM [0x8002CDC0,0x8002CE0C): 19 words, one routine; 20 zero-padding bytes to func_8002CE20.",
+        "All words correspond to addi t0,zero,1; sll t1,t0,16; the sixteen SDK stores; and jr ra, with the final store moved into its delay slot.",
+        "The decisive non-C detail is constant 1 materialized by trapping ADDI (word 0x20080001), not merely the choice of t0. GCC 2.7.2/2.8.1 scalar constant templates use li, and their integer-add templates use addu; the supported assembler recipes do not turn li 1 into trapping ADDI. The SDK explicitly requests that instruction.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b",
+          "family": "gpt",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002CE20",
+      "rom_start": 33312,
+      "size": 72,
+      "expected_sha256": "951d6c84c7f95f53592fbcf3b2b6bdbc544c349e485d5a7c5d0e59fd9791d976",
+      "sdk_routines": [
+        "guMtxIdentF"
+      ],
+      "sdk_source": "libultra mgu/mtxidentf.s (LEAF guMtxIdentF); reference copy scratch/omp/wave12/r2/sdk_ref/mgu_mtxidentf.s (from decompals/ultralib src/mgu/mtxidentf.s)",
+      "evidence": [
+        "ROM [0x8220,0x8268), RAM [0x8002CE20,0x8002CE68): 18 words, one routine; 24 zero-padding bytes to func_8002CE80.",
+        "SDK identification is exact: li t0,0x3f800000 becomes LUI, followed by the sixteen stores in source order and the final diagonal store in the return delay slot.",
+        "All seven profiles put the integer 1.0 bit constant in r2 rather than ROM r8. CE20_int and CE20_intconst each have exactly five differing instruction words, exclusively bits 16..20. The constant has no ABI tie to r8; r2/r3 are eligible and unused in the ROM. Float/union/SDK alternatives also fail.",
+        "Initial hw-review/01 verdict was uncertain. The F1 measurement follow-up is confirmed by the F1 item_verdicts in b15-review/01, not that mixed review's overall FAIL status. Measurement corrections B15-01-M1 do not change the confirmed classification; failed candidates alone are not a universal compiler-impossibility proof.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json; measurement follow-up: docs/evidence/handwritten/omp/hw-review/f1/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/b15-review/01/review.json",
+          "sha256": "3a1c95a88e6833b835bfa2ce5a83a72ccee8ad500c0af171e986be1a34aafbef",
+          "family": "gpt",
+          "items": "item_verdicts"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/f1/results.json",
+          "sha256": "6d2798e06b68ba9db3cf5075fcd6b6541c5d46df5fb097abb9e657eea70ab684"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b"
+        }
+      ]
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002CE80",
+      "rom_start": 33408,
+      "size": 108,
+      "expected_sha256": "e706afe4b72d296062571ca9918036a07197bdf713976810f05d26e67be6a9e3",
+      "sdk_routines": [
+        "guMtxL2F"
+      ],
+      "sdk_source": "libultra mgu/mtxl2f.s (LEAF guMtxL2F); reference copy scratch/omp/wave12/r2/sdk_ref/mgu_mtxl2f.s (from decompals/ultralib src/mgu/mtxl2f.s)",
+      "evidence": [
+        "ROM [0x8280,0x82EC), RAM [0x8002CE80,0x8002CEEC): 27 words, one routine; 20 zero-padding bytes to func_8002CF00.",
+        "All words match: 0x37800000 scale in f0, mask in t9, end pointer in t8, packed-word extraction through t0-t7, conversions through f4/f6/f8 and f10/f16/f18, and the a0 increment moved into the loop branch delay slot. Both conversion hazard nops are accounted for.",
+        "The ROM deliberately leaves v0/v1 and f2 unused, keeps invariants in t8/t9, and uses separate t0..t7 and f4/f6/f8/f10/f16/f18 temporaries. The reviewed allocation policy and 35 probes instead reuse low registers. The fresh nearest-size probe uses v0/v1/a0/a1 and f0/f2, and schedules the first conversion before the second extraction. SDK identity was already instruction-exact in the prior review.",
+        "Initial hw-review/01 verdict was uncertain. The F1 measurement follow-up is confirmed by the F1 item_verdicts in b15-review/01, not that mixed review's overall FAIL status. Measurement corrections B15-01-M1 do not change the confirmed classification; failed candidates alone are not a universal compiler-impossibility proof.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json; measurement follow-up: docs/evidence/handwritten/omp/hw-review/f1/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/b15-review/01/review.json",
+          "sha256": "3a1c95a88e6833b835bfa2ce5a83a72ccee8ad500c0af171e986be1a34aafbef",
+          "family": "gpt",
+          "items": "item_verdicts"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/f1/results.json",
+          "sha256": "6d2798e06b68ba9db3cf5075fcd6b6541c5d46df5fb097abb9e657eea70ab684"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b"
+        }
+      ]
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002D040",
+      "rom_start": 33856,
+      "size": 84,
+      "expected_sha256": "b4addc6bc43c34e1263952ad1e0811e0229db57fc377cbf3346c2ac65f84c887",
+      "sdk_routines": [
+        "guNormalize"
+      ],
+      "sdk_source": "libultra mgu/normalize.s (LEAF guNormalize, .set noreorder); reference copy scratch/omp/wave12/r2/sdk_ref/mgu_normalize.s (from decompals/ultralib src/mgu/normalize.s)",
+      "evidence": [
+        "ROM [0x8440,0x8494), RAM [0x8002D040,0x8002D094): 21 words, one routine; 12 zero-padding bytes to func_8002D0A0.",
+        "The entire noreorder sequence matches, including SQRT.S at 0x8002D068, explicit nops at 0x8002D074/0x8002D07C, and the z store in the return delay slot.",
+        "Supported-profile exclusion rests on the unguarded inline square root, not a universal claim that GCC never emits nops. The inspected GCC builtin expansion emits a NaN-result check and errno handling/library fallback unless fast-math is enabled; none of the declared profiles enables it. Ordinary sqrtf calls also cannot yield this call-free body under -fno-builtin. The author's claim that GCC 2.7.2 has no float sqrt builtin is incorrect and unnecessary.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b",
+          "family": "gpt",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_8002FDE0",
+      "rom_start": 45536,
+      "size": 184,
+      "expected_sha256": "12b6f5b60134817aeedf2b981de4b804b3c6fa887e20414084efbbacb88b0052",
+      "sdk_routines": [
+        "__osProbeTLB"
+      ],
+      "sdk_source": "libultra os/probetlb.s (LEAF __osProbeTLB, .set noreorder); reference copy scratch/omp/wave12/r2/sdk_ref/os_probetlb.s (from decompals/ultralib src/os/probetlb.s)",
+      "evidence": [
+        "ROM [0xB1E0,0xB298), RAM [0x8002FDE0,0x8002FE98): 46 words, one routine; 8 zero-padding bytes to func_8002FEA0.",
+        "All instructions, branch destinations and nops match the SDK: EntryHi preservation, VPN/ASID masking, TLBP, Index probe test, TLBR, PageMask calculation, EntryLo0/1 selection, valid/PFN extraction, failure return and EntryHi restoration.",
+        "CP0 reads/writes and TLBP/TLBR require assembly under every supported plain-C/C++ profile. The explicit CP0 hazard nops and trapping ADDI/ADD further agree with the handwritten source.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b",
+          "family": "gpt",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_80031220",
+      "rom_start": 50720,
+      "size": 184,
+      "expected_sha256": "c66d20177a3d7663d24050bc0284552550dca41cc1cc00d877d32c3e9d69d4a4",
+      "sdk_routines": [
+        "guScale"
+      ],
+      "sdk_source": "libultra mgu/scale.s (LEAF guScale); reference copy scratch/omp/wave12/r2/sdk_ref/mgu_scale.s (from decompals/ultralib src/mgu/scale.s)",
+      "evidence": [
+        "ROM [0xC620,0xC6D8), RAM [0x80031220,0x800312D8): 46 words, one routine; 8 zero-padding bytes to func_800312E0.",
+        "All three FTOFIX32 expansions match the SDK, including 65536.0 in f4, MTC1/MUL.S/TRUNC.W.S/MFC1, the inserted hazard nops, fixed-point packing/stores, integer 1 at offset 28 and the final zero store in the return delay slot.",
+        "The ROM leaves f0/f2 and v0/v1 unused while materializing the scale in f4 and packing each axis through t0/t1/t2. Supported-profile probes select lower registers and interleave independent axis computations. The fresh KMC mask probe reproduces f0 scale allocation and v0/v1 packing. Volatile probes are diagnostic negatives, not admissible matching sources. Corrected SDK target sizes do not create a matching candidate.",
+        "Initial hw-review/01 verdict was uncertain. The F1 measurement follow-up is confirmed by the F1 item_verdicts in b15-review/01, not that mixed review's overall FAIL status. Measurement corrections B15-01-M1 do not change the confirmed classification; failed candidates alone are not a universal compiler-impossibility proof.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json; measurement follow-up: docs/evidence/handwritten/omp/hw-review/f1/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/b15-review/01/review.json",
+          "sha256": "3a1c95a88e6833b835bfa2ce5a83a72ccee8ad500c0af171e986be1a34aafbef",
+          "family": "gpt",
+          "items": "item_verdicts"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/f1/results.json",
+          "sha256": "6d2798e06b68ba9db3cf5075fcd6b6541c5d46df5fb097abb9e657eea70ab684"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b"
+        }
+      ]
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_800312E0",
+      "rom_start": 50912,
+      "size": 72,
+      "expected_sha256": "80864487ec220bb1752f4b37d9ea39cb086920386412e76c70e46b00d0bf8c6a",
+      "sdk_routines": [
+        "guScaleF"
+      ],
+      "sdk_source": "libultra mgu/scalef.s (LEAF guScaleF); reference copy scratch/omp/wave12/r2/sdk_ref/mgu_scalef.s (from decompals/ultralib src/mgu/scalef.s)",
+      "evidence": [
+        "ROM [0xC6E0,0xC728), RAM [0x800312E0,0x80031328): 18 words, one routine; 24 zero-padding bytes to func_80031340.",
+        "Every SDK store matches, including arguments a1/a2/a3 at offsets 0/20/40, LUI t0,0x3f80 at 0x80031310, and the offset-60 store in the return delay slot.",
+        "All seven profiles compile the integer and late-assignment probes with the LUI at word 0 rather than ROM word 12. Moving that word to position 12 leaves exactly two r8-versus-r2-only differences in every profile. The late source assignment does not preserve the ROM schedule, and the free-low-register constant allocation independently disagrees.",
+        "Initial hw-review/01 verdict was uncertain. The F1 measurement follow-up is confirmed by the F1 item_verdicts in b15-review/01, not that mixed review's overall FAIL status. Measurement corrections B15-01-M1 do not change the confirmed classification; failed candidates alone are not a universal compiler-impossibility proof.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json; measurement follow-up: docs/evidence/handwritten/omp/hw-review/f1/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/b15-review/01/review.json",
+          "sha256": "3a1c95a88e6833b835bfa2ce5a83a72ccee8ad500c0af171e986be1a34aafbef",
+          "family": "gpt",
+          "items": "item_verdicts"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/f1/results.json",
+          "sha256": "6d2798e06b68ba9db3cf5075fcd6b6541c5d46df5fb097abb9e657eea70ab684"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b"
+        }
+      ]
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_80031E80",
+      "rom_start": 53888,
+      "size": 12,
+      "expected_sha256": "36d5b735ab25f9bb478700d6bf34d5e54555d915b3f13a889e07eade088947cd",
+      "sdk_routines": [
+        "__osSetCompare"
+      ],
+      "sdk_source": "libultra os/setcompare.s (LEAF __osSetCompare); reference copy scratch/omp/wave12/r2/sdk_ref/os_setcompare.s (from decompals/ultralib src/os/setcompare.s)",
+      "evidence": [
+        "ROM [0xD280,0xD28C), RAM [0x80031E80,0x80031E8C): 3 words, one routine; 4 zero-padding bytes to func_80031E90.",
+        "Exact MTC0(a0,C0_COMPARE), JR RA, NOP. The SDK macro temporarily selects noreorder, preventing the control write from being moved into the return delay slot.",
+        "Writing CP0 Compare ($11) is not expressible by the supported assembly-free C/C++ profiles.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b",
+          "family": "gpt",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_80031F40",
+      "rom_start": 54080,
+      "size": 16,
+      "expected_sha256": "1b1c2a5e117a433a988d960120310c5634987537358a5b13b49fddcee5d2dac4",
+      "sdk_routines": [
+        "__osSetFpcCsr"
+      ],
+      "sdk_source": "libultra os/setfpccsr.s (LEAF __osSetFpcCsr); reference copy scratch/omp/wave12/r2/sdk_ref/os_setfpccsr.s (from decompals/ultralib src/os/setfpccsr.s)",
+      "evidence": [
+        "ROM [0xD340,0xD350), RAM [0x80031F40,0x80031F50): 4 words, one routine; next catalogue function starts immediately.",
+        "Exact CFC1 v0,FCR31; CTC1 a0,FCR31; JR RA; NOP. The erroneous END(__osSetSR) in one SDK preprocessor branch is metadata, not a second routine.",
+        "Returning the previous FPU control/status word while replacing it with arbitrary a0 requires assembly under the supported profiles. This is distinct from ordinary MFC1/MTC1 data movement or an internal float-conversion sequence.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b",
+          "family": "gpt",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_80031F90",
+      "rom_start": 54160,
+      "size": 160,
+      "expected_sha256": "c9f9c369a5faa0f83d3c4f75832d7e76ed8ba54e1214354b870b18fd3952ce6d",
+      "sdk_routines": [
+        "osSetIntMask"
+      ],
+      "sdk_source": "libultra os/setintmask.s (LEAF osSetIntMask, .set noreorder; table __osRcpImTable in .rdata); reference copy scratch/omp/wave12/r2/sdk_ref/os_setintmask.s (from decompals/ultralib src/os/setintmask.s)",
+      "evidence": [
+        "ROM [0xD390,0xD430), RAM [0x80031F90,0x80032030): 40 words, one routine; next catalogue function starts immediately.",
+        "All macro expansions and branch/delay slots match: __OSGlobalIntMask at 0x80037260, MI_INTR_MASK_REG at 0xA430000C, complement-via-XOR operations, table load based at 0x80038A00, and Status update followed by two explicit nops. The SDK's separate .rdata table is outside this code span.",
+        "MFC0/ MTC0 Status cannot be generated from assembly-free C/C++ using any supported profile. Ordinary MMIO loads/stores alone would not justify this verdict, but the CP0 state transitions do.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b",
+          "family": "gpt",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_80032030",
+      "rom_start": 54320,
+      "size": 16,
+      "expected_sha256": "8c9798aafb630c54a679991a2a686c3379687a94f8b3c8c14e5eafe1cd8cb961",
+      "sdk_routines": [
+        "__osSetSR"
+      ],
+      "sdk_source": "libultra os/setsr.s (LEAF __osSetSR); reference copy scratch/omp/wave12/r2/sdk_ref/os_setsr.s (from decompals/ultralib src/os/setsr.s)",
+      "evidence": [
+        "ROM [0xD430,0xD440), RAM [0x80032030,0x80032040): 4 words, one routine; next catalogue function starts immediately.",
+        "Exact MTC0 a0,Status; explicit NOP; JR RA; delay-slot NOP, including the SDK MTC0/NOP noreorder macro boundaries.",
+        "Arbitrary CP0 Status replacement requires assembly under every supported profile.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b",
+          "family": "gpt",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_80032240",
+      "rom_start": 54848,
+      "size": 16,
+      "expected_sha256": "57a60924b5ab6bcac4231c2f07f0716ee5d63495724303dbfa626ca0f4112708",
+      "sdk_routines": [
+        "__osSetWatchLo"
+      ],
+      "sdk_source": "libultra os/setwatchlo.s (LEAF __osSetWatchLo); reference copy scratch/omp/wave12/r2/sdk_ref/os_setwatchlo.s (from decompals/ultralib src/os/setwatchlo.s)",
+      "evidence": [
+        "ROM [0xD640,0xD650), RAM [0x80032240,0x80032250): 4 words, one routine; next catalogue function starts immediately.",
+        "Exact MTC0 a0,WatchLo; explicit NOP; JR RA; delay-slot NOP.",
+        "Writing CP0 WatchLo ($18) requires assembly under every supported profile.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b",
+          "family": "gpt",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_80032B40",
+      "rom_start": 57152,
+      "size": 8,
+      "expected_sha256": "b6734913923fe896811dcd9a80dc62ec436b4b9b440e7ba45c9f097eb8917e25",
+      "sdk_routines": [
+        "sqrtf"
+      ],
+      "sdk_source": "libultra gu/sqrtf.s (LEAF sqrtf; its SGI comment says the compiler would not emit sqrt.s, so the routine was written in assembly); reference copy scratch/omp/wave12/r2/sdk_ref/gu_sqrtf.s (from decompals/ultralib src/gu/sqrtf.s)",
+      "evidence": [
+        "ROM [0xDF40,0xDF48), RAM [0x80032B40,0x80032B48): 2 words, one routine; 8 zero-padding bytes to func_80032B50.",
+        "Exact SDK SQRT.S fv0,fa0 followed by return after assembler delay-slot filling: JR RA; SQRT.S f0,f12.",
+        "GCC 2.7.2 and 2.8.1 do have __builtin_sqrtf and a SQRT.S backend pattern. However, their inspected expansion guards the result and handles NaN/errno without fast-math; none of the supported profiles enables fast-math. Thus the unrestricted two-instruction leaf is excluded by the supported recipes, not by absence of a float builtin.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b",
+          "family": "gpt",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_80033A20",
+      "rom_start": 60960,
+      "size": 216,
+      "expected_sha256": "307575fc51ec8366c126191cacb3f4ea45e3b56df159d1987e64e4cab1126564",
+      "sdk_routines": [
+        "guTranslate"
+      ],
+      "sdk_source": "libultra mgu/translate.s (LEAF guTranslate); reference copy scratch/omp/wave12/r2/sdk_ref/mgu_translate.s (from decompals/ultralib src/mgu/translate.s)",
+      "evidence": [
+        "ROM [0xEE20,0xEEF8), RAM [0x80033A20,0x80033AF8): 54 words, one routine; 8 zero-padding bytes to func_80033B00.",
+        "Every conversion, packing operation, store and nop matches the SDK, including the initial zero stores subsequently overwritten at offsets 0/8/20 and the final offset-8 store in the return delay slot.",
+        "The decisive compiler inconsistency is the explicit redundant constant construction: LUI t0,1; ORI t0,t0,0 at 0x80033AD8, and LUI t0,0; ORI t0,t0,1 at 0x80033AE8. Supported optimized GCC constant emission uses li/move and folds these literal expressions; the SDK deliberately spells the redundant instructions. ADDIU of 1 and overwritten stores alone would not establish exclusion.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b",
+          "family": "gpt",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_80033B00",
+      "rom_start": 61184,
+      "size": 72,
+      "expected_sha256": "87161b09f136b903fee891575d01cad359ace9547bd84d9135f067277edff1f3",
+      "sdk_routines": [
+        "guTranslateF"
+      ],
+      "sdk_source": "libultra mgu/translatef.s (LEAF guTranslateF); reference copy scratch/omp/wave12/r2/sdk_ref/mgu_translatef.s (from decompals/ultralib src/mgu/translatef.s)",
+      "evidence": [
+        "ROM [0xEF00,0xEF48), RAM [0x80033B00,0x80033B48): 18 words, one routine; 24 zero-padding bytes to func_80033B60.",
+        "Exact SDK LUI of 1.0's bits, diagonal and zero stores, argument stores at offsets 48/52/56, and final diagonal store in the return delay slot.",
+        "All seven profiles produce the same five r8-versus-r2-only differences for the integer probe. Arguments occupy a1..a3 but do not constrain v0/v1; the constant has no copy/ABI suggestion for t0. Float and SDK alternatives fail as well.",
+        "Initial hw-review/01 verdict was uncertain. The F1 measurement follow-up is confirmed by the F1 item_verdicts in b15-review/01, not that mixed review's overall FAIL status. Measurement corrections B15-01-M1 do not change the confirmed classification; failed candidates alone are not a universal compiler-impossibility proof.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json; measurement follow-up: docs/evidence/handwritten/omp/hw-review/f1/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/b15-review/01/review.json",
+          "sha256": "3a1c95a88e6833b835bfa2ce5a83a72ccee8ad500c0af171e986be1a34aafbef",
+          "family": "gpt",
+          "items": "item_verdicts"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/f1/results.json",
+          "sha256": "6d2798e06b68ba9db3cf5075fcd6b6541c5d46df5fb097abb9e657eea70ab684"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b"
+        }
+      ]
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_80033B60",
+      "rom_start": 61280,
+      "size": 68,
+      "expected_sha256": "768bdca0d47853c4ad2219d3a7ce67beb987cae59401d5a92eedfb9c4612f23b",
+      "sdk_routines": [
+        "osUnmapTLBAll"
+      ],
+      "sdk_source": "libultra os/unmaptlball.s (LEAF osUnmapTLBAll, .set noreorder); reference copy scratch/omp/wave12/r2/sdk_ref/os_unmaptlball.s (from decompals/ultralib src/os/unmaptlball.s)",
+      "evidence": [
+        "ROM [0xEF60,0xEFA4), RAM [0x80033B60,0x80033BA4): 17 words, one routine; 12 zero-padding bytes to func_80033BB0.",
+        "Exact EntryHi save/restore, initial index 30 (NTLBENTRIES=31), K0BASE EntryHi, cleared EntryLo0/1, Index writes, TLBWI, explicit nops and trapping ADDI decrement loop. Reserved entry 31 is not processed.",
+        "CP0 operations and TLBWI are unavailable to every supported assembly-free C/C++ profile.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b",
+          "family": "gpt",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_80034720",
+      "rom_start": 64288,
+      "size": 116,
+      "expected_sha256": "1f0c92717c0320c652883aff97a82af6fc935d0aba9eab058253f183113ec924",
+      "sdk_routines": [
+        "osWritebackDCache"
+      ],
+      "sdk_source": "libultra os/writebackdcache.s (LEAF osWritebackDCache); reference copy scratch/omp/wave12/r2/sdk_ref/os_writebackdcache.s (from decompals/ultralib src/os/writebackdcache.s)",
+      "evidence": [
+        "ROM [0xFB20,0xFB94), RAM [0x80034720,0x80034794): 29 words, one routine including its whole-cache fallback; 12 zero-padding bytes to func_800347A0.",
+        "All guard branches, unsigned-branch expansions, 16-byte line alignment/steps and both return sites match. CACHE 0x19 at 0x80034758 is Hit_Writeback_D; CACHE 0x01 at 0x8003477C is Index_Writeback_Invalidate_D over the 8 KiB cache.",
+        "Both CACHE operations require assembly under the supported profiles. The fallback at 0x80034770 is SDK label 3 inside osWritebackDCache, not an omitted C routine or the separately catalogued osWritebackDCacheAll.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b",
+          "family": "gpt",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "resident",
+      "symbol": "func_800347A0",
+      "rom_start": 64416,
+      "size": 40,
+      "expected_sha256": "394d3bf1ec1a51ef7eff9113ae1103280d0f09b29035cfd8630a0843d890c4f5",
+      "sdk_routines": [
+        "osWritebackDCacheAll"
+      ],
+      "sdk_source": "libultra os/writebackdcacheall.s (LEAF osWritebackDCacheAll); reference copy scratch/omp/wave12/r2/sdk_ref/os_writebackdcacheall.s (from decompals/ultralib src/os/writebackdcacheall.s)",
+      "evidence": [
+        "ROM [0xFBA0,0xFBC8), RAM [0x800347A0,0x800347C8): 10 words, one routine; 8 zero-padding bytes to func_800347D0.",
+        "Exact K0BASE/0x2000 setup, last-line calculation, CACHE 0x01, SLTU/BNEZ expansion with ADDIU 16 in the delay slot, and return/nop.",
+        "Index_Writeback_Invalidate_D cannot be produced by any supported assembly-free C/C++ profile. The full span is this one SDK routine.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave12/r2/results.json."
+      ],
+      "classifier_family": "claude",
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/hw-review/01/review.json",
+          "sha256": "fa483a9f6d8d36a2bfdd94cba37d254b97519a932944a3f37310bbc3faa45d7b",
+          "family": "gpt",
+          "items": "functions"
+        }
+      ],
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave12/r2/results.json",
+        "sha256": "c133d843906db7471b00adbb8fb73782e8d9cd029cab8fb73adfeb558c6e9ef4"
+      },
+      "supporting_evidence": []
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800D8E60",
+      "rom_start": 704160,
+      "size": 172,
+      "expected_sha256": "8708f0436185e74436a8a19fe3d4134201aa2491f356949bc7a7faf3bc8d3ec6",
+      "sdk_routines": [
+        "Yay0 decoder (decode_yay0)"
+      ],
+      "sdk_source": "Not part of libultra. The routine is Nintendo's Yay0 decoder as also shipped hand-written in Paper Mario (pmret/papermario src/os/decode_yay0.s, under that decomp's os/ directory). It is a Nintendo-provided assembly routine reused across titles; no original SDK file name is asserted.",
+      "evidence": [
+        "Trapping (signed-overflow) arithmetic, 16 instructions (3 add, 12 addi, 1 sub): add at 0x800D8E70 `add t8,t8,a1` (0305C020), 0x800D8E74 `add a3,a3,a0` (00E43820) and 0x800D8E78 `add t9,t9,a0` (0324C820); addi at 0x800D8E7C `addi a0,a0,0x10` (20840010), 0x800D8E90 (20840004), 0x800D8EA4 (23390001), 0x800D8EB0 (20A50001), 0x800D8EB8 (20E70002), 0x800D8ECC (216B0002), 0x800D8ED4 (216BFFFF), 0x800D8ED8 (21290001), 0x800D8EE4 (20A50001), 0x800D8EF0 (20C6FFFF), 0x800D8F00 (23390001) and 0x800D8F08 (216B0012); sub at 0x800D8EC8 `sub t1,a1,t2` (00AA4822). Rabbitizer decode of ROM 0xABEA0..0xABF4F: scratch/omp/wave15/o2/r2work/decode-800D8E60.txt (command: uv run --frozen python scratch/omp/wave15/o2/r2work/decode.py d8e60), final count line {'add': 3, 'addi': 12, 'sub': 1} 16. match.py's disassembly flags each one as a handwritten instruction.",
+        "Sign test on the code word: 0x800D8E94 `slt t1,t0,zero` then 0x800D8E98 `beqz t1`. Both compilers branch on a sign with bltz/bgez, not slt plus beqz on a zero register.",
+        "Unconditional branches use `b` (beq zero,zero) at 0x800D8EAC and 0x800D8F04. The decrement of the bit counter is hand-placed in the loop-closing delay slot at 0x800D8EF0 (`addi a2,a2,-1`). This is .set noreorder hand scheduling.",
+        "The instruction words are identical to Paper Mario's hand-written decoder: all 43 words of 0x800D8E60..0x800D8F08 equal pmret/papermario src/os/decode_yay0.s (0x8006EDF0..0x8006EE98), and both end with the same padding nop. Branch offsets are PC-relative, so the bytes compare directly. Reference copy: scratch/omp/wave15/o2/sdk_ref/papermario_src_os_decode_yay0.s.",
+        "Classifier: Claude (Opus); source: docs/evidence/handwritten/omp/wave15/o2/handwritten-func_800D8E60.r2.json (r2; supersedes scratch/omp/wave15/o2/handwritten-func_800D8E60.json 90badd2d)."
+      ],
+      "classifier_family": "claude",
+      "classification_source": {
+        "path": "docs/evidence/handwritten/omp/wave15/o2/handwritten-func_800D8E60.r2.classification.json",
+        "sha256": "f9ef23e034673aeb27517bea0f76911d0ff07708496db9e798e9c1bada2235cb"
+      },
+      "supporting_evidence": [
+        {
+          "path": "docs/evidence/handwritten/omp/wave15/o2/handwritten-func_800D8E60.r2.json",
+          "sha256": "da1e4087aa014a757b94d666a28bdc099870c150c2d19dabb238013b87a47e66"
+        },
+        {
+          "path": "docs/evidence/handwritten/omp/wave15-review/astra2/func_800D8E60-evidence.json",
+          "sha256": "aba7df06accfdb95e3d981398bf063a51e7bfb72d89c6c988f6325264942d321"
+        }
+      ],
+      "reviews": [
+        {
+          "path": "docs/evidence/handwritten/omp/wave15-review/astra2/review.json",
+          "sha256": "2c0b51f88ec740220d7a27c922927bc438850bb1ba820e053f82990f76823ed7",
+          "family": "gpt",
+          "items": "item_verdicts"
+        }
+      ]
+    }
+  ]
+}

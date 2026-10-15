@@ -17,7 +17,11 @@ extern const char D_8014A814[];
 extern void func_80043ED8(Obj *obj);
 extern void *func_80032D94(void *dst, const void *src, size_t size);
 
-void func_80043FD0(Obj *obj, u32 size, const void *data)
+/* Stream write slot (vtable +0x1C): void (void *self, s32 size, const void *data),
+ * the same s32 byte count as its read sibling func_80044154 (+0x2C) and every
+ * stream caller. The capacity check is signed (ROM 0x17070 slt); the chunk
+ * tests compare against the unsigned sizeof/chunk (0x170A0 sltiu, 0x17124 sltu). */
+void func_80043FD0(Obj *obj, s32 size, const void *data)
 {
     const u8 *src;
     u32 chunk;
@@ -35,7 +39,7 @@ void func_80043FD0(Obj *obj, u32 size, const void *data)
         return;
     }
     position = obj->position_00;
-    if (D_801541E4[obj->device_10] - position < (s32)size) {
+    if (D_801541E4[obj->device_10] - position < size) {
         obj->message_14 = D_8014A814;
         return;
     }
@@ -48,7 +52,7 @@ void func_80043FD0(Obj *obj, u32 size, const void *data)
             obj->vtable_18[1].fn((u8 *)obj + obj->vtable_18[1].delta);
             obj->window_40 = -1;
         }
-        if (size >= 32 && (obj->window_40 < 0 || obj->position_00 == obj->window_40)) {
+        if (size >= sizeof(obj->cache_20) && (obj->window_40 < 0 || obj->position_00 == obj->window_40)) {
             obj->window_40 = obj->position_00;
             chunk = 32;
         } else {

@@ -13,9 +13,10 @@ typedef struct {
     s8 members[12];
 } Menu;
 
+/* Menu descriptor (func_8009D910 copies it whole; func_8009543C reads +0x00 as the s32 count).
+   Only the count's low byte is used here, read as lbu +0x03. */
 typedef struct {
-    u8 pad0[0x3];
-    u8 field_3;
+    s32 count;
 } Request;
 
 typedef struct {
@@ -47,7 +48,7 @@ void func_8009F540(Menu *menu, Request *req)
         }
         i++;
     }
-    args.field_0 = req->field_3;
+    args.field_0 = (u8)req->count;
     args.field_1 = 1;
     args.count = count;
     func_8009D910(menu, req, &args);

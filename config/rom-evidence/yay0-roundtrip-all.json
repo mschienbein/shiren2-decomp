@@ -1,0 +1,21 @@
+{
+ "crunch64": {
+  "version": "0.6.2",
+  "exact": 13727,
+  "size_equal": 13727,
+  "total": 13727,
+  "examples": []
+ },
+ "greedy4096_farthest": {
+  "exact": 0,
+  "token_exact": 0,
+  "total": 0,
+  "examples": []
+ },
+ "greedy4096_nearest": {
+  "exact": 0,
+  "token_exact": 0,
+  "total": 0,
+  "examples": []
+ }
+}

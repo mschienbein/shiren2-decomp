@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 typedef short s16;
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -9,7 +10,6 @@ typedef struct { s16 delta; s16 index; void *(*fn)(void *self); } VEntry19;
 typedef struct { char pad0[0x60]; VEntry12 slot12; char pad68[0x98 - 0x68]; VEntry19 inventory; } VTable;
 typedef struct { char pad0[0x1E]; u8 flags; char pad1F[5]; VTable *vtbl; } Actor;
 typedef struct { char pad0[4]; Actor *actor; char pad8[0x10]; s32 unk18; s32 unk1C; } Event;
-typedef struct { char pad0; u8 kind; u8 flags2; char pad3[0xD - 3]; u8 flagsD; } Item;
 extern u32 D_8013960C;
 extern u16 D_8014767C;
 s32 func_800CF140(void *list, u8 kind);
@@ -17,7 +17,6 @@ void func_800498E4(s32 message_id, ...);
 s32 func_80049CB4(s32 id, ...);
 s32 func_800ACEB4(Item *);
 void func_800ACD34(Item *);
-char *func_800AE674(void *obj);
 s32 func_800AE498(Item *);
 s32 func_800A533C(void *obj);
 void func_800C94E8(void);
@@ -45,7 +44,7 @@ void func_80113C68(Item *item, Event *ev) {
     force = ev->unk1C != 0;
     stacked = force;
     verbose = D_8013960C & 1;
-    equipped = item->flags2 & 4;
+    equipped = item->flags02 & 4;
     if (equip == (equipped != 0)) {
         return;
     }
@@ -59,8 +58,8 @@ void func_80113C68(Item *item, Event *ev) {
             func_800498E4(0x31);
             return;
         }
-        item->flags2 |= 4;
-        item->flagsD |= 2;
+        item->flags02 |= 4;
+        item->payload.timer.flags0D |= 2;
         doIt = IS_PLAYER(actor) && func_800ACEB4(item) == 1;
         if (doIt) {
             func_800ACD34(item);
@@ -77,7 +76,7 @@ void func_80113C68(Item *item, Event *ev) {
                 func_80049CB4(7);
             }
             func_800498E4(0x2B, func_800AE674(item));
-            if (item->flagsD & 1) {
+            if (item->payload.timer.flags0D & 1) {
                 func_80049CB4(0x12B);
                 func_800498E4(0x2E, func_800AE674(item));
             }
@@ -89,7 +88,7 @@ void func_80113C68(Item *item, Event *ev) {
                 return;
             }
         }
-        item->flags2 &= ~4;
+        item->flags02 &= ~4;
         if (verbose) {
             if (IS_PLAYER(actor)) {
                 func_80049CB4(0x1134, 0);
@@ -105,12 +104,12 @@ void func_80113C68(Item *item, Event *ev) {
         }
     }
     VFN(actor, slot12)(VTHIS(actor, slot12));
-    doIt = (D_8014767C & 1) && !(item->flagsD & 4);
+    doIt = (D_8014767C & 1) && !(item->payload.timer.flags0D & 4);
     if (doIt) {
         func_80049CB4(0x132);
         func_800A533C(actor);
     }
-    kind = item->kind;
+    kind = item->field01;
     if ((D_8014767C & 1) && (kind == 0x7D || kind == 0x8A)) {
         func_800C94E8();
         if (kind == 0x7D) {

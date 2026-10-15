@@ -6,7 +6,7 @@ typedef struct { s32 x; s32 y; } Point;
 typedef struct { u32 value; } Flags;
 typedef struct { Point point; char pad8[0x14]; u16 field1C; u8 field1E; u8 field1F; Flags field20; } Obj;
 typedef struct { u8 pad[3]; u8 field3; } Tile;
-typedef struct { s32 fields[6]; } Event;
+typedef struct { void *field_0; u32 field_4; u32 field_8; u16 field_C; u16 field_E; u8 field_10; } Event;
 extern Obj *D_801476B8;
 extern u16 func_800B5768(Point *);
 extern s32 func_800A58B8(Obj *);

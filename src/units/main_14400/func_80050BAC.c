@@ -1,7 +1,7 @@
 #include "common.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
-typedef struct { u8 kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+typedef struct { u8 kind, variant, field_02, flags, row, field_05; u16 field_06; u8 mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 typedef struct { s32 x, y; } Vec2;
 typedef struct { s32 x, y, z; } Pos3;

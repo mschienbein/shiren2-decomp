@@ -1,14 +1,13 @@
 #include "common.h"
+#include "item_records.h"
 
-typedef unsigned char u8;
-
-void *func_800AFD78(void *table, u8 index);
 s32 func_800AC670(void *ptr);
 
-void *func_800D561C(void **arg0, u8 arg1) {
-    void *ptr = func_800AFD78(*arg0, arg1);
-    if (ptr == 0 || func_800AC670(ptr) != 0) {
+/* The handle's pool is one of D_80147FD0 (stored by every caller). */
+Item *func_800D561C(Handle *handle, s32 index) {
+    Item *item = func_800AFD78(handle->pool, index);
+    if (item == 0 || func_800AC670(item) != 0) {
         return 0;
     }
-    return ptr;
+    return item;
 }

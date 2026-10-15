@@ -1,5 +1,6 @@
 #include "common.h"
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+#include "item_records.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 typedef struct { unsigned char index, count, previous, field_03, masks[2], field_06, previous_count, field_08; signed char result; unsigned char field_0A; } SelectionSave;
 extern SelectionRecord D_80142F18;
 extern SelectionSave D_80142F24;
@@ -31,8 +32,6 @@ typedef struct {
     Slot slots[2];
 } Rec;
 typedef struct { char pad[2]; Str4 x2; char pad6[0x12]; s32 x18; } Info;
-typedef struct EntVT { char pad[0x10]; short off; s32 (*fn)(void *); } EntVT;
-typedef struct { char pad; unsigned char x1; char pad2[6]; EntVT *vt; unsigned char xC; } Ent;
 typedef struct PlVT {
     char pad[0x68];
     short off68;
@@ -72,7 +71,7 @@ char *func_80048480(unsigned short);
 u32 func_80032D70(const char *);
 void *func_800E8A68(void *, unsigned char);
 void func_800CB564(char *dst, char *src);
-unsigned char func_800E8B10(void *, void *);
+unsigned char func_800E8B10(void *, Item **);
 /* Byte reads of the selection save, integrated at each call site. */
 static inline unsigned char selIndex(SelectionSave *s) { return s->index; }
 static inline unsigned char selCount(SelectionSave *s) { return s->count; }
@@ -85,7 +84,7 @@ void func_800CC288(Rec *r) {
     char *p;
     s32 i;
     char sep[2];
-    Ent *ents[2];
+    Item *ents[2];
     Slot *slot;
     s32 k;
     r->x0 = selIndex(&D_80142F24);
@@ -153,14 +152,14 @@ void func_800CC288(Rec *r) {
     func_800E8B10(pl, ents);
     slot = r->slots;
     for (k = 0;; slot++, k++) {
-        Ent *e;
+        Item *e;
         if (k >= 2) break;
         e = ents[k];
         if (e != 0) {
-            slot->id = e->x1;
-            if (e->xC) slot->flags |= 1;
+            slot->id = e->field01;
+            if (e->payload.timer.turns0C) slot->flags |= 1;
             else slot->flags &= ~1;
-            if (e->vt->fn((char *)e + e->vt->off)) slot->flags |= 2;
+            if (e->field08->test14((char *)e + e->field08->delta10)) slot->flags |= 2;
             else slot->flags &= ~2;
         } else {
             slot->id = 0;

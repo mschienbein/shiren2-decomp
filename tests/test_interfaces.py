@@ -579,18 +579,8 @@ class CxxAstBoundaryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unsupported C\\+\\+ statement CXXTryStmt"):
             self.indexed({"kind": "CXXTryStmt", "id": "try"})
 
-    def test_member_pointers_below_declarators_and_in_typeof_spellings_refuse(self) -> None:
-        # GXX-IR4-02: the outer reference decides the category only after its tree is member-pointer free.
-        member = {"kind": "MemberPointerType", "type": {"qualType": "int S::*"}, "isData": True,
-                  "inner": [{"kind": "BuiltinType", "type": {"qualType": "int"}}]}
-        reference = {"kind": "LValueReferenceType", "type": {"qualType": "int S::*const &"}, "inner": [
-            {"kind": "QualType", "type": {"qualType": "int S::*const"}, "qualifiers": "const", "inner": [member]}]}
-        collector = self.indexed({"kind": "TypedefDecl", "id": "r", "name": "R", "inner": [reference]},
-                                 {"kind": "TypedefDecl", "id": "p", "name": "P", "inner": [
-                                     {**reference, "kind": "PointerType", "inner": [{"kind": "BuiltinType", "type": {"qualType": "int"}}]}]})
-        with self.assertRaisesRegex(ValueError, "member pointer type 'int S::\\*' inside 'int S::\\*const &'"):
-            collector.classify_use({"qualType": "R", "typeAliasDeclId": "r"}, True)
-        self.assertEqual("pointer", collector.classify_use({"qualType": "P", "typeAliasDeclId": "p"}, True).category)
+    def test_opaque_type_spellings_without_type_trees_refuse(self) -> None:
+        collector = self.indexed()
         with self.assertRaisesRegex(ValueError, "typeof/decltype"):
             collector.classify_use({"qualType": "typeof (mp) *"}, True)
         with self.assertRaisesRegex(ValueError, "typeof/decltype"):
@@ -993,9 +983,8 @@ class CxxGateTests(unittest.TestCase):
         self.assertEqual((None, [], []), (cpp.error, summary, gated))
         self.assertEqual([("declaration-disagreement", "f", ["parameter 1 width"])], self.outcome(text, "void f(short);")[1])
 
-    def test_member_pointers_fail_closed_behind_declarators_typedefs_and_typeof(self) -> None:
-        # GXX-IR4-02: the outer pointer, reference or array decides the category, but the unsupported
-        # member pointer subset must not pass because it sits below one.
+    def test_member_pointer_wrappers_keep_the_outer_category(self) -> None:
+        # Pointers/references pass an address; arrays retain storage, not their element category.
         member = "struct S { int x; void m(); }; "
         cases = {
             "reference parameter": ('typedef int S::* const & R; extern "C" void f(R);', "void f(void *);"),
@@ -1011,7 +1000,8 @@ class CxxGateTests(unittest.TestCase):
         }
         for label, (text, peer) in cases.items():
             with self.subTest(case=label):
-                self.assert_parse_failure(member + text, peer, "member pointer type")
+                cpp, summary, gated = self.outcome(member + text, peer)
+                self.assertEqual((None, [], []), (cpp.error, summary, gated))
         # Without a typedef's type tree a typeof spelling hides its operand's type.
         for text, peer in (('static int S::* mp; extern "C" void f(__typeof__(mp) *);', "void f(void *);"),
                            ('static int S::* mp; extern "C" __typeof__(mp) *obj;', "extern void *obj;")):
@@ -1023,6 +1013,79 @@ class CxxGateTests(unittest.TestCase):
                                            "struct Obj; void f(void (*)(int), struct Obj *, int); extern void (*obj[2])(int);")
         self.assertEqual((None, [], []), (cpp.error, summary, gated))
         self.assertEqual("void f(pointer, pointer, int)", cpp.sites[0].shape.render("f"))
+
+    def test_member_pointer_values_agree_through_typedefs_and_direct_spellings(self) -> None:
+        member = "struct S { int x; void m(); }; "
+        declaration = self.cxx("decl.cpp", member +
+            'typedef int S::*Data; typedef void (S::*Method)(); extern "C" { '
+            'extern Data data; extern Method method; Method f(Data, Method); Data g(); }')
+        definition = self.cxx("def.cpp", member +
+            'typedef void (S::*Other)(); extern "C" { extern int S::*data; extern void (S::*method)(); '
+            'Other f(int S::*, void (S::*p)()) { return p; } int S::*g() { return &S::x; } }', candidate=0)
+        self.assertIsNone(declaration.error, declaration.error)
+        self.assertIsNone(definition.error, definition.error)
+        self.assertEqual([], analyse([declaration, definition]).findings)
+        self.assertEqual([], Gate([declaration, definition]).check(0))
+        f = next(s.shape for s in definition.sites if s.symbol == "f")
+        self.assertEqual([("member-data-pointer", 4), ("member-function-pointer", 8)],
+                         [(p.category, p.width) for p in f.params])
+        self.assertEqual(("member-function-pointer", 8), (f.returns.category, f.returns.width))
+
+    def test_member_pointer_values_never_agree_with_ordinary_values(self) -> None:
+        member = "struct S { int x; void m(); }; "
+        for declaration, category in (("typedef int S::*MP;", "member-data-pointer"),
+                                      ("typedef void (S::*MP)();", "member-function-pointer")):
+            for ordinary, object_type in (("void *", "pointer"), ("int", "integer"), ("struct ViewA", "aggregate")):
+                for definition in (False, True):
+                    with self.subTest(member=category, ordinary=ordinary, definition=definition):
+                        suffix = "{ return value; }" if definition else ";"
+                        cpp = self.cxx("member.cpp", member + declaration +
+                            f' extern "C" {{ MP f(MP value) {suffix} extern MP obj; }}', candidate=0)
+                        c = unit("plain.c", f"{ordinary} f({ordinary}); extern {ordinary} obj;")
+                        self.assertIsNone(cpp.error, cpp.error)
+                        report = analyse([c, cpp])
+                        expected = "declaration-vs-definition" if definition else "declaration-disagreement"
+                        self.assertEqual([(expected, "f"), ("object-category", "obj")],
+                                         [(f.kind, f.symbol) for f in report.findings])
+                        self.assertEqual(["return", "parameter 1"], aspects(report.findings[0]))
+                        self.assertEqual(f"{category}-vs-{object_type}", report.findings[1].differences[0]["subkind"])
+                        self.assertEqual([f.key for f in report.findings],
+                                         [f.key for f in Gate([c, cpp]).check(0)])
+
+    def test_data_and_function_member_pointers_are_different_interfaces(self) -> None:
+        member = "struct S { int x; void m(); }; "
+        data = self.cxx("data.cpp", member + 'typedef int S::*MP; extern "C" { MP f(MP); extern MP obj; }')
+        method = self.cxx("method.cpp", member + 'typedef void (S::*MP)(); extern "C" { MP f(MP); extern MP obj; }',
+                          candidate=0)
+        self.assertIsNone(data.error, data.error)
+        self.assertIsNone(method.error, method.error)
+        findings = Gate([data, method]).check(0)
+        self.assertEqual([("declaration-disagreement", "f"), ("object-category", "obj")],
+                         [(f.kind, f.symbol) for f in findings])
+        self.assertEqual(["return", "parameter 1"], aspects(findings[0]))
+
+    def test_member_declarator_precedence_preserves_argument_and_storage_categories(self) -> None:
+        member = "struct S { int x; void m(); }; "
+        cases = [
+            ("int (S::*)(int S::*)", "member-function-pointer", 8),
+            ("int (*S::*)()", "member-data-pointer", 4),
+            ("int S::*S::*", "member-data-pointer", 4),
+            ("int (S::*)[2]", "member-data-pointer", 4),
+            ("int (S::**)(int)", "pointer", 4),
+            ("int (S::*const &)(int)", "pointer", 4),
+            ("int S::*const &", "pointer", 4),
+            ("void (*)(int S::*)", "pointer", 4),
+            ("int (S::*[2])(int)", "pointer", 4),
+        ]
+        for spelling, category, width in cases:
+            with self.subTest(spelling=spelling):
+                cpp = self.cxx("declarator.cpp", member + f'extern "C" void f({spelling});')
+                self.assertIsNone(cpp.error, cpp.error)
+                param = cpp.sites[0].shape.params[0]
+                self.assertEqual((category, width), (param.category, param.width))
+        array = self.cxx("table.cpp", member + 'extern "C" { extern int (S::*table[2])(int); extern int S::*data[2]; }')
+        self.assertIsNone(array.error, array.error)
+        self.assertEqual({"table": "array", "data": "array"}, {o.symbol: o.category for o in array.objects})
 
     def test_selection_and_iteration_statements_scope_their_declarations(self) -> None:
         # GXX-PREEXISTING-SCOPE-01: each selection/iteration statement and each (even unbraced) substatement
@@ -1167,7 +1230,6 @@ class CxxGateTests(unittest.TestCase):
     def test_unanalysable_cpp_tus_are_parse_failures(self) -> None:
         cases = {"syntax": "extern \"C\" void broken(\n",
                  "template": "template <class T> T twice(T x) { return x + x; }\n",
-                 "member pointer": 'struct S { int a; };\nextern "C" void f(int S::*member);\n',
                  "unknown type": 'extern "C" __int128 wide(void);\n'}
         results = [self.cxx(f"src/{name.replace(' ', '_')}.cpp", text, candidate=index) for index, (name, text) in enumerate(cases.items())]
         results.append(parse_cxx_tu(self.PRELUDE, "src/no_clang.cpp", "gxx", None, unavailable="pinned clang_ast missing"))
@@ -1176,7 +1238,7 @@ class CxxGateTests(unittest.TestCase):
                 self.assertIsNotNone(result.error)
                 self.assertTrue(result.error.startswith("parse: "), result.error)
         self.assertIn("src/syntax.cpp:", results[0].error)  # clang diagnostics map back through linemarkers
-        self.assertEqual(["parse-failure"] * 5, [f.kind for f in analyse(results).findings])
+        self.assertEqual(["parse-failure"] * 4, [f.kind for f in analyse(results).findings])
 
 
 if __name__ == "__main__":

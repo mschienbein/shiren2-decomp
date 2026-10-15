@@ -32,7 +32,7 @@ typedef struct Object {
 
 extern Object *func_800EFC70(Object *obj, s32 arg1, u8 arg2);
 extern void *func_800CEC90(void *obj, void *owner, void *entries, u8 capacity, u16 text_id);
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 extern const unsigned char D_8015C450[192];
 

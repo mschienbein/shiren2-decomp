@@ -14,8 +14,9 @@ typedef struct {
     Key800453E4 field08, field10;
 } Buf800459A8;
 extern Pair800459A8 D_8014BF98;
-/* Assembly-only constructor: the escaped parameter lifetime remains unresolved. */
-void func_80045370(Buf800459A8 *buf, Key800453E4 *key, Pair800459A8 pos);
+/* Returns buf; buf->pos is left pointing at its by-value pos parameter
+   (ORIGINAL BUG, see func_80045370.c). */
+Buf800459A8 *func_80045370(Buf800459A8 *buf, Key800453E4 *key, Pair800459A8 pos);
 Pair800459A8 func_800453B8(Buf800459A8 *buf);
 void func_80045948(s32 id, Pair800459A8 pos);
 void func_800459A8(s32 id, Key800453E4 *key) {

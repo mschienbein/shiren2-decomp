@@ -1,12 +1,11 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef struct { s32 x, y; } Pos;
 typedef struct { u8 x, y, amount, flags; } Record;
 typedef struct { u32 bits; } Flags;
-typedef struct { u8 pad00[0x18]; short adjust18, pad1A; s32 (*test1C)(void *, s32); } ItemTable;
-typedef struct { u8 pad00[8]; ItemTable *vtable08; } Item;
 typedef struct { u8 pad00[0x10]; short adjust10, pad12; s32 (*test14)(void *); } EntityTable;
 typedef struct { Pos position; u8 byte08, flags09; u8 pad0A[0x12]; u16 flags1C; u8 flags1E, pad1F; Flags flags20; EntityTable *vtable24; } Obj;
 typedef struct { void *source; u32 kind, field08; u16 value0C, flags0E; u8 mode10, pad11[7]; } Damage;
@@ -19,7 +18,6 @@ extern Record *func_800B51D4(Obj *obj);
 extern s32 func_800A23E8(Pos *origin, Pos *vec);
 extern s32 func_80049CB4(s32 id, ...);
 extern s32 func_800B56F0(void *object);
-extern char *func_800AE674(void *obj);
 extern void func_800497F0(s32 id, ...);
 extern void func_800D3650(void *arg);
 extern void func_800B4E7C(Pos *pos);
@@ -55,7 +53,7 @@ s32 func_800B5300(Obj *self, Obj *source, u8 amount)
     u16 total;
     if (func_800B1C6C(&self->position) & 0xE100) return 0;
     item = func_800B4D80(&self->position);
-    if (item && item->vtable08->test1C((char *)item + item->vtable08->adjust18, 0x24)) return 0;
+    if (item && item->field08->test1C((char *)item + item->field08->delta18, 0x24)) return 0;
     record = func_800B51D4(self);
     if (record == 0) {
         s32 best = 0;

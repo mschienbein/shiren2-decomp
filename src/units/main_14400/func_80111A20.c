@@ -1,9 +1,8 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
-typedef struct { u8 pad_0[0xD]; u8 field_D; } Item;
 typedef struct { u8 pad_0[0x1E]; u8 field_1E; } Unit;
 extern s32 func_80049CB4(s32 id, ...);
-extern char *func_800AE674(void *obj);
 extern s32 func_80111578(void *obj);
 extern void func_800498E4(s32 id, ...);
 extern char *func_800A3B20(Unit *unit);
@@ -16,7 +15,7 @@ s32 func_80111A20(Item *item, Unit *unit)
     name = func_800AE674(item);
     if (func_80111578(item) != 0) {
         u8 flags;
-        item->field_D++;
+        item->payload.charges.used0D++;
         flags = unit->field_1E;
         if ((flags >> 2) & 1) {
             func_800498E4(108, name);

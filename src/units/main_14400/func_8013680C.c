@@ -1,19 +1,13 @@
 #include "common.h"
+#include "item_records.h"
 
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef short s16;
-typedef signed char s8;
-
-typedef struct { s32 x0; void *x4; } S;
-extern u8 D_80149DA8[];
-extern u8 D_80149DB8[];
 void func_800D8FA8(void *object);
-void func_8013680C(S *s, s32 flags) {
-    s->x4 = D_80149DA8;
-    s->x0 = 0;
-    s->x4 = D_80149DB8;
+/* Destructor in D_80149DA8 (+0xC): drop the pool, revert to the base vtable, free on flag 1. */
+void func_8013680C(Handle *handle, s32 flags) {
+    handle->vtable = &D_80149DA8;
+    handle->pool = 0;
+    handle->vtable = &D_80149DB8;
     if (flags & 1) {
-        func_800D8FA8(s);
+        func_800D8FA8(handle);
     }
 }

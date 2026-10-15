@@ -1,18 +1,18 @@
 #include "common.h"
+#include "map_rect.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef short s16;
 typedef signed char s8;
 
-typedef struct { u8 pad0[0x10]; u8 counts[4]; } Obj800B6C14;
-typedef struct { s32 value; } Result800B6C14;
+typedef struct { MapRect geometry; u8 counts[4]; } Obj800B6C14;
 extern u8 D_80147620[];
 s32 func_800B68B0(Obj800B6C14 *obj);
 u16 func_800C58DC(void *rng, u16 range);
-Result800B6C14 *func_800B6BA0(Result800B6C14 *out, Obj800B6C14 *obj);
-void *func_800B6A98(void *out, void *obj, s32 value);
-Result800B6C14 *func_800B6C14(Result800B6C14 *out, Obj800B6C14 *obj, s32 index) {
+MapPos *func_800B6BA0(MapPos *out, Obj800B6C14 *obj);
+MapPos *func_800B6A98(MapPos *out, Obj800B6C14 *obj, s32 value);
+MapPos *func_800B6C14(MapPos *out, Obj800B6C14 *obj, s32 index) {
     s32 value;
     s32 sum;
     s32 i;

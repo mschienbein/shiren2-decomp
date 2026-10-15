@@ -1,18 +1,17 @@
 #include "common.h"
+#include "map_rect.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
-typedef struct { s32 x, y; } Point;
-typedef struct { Point min, max; } Rect;
 typedef struct { u8 value; } Dir;
 typedef struct { u8 pad_00[0x20]; signed short delta_20; u16 reserved_22; s32 (*count_24)(void *); } ListVtable;
 typedef struct { void *table_00; ListVtable *vtable_04; } List;
 typedef struct Unit Unit;
 struct Unit {
-    Point position;
+    MapPos position;
     u8 direction_08, area_09;
     u8 pad_0A[2];
-    Rect bounds_0C;
+    MapRect bounds_0C;
     u16 flags_1C;
     u8 flags_1E;
     u8 pad_1F[0x35];
@@ -20,7 +19,7 @@ struct Unit {
     u8 pad_55[3];
     Unit *target_58;
     u8 pad_5C[8];
-    Point destination_64;
+    MapPos destination_64;
     u8 pad_6C[6];
     u8 flags_72;
     u8 pad_73[0x19];
@@ -32,20 +31,20 @@ struct Unit {
 };
 extern Unit *D_801476B8;
 extern s32 func_800E7794(Unit *unit);
-extern s32 func_800FA710(Unit *unit, Point *position);
+extern s32 func_800FA710(Unit *unit, MapPos *position);
 extern s32 func_800FA1FC(Unit *unit, Unit *target);
-extern Point *func_800B50D4(Point *out, u8 direction);
-extern s32 func_800A24DC(void *point, Rect *bounds);
-extern Point *func_800FA760(Point *out, Unit *unit);
+extern MapPos *func_800B50D4(MapPos *out, u8 direction);
+extern s32 func_800A24DC(void *point, MapRect *bounds);
+extern MapPos *func_800FA760(MapPos *out, Unit *unit);
 extern s32 func_800E7104(Unit *unit);
-extern s32 func_800A23E8(Point *from, Point *to);
+extern s32 func_800A23E8(MapPos *from, MapPos *to);
 extern void *func_800A27A4(void *out, void *from, void *to);
 extern s32 func_800A4360(void *unit, void *position);
 extern s32 func_800A4754(Unit *unit, void *position, Dir *direction);
 extern void func_800A665C(Unit *unit, u8 *direction);
 extern s32 func_800E66EC(Unit *unit);
 
-static inline void point_copy(Point *out, Point *point)
+static inline void point_copy(MapPos *out, MapPos *point)
 {
     out->x = point->x;
     out->y = point->y;
@@ -53,10 +52,10 @@ static inline void point_copy(Point *out, Point *point)
 
 s32 func_800FAA80(Unit *unit)
 {
-    Point here;
-    Rect bounds;
-    Point destination;
-    Point temporary;
+    MapPos here;
+    MapRect bounds;
+    MapPos destination;
+    MapPos temporary;
     Dir direction;
     List *list = unit->list_8C;
     ListVtable *vtable;

@@ -1,33 +1,27 @@
-#include "common.h"
+#include "map_position_iterator.h"
 typedef unsigned char u8;
-typedef struct { s32 x, y; } Pair;
-typedef Pair Pos;
-typedef Pair Position;
-typedef struct { Pair current, start, end; } Iter;
-typedef struct { Pair start, end; } Area;
 typedef struct { u8 kind; u8 pad1[0xB]; u8 flagsC; } Item;
-extern Pair *func_800A3610(Pair *out, Iter *it);
-extern void *func_800B4D80(Pos *p);
-extern void func_800B4E7C(Position *);
+extern void *func_800B4D80(MapPos *p);
+extern void func_800B4E7C(MapPos *);
 extern s32 func_80049CB4(s32 id, ...);
-static inline s32 position_x(Pair *position) { return position->x; }
-static inline s32 iterator_active(Iter *iter, Pair *current) {
+static inline s32 position_x(MapPos *position) { return position->x; }
+static inline s32 iterator_active(MapPositionIterator *iter, MapPos *current) {
     return position_x(current) <= iter->end.x;
 }
-s32 func_800B2A14(Area *area, s32 remove) {
-    Iter iterator;
-    Pair position;
+s32 func_800B2A14(MapRect *area, s32 remove) {
+    MapPositionIterator iterator;
+    MapPos position;
     s32 found = 0;
-    Iter *iter = &iterator;
-    Pair *pos = &position;
-    position.x = area->start.x;
-    position.y = area->start.y;
+    MapPositionIterator *iter = &iterator;
+    MapPos *pos = &position;
+    position.x = area->min.x;
+    position.y = area->min.y;
     iterator.start = position;
-    iterator.current = iterator.start;
-    position.x = area->end.x;
-    position.y = area->end.y;
+    iterator.cur = iterator.start;
+    position.x = area->max.x;
+    position.y = area->max.y;
     iterator.end = position;
-    while (iterator_active(iter, &iterator.current)) {
+    while (iterator_active(iter, &iterator.cur)) {
         Item *item;
         s32 eligible;
         func_800A3610(pos, iter);

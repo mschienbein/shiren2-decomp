@@ -1,12 +1,12 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
 typedef struct { s32 x, y; } Position;
-typedef struct { u8 pad_00[3]; u8 state_03; } Item;
 typedef struct { u8 pad_00[0x20]; short count_delta_20, reserved_22; s32 (*count_24)(void *); u8 pad_28[0x10]; short at_delta_38, reserved_3A; void *(*at_3C)(void *, u32); } InventoryVTable;
 typedef struct { s32 field_00; InventoryVTable *vtable_04; } Inventory;
 typedef struct { u32 pad0 : 21; u32 bit10 : 1; u32 pad1 : 10; } Flags;
 typedef struct { Position position_00; u8 direction_08; u8 pad_09[0x15]; u8 flags_1E; u8 field_1F; Flags flags_20; u8 pad_24[0x40]; void *target_64; void *target_68; u8 pad_6C[0x20]; Inventory *inventory_8C; } Entity;
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 s32 func_80049CB4(s32 id, ...);
 void *func_800A6CC0(void *out_position, void *object);
@@ -15,7 +15,6 @@ s32 func_800B4888(void *position);
 void func_800498E4(s32 id, ...);
 s32 func_800AD714(Item *item, Position *position);
 u32 func_800B1C6C(Position *position);
-char *func_800AE674(void *item);
 s32 func_800AD8AC(Item *item, Position *position);
 void *func_800F1750(void *entity);
 s32 func_800A4754(void *entity, void *position, u8 *direction);
@@ -83,7 +82,7 @@ s32 func_800FAE58(Entity *entity, Entity *other)
             }
             from = &current;
             if (func_800B1C6C(from) & 0x2000) {
-                item->state_03 = 1;
+                item->field03 = 1;
                 func_80049CB4(0xD1, item, from, &destination);
             } else {
                 func_80049CB4(0xB9, item, from, &destination);

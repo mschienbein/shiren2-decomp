@@ -6,7 +6,7 @@ typedef struct { short delta, index; void (*call)(void *, s32); } IntEntry;
 typedef struct { char pad0[0x78]; ShortEntry adjust_78; IntEntry forward_80; } Vtable;
 typedef struct Object { char pad0[0x24]; Vtable *vtbl_24; char pad28[0x44]; s32 field_6C; char pad70[4]; u8 field_74; char pad75[0x8F]; struct Object *field_104; } Object;
 extern Object *D_801476B8;
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 extern unsigned short func_800E08B0(void *obj);
 

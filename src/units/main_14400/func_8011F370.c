@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -23,9 +24,9 @@ typedef struct {
     u8 data[0x38];
 } Effect;
 
-void *func_800B5A18(void *out, void *pos, Dir dir, s32 count, u16 mask);
+Pos func_800B5A18(Pos *pos, Dir dir, s32 count, u16 mask);
 void func_800A2758(Pos *p, Dir d);
-s32 func_80111A20(void *self, void *req);
+s32 func_80111A20(Item *self, void *req);
 Effect *func_80111E08(Effect *o, void *a1, void *a2, Pos *pos, u8 *color);
 void func_800C2D0C(Effect *effect);
 
@@ -53,7 +54,7 @@ void func_8011F370(void *self, Request *req)
     dir = facing;
     pos_copy(&pos, &req->pos);
     pos_copy(&in, &pos);
-    func_800B5A18(&out, &in, facing, 10, 0xC000);
+    out = func_800B5A18(&in, facing, 10, 0xC000);
     pos = out;
     func_800A2758(&pos, dir);
     if (func_80111A20(self, req)) {

@@ -30,6 +30,10 @@ s32 func_80131820(void *message) {
     for (i = 0; i < 4; i++) {
         Slot80131820 *slot = &D_801D4CDC[i];
         switch (slot->state) {
+        /* ODD_C: inactive controller-accessory slot, set by func_801319A0
+         * at reset or by state 1 after an update error; no slot work is due.
+         * This label shapes dispatch: removing it changes 74 overlapping
+         * words and shrinks text from 384 to 376 bytes in the -asg profile. */
         case 0:
             break;
         case 1:

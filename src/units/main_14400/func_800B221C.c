@@ -1,34 +1,34 @@
 #include "common.h"
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+#include "map_rect.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 typedef unsigned char u8;
 typedef signed char s8;
 typedef unsigned short u16;
 typedef signed short s16;
 
-typedef struct { s32 x, y; } Vec2;
-typedef struct { u8 data[0x14]; } Entry;
+typedef struct { MapRect bounds; u8 side_counts[4]; } Entry;
 /* Owner object held by D_80142B10. This TU only forwards its address: func_800BAB28
  * selects a position inside the 16-byte rectangle the owner embeds at +0x9BC. */
 typedef struct Owner800B221C Owner800B221C;
 extern u8 D_8014344C;
 extern u16 D_8014344A;
 extern Entry D_801431F0[];
-extern u8 D_801429C0[16];
+extern MapRect D_801429C0;
 extern u8 D_80147620[];
 
 extern Owner800B221C *D_80142B10;
 extern u16 func_800C58DC(void *, u16);
-extern s32 func_800A3214(Entry *);
-extern void *func_800A33DC(void *out, void *rect);
+extern s32 func_800A3214(MapRect *);
+extern MapPos *func_800A33DC(MapPos *out, MapRect *rect);
 /* Returns `out` (move to v0 at 0x800BAB80); this caller ignores it and reads the buffer. */
-extern Vec2 *func_800BAB28(Vec2 *out, Owner800B221C *owner);
-void *func_800B221C(Vec2 *out){
+extern MapPos *func_800BAB28(MapPos *out, Owner800B221C *owner);
+void *func_800B221C(MapPos *out){
     s32 i;
     u16 roll;
     Entry *e;
     if (D_8014344C == 0) {
-        func_800A33DC(out, D_801429C0);
+        func_800A33DC(out, &D_801429C0);
         return out;
     }
     roll = func_800C58DC(D_80147620, D_8014344A - 1);
@@ -37,7 +37,7 @@ void *func_800B221C(Vec2 *out){
     for (;;) {
         s32 w;
         if (i >= D_8014344C) break;
-        w = func_800A3214(e);
+        w = func_800A3214(&e->bounds);
         if (roll < w) break;
         roll -= w;
         e++;
@@ -48,8 +48,8 @@ void *func_800B221C(Vec2 *out){
         i = 0;
         same = (D_80142F18.mode & 0xE0) == 0x20;
         if (same) {
-            Vec2 v;
-            Vec2 *pv;
+            MapPos v;
+            MapPos *pv;
             func_800BAB28(&v, D_80142B10);
             pv = &v;
             if (pv->y | pv->x) {
@@ -59,7 +59,7 @@ void *func_800B221C(Vec2 *out){
             }
         }
     }
-    func_800A33DC(out, &D_801431F0[i]);
+    func_800A33DC(out, &D_801431F0[i].bounds);
 done:
     return out;
 }

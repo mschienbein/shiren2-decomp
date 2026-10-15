@@ -8,7 +8,8 @@ typedef short s16;
 /* Slot +0x6C binds u32 func_800E0E88/func_800E96D4; the result is narrowed into the s16 field. */
 typedef struct { u8 pad0[0x68]; s16 offset_68; s16 pad6A; u32 (*fn_6C)(void *self); } VTable801237B8;
 typedef struct { u8 pad0[0x1E]; u8 flags_1E; u8 pad1F[5]; VTable801237B8 *vtable_24; } Obj801237B8;
-typedef struct { void *field_0; s32 field_4; s32 field_8; s16 value_C; s16 padE; s32 field_10; s32 field_14; } Info801237B8;
+/* Damage fields written by func_80136910; retain the signed amount consumer. */
+typedef struct { void *field_0; u32 field_4; u32 field_8; s16 value_C; u16 field_E; u8 field_10; } Info801237B8;
 s32 func_800A58B8(void *obj);
 u32 func_800B1C6C(void *pos);
 void func_80123894(void *owner, void *obj, void *context);

@@ -1,17 +1,17 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef struct Member Member;
-extern char *func_800AE674(void *obj);
 extern void func_80049A04(u16 id, ...);
-extern void *func_8011422C(u8 *);
-extern s32 func_800CD508(Member *member, u8 *item);
+extern void *func_8011422C(Item *);
+extern s32 func_800CD508(Member *member, Item *item);
 extern s32 func_800CD278(Member *member);
-s32 func_80114330(u8 *obj, u8 *item) {
+s32 func_80114330(Item *obj, Item *item) {
     char *name = func_800AE674(obj);
     s32 accepted;
     u16 message;
-    switch (item[0]) {
+    switch (item->field00) {
     case 9:
         message = 0x99;
         goto report;

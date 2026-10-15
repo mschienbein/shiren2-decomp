@@ -4,7 +4,7 @@ typedef unsigned char u8;
 typedef struct { s32 x, y; } Position;
 typedef struct { s32 cursor; } Iter;
 typedef struct { u8 pad00[0x72]; u8 flags72; } Obj;
-typedef struct { u8 kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+typedef struct { u8 kind, variant, field_02, flags, row, field_05; unsigned short field_06; u8 mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 extern u8 D_80143391;
 extern u32 D_8013960C;

@@ -1,12 +1,11 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef struct { s32 x, y; } Pos;
 typedef struct { u8 value; } Dir;
 typedef struct { u32 word; } Flags;
 typedef struct { Pos position; Dir direction; u8 pad_09[0x17]; Flags flags_20; } Actor;
-typedef struct { u8 pad_00[8]; short delta_08, slot_0A; void (*destroy_0C)(void *, s32); } ItemTable;
-typedef struct { u8 pad_00[8]; ItemTable *vtable_08; } Item;
 typedef struct { s32 kind; Actor *owner; Actor *target; Dir direction; u8 pad_0D[3]; Pos position; s32 limit_or_flags; s32 flags; } Event;
 /* The live operation occupies original sp+0x28..sp+0x148, including the
  * storage consumed by the constructor and iterative executor. */
@@ -16,7 +15,6 @@ extern Operation *func_800C32C0(Operation *, void *, Item *, Pos *, Dir *, s32, 
 extern void func_800C2D0C(void *);
 extern void func_800D3650(void *);
 extern void func_800A7B18(void *, void *, s32, s32);
-extern char *func_800AE674(void *);
 extern s32 func_800ADC90(void *, Pos *, void *);
 extern void func_800498E4(s32, ...);
 /* ODD_C: Read the copied flag object through its original addressable view. */
@@ -58,7 +56,7 @@ s32 func_800AF28C(Item *item, Event *event) {
     }
     case 18:
         func_800D3650(item);
-        if (item) item->vtable_08->destroy_0C((u8 *)item + item->vtable_08->delta_08, 3);
+        if (item) item->field08->method0C((u8 *)item + item->field08->delta08, 3);
         /* Destruction is followed by the same event-target damage as case 19. */
     case 19:
         func_800A7B18(event->target, event->owner, 1, 6);

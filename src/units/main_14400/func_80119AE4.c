@@ -1,21 +1,18 @@
 #include "common.h"
+#include "item_records.h"
+#include "map_position_iterator.h"
 
 typedef unsigned char u8;
 typedef signed short s16;
 typedef unsigned short u16;
 
-typedef struct { s32 x0; s32 x4; } Pos;
 typedef struct { s32 x0; void *position; } Iter;
 typedef struct { void *current; short index; } FeatureIter;
-typedef struct { Pos current, first, last; } Range;
-typedef struct { Pos first, last; } Rect;
 typedef struct { void *actor; s32 field_04, field_08; s16 amount; u16 flags; u8 kind; } Effect;
-typedef struct { u8 kind; u8 id; } Feature;
 typedef struct { u8 pad0[8]; s16 x8; s16 padA; void (*xC)(void *, s32); } VTable;
 typedef struct { u8 pad0[8]; VTable *vtable; } Object;
 typedef struct {
-    s32 x0;
-    s32 x4;
+    MapPos position;
     u8 pad8[2];
     u8 room;
     u8 padB[0x11];
@@ -25,7 +22,7 @@ typedef struct {
 typedef struct { u8 index, count, previous, field_03, masks[2], field_06, previous_count, field_08; signed char result; u8 field_0A; } SelectionSave;
 extern SelectionSave D_80142F24;
 extern u32 D_8013960C;
-extern Rect D_801429C0;
+extern MapRect D_801429C0;
 s32 func_800E4454(Unit *unit);
 void func_800E4470(Unit *unit);
 char *func_800A3B20(Unit *unit);
@@ -43,13 +40,12 @@ void *func_800A6DE4(Unit *unit);
 s32 func_80119A40(void *obj, void *target, u8 room, u8 kind);
 FeatureIter *func_800B07F0(FeatureIter *it);
 s32 func_800B0808(FeatureIter *it);
-Feature *func_800B0864(FeatureIter *it);
-void *func_8011422C(Feature *feature);
-s32 func_80121B8C(Feature *feature);
-Pos *func_800A3610(Pos *pos, Range *cur);
-Object *func_800B4D80(Pos *pos);
+Item *func_800B0864(FeatureIter *it);
+void *func_8011422C(Item *feature);
+s32 func_80121B8C(Item *feature);
+Object *func_800B4D80(MapPos *pos);
 s32 func_801199E0(void *obj, Object *target, u8 room, u8 kind);
-void func_800AD868(Pos *pos);
+void func_800AD868(MapPos *pos);
 void func_80112EAC(void *obj);
 /* ODD_C: individual state setters keep the whole-object accesses separate. */
 static inline void save_kind(SelectionSave *state, u8 kind) {
@@ -58,25 +54,25 @@ static inline void save_kind(SelectionSave *state, u8 kind) {
 static inline void save_room(SelectionSave *state, u8 room) {
     state->previous = room;
 }
-static inline void unit_pos(Pos *pos, Unit *unit) {
-    pos->x0 = unit->x0;
-    pos->x4 = unit->x4;
+static inline void unit_pos(MapPos *pos, Unit *unit) {
+    pos->x = unit->position.x;
+    pos->y = unit->position.y;
 }
-static inline void range_init(Range *range, Pos *corner, s32 x0, s32 y0, s32 x1, s32 y1) {
-    corner->x0 = x0;
-    corner->x4 = y0;
-    range->first = *corner;
-    range->current = range->first;
-    corner->x0 = x1;
-    corner->x4 = y1;
-    range->last = *corner;
+static inline void range_init(MapPositionIterator *range, MapPos *corner, s32 x0, s32 y0, s32 x1, s32 y1) {
+    corner->x = x0;
+    corner->y = y0;
+    range->start = *corner;
+    range->cur = range->start;
+    corner->x = x1;
+    corner->y = y1;
+    range->end = *corner;
 }
 void func_80119AE4(void *obj, void *source /* unused, supplied by the event caller */, Unit *unit) {
-    Pos pos;
+    MapPos pos;
     Effect effect;
     FeatureIter featureIt;
-    Range range;
-    Pos scratch;
+    MapPositionIterator range;
+    MapPos scratch;
     Iter it;
     s32 original_room;
     u8 room;
@@ -125,24 +121,24 @@ void func_80119AE4(void *obj, void *source /* unused, supplied by the event call
     }
     func_800B07F0(&featureIt);
     while (func_800B0808(&featureIt)) {
-        Feature *feature = func_800B0864(&featureIt);
-        if (feature->kind != 9) {
+        Item *feature = func_800B0864(&featureIt);
+        if (feature->field00 != 9) {
             continue;
         }
         if (!func_80119A40(obj, func_8011422C(feature), room, kind)) {
             continue;
         }
-        if (feature->id != 0xAC) {
+        if (feature->field01 != 0xAC) {
             continue;
         }
         D_8013960C = (D_8013960C << 1) & ~1;
         func_80121B8C(feature);
         D_8013960C >>= 1;
     }
-    range_init(&range, &scratch, D_801429C0.first.x0, D_801429C0.first.x4, D_801429C0.last.x0, D_801429C0.last.x4);
+    range_init(&range, &scratch, D_801429C0.min.x, D_801429C0.min.y, D_801429C0.max.x, D_801429C0.max.y);
     while (1) {
         Object *target;
-        s32 more = range.current.x0 <= range.last.x0;
+        s32 more = range.cur.x <= range.end.x;
         if (!more) {
             break;
         }

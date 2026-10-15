@@ -1,12 +1,8 @@
 #include "common.h"
+#include "map_ring_iterator.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
-
-typedef struct {
-    s32 x;
-    s32 y;
-} Pos;
 
 typedef struct {
     unsigned bits_31_24 : 8;
@@ -15,15 +11,10 @@ typedef struct {
 } UnitFlags;
 
 typedef struct {
-    Pos pos;
+    MapPos pos;
     u8 pad8[0x20 - 0x8];
     UnitFlags flags;
 } Unit;
-
-/* Square iterator filled by func_800C5280 (0x18 bytes). */
-typedef struct {
-    u8 data[0x18];
-} Iterator;
 
 typedef struct {
     short delta;
@@ -59,19 +50,16 @@ void *func_800EB9FC(Unit *unit);
 char *func_80048480(u16 id);
 void func_800498E4(s32 id, ...);
 s32 func_800A692C(Unit *unit, s32 kind);
-void *func_800C5280(Iterator *it, Pos *origin, u16 radius);
-s32 func_800C559C(Iterator *it);
-Pos *func_800C532C(Pos *out, Iterator *it);
-s32 func_800AD714(void *item, Pos *pos);
+s32 func_800AD714(void *item, MapPos *pos);
 s32 func_800CD2BC(List *list, void *item);
-s32 func_800AD8AC(void *item, Pos *pos);
+s32 func_800AD8AC(void *item, MapPos *pos);
 
 static inline s32 flags_bit23(UnitFlags *flags)
 {
     return flags->bit23;
 }
 
-static inline void copy_pos(Pos *out, Pos *in)
+static inline void copy_pos(MapPos *out, MapPos *in)
 {
     out->x = in->x;
     out->y = in->y;
@@ -80,8 +68,8 @@ static inline void copy_pos(Pos *out, Pos *in)
 /* Scatter the list's items onto the free squares around the player. */
 s32 func_800DDEE0(Obj *obj)
 {
-    Iterator it;
-    Pos pos;
+    MapRingIterator it;
+    MapPos pos;
     UnitFlags flags;
     Unit *player = D_801476B8;
     Unit *unit;

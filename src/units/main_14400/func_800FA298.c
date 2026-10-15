@@ -1,22 +1,10 @@
 #include "common.h"
+#include "collection_iterator.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef short s16;
 
-typedef struct {
-    u8 pad0[0x10];
-    s16 delta_10;
-    s16 pad12;
-    s32 (*func_14)(void *self); /* nonzero: cursed / cannot be taken */
-} ItemVTable;
-
-typedef struct {
-    u8 type;
-    u8 kind;
-    u8 flags2;         /* 0x02 */
-    u8 pad3[5];
-    ItemVTable *vtable_8;
-} Item;
 
 typedef struct {
     u8 pad0[0x20];
@@ -32,7 +20,7 @@ typedef struct {
 typedef struct {
     u8 pad0[4];
     ListVTable *vtable_4;
-} ItemList;
+} InventoryList;
 
 typedef struct {
     u8 pad0[0x98];
@@ -51,12 +39,6 @@ typedef struct {
 } Unit;
 
 /* Item-list iterator. */
-typedef struct {
-    s32 index;
-    ItemList *list;
-    s32 direction;
-    Item *current;
-} ListIter;
 
 extern u8 D_80147620[]; /* random number generator state */
 
@@ -64,13 +46,9 @@ s32 func_800A674C(Unit *self, Unit *other);
 s32 func_800A7BE4(Unit *target, void *source);
 void func_800E20F0(Unit *unit);
 s32 func_800E0F40(Unit *unit);
-ListIter *func_800CEB20(ListIter *it, void *list);
-void func_800CEB54(ListIter *it);
-s32 func_800CEBA0(ListIter *it);
-Item *func_800CEC68(ListIter *it);
 s32 func_800FA67C(Unit *self, Item *item);
 u8 func_800C57CC(void *rng, s32 limit);
-void func_800CD304(ItemList *list, u32 index);
+void func_800CD304(InventoryList *list, u32 index);
 Item *func_800F1568(Unit *unit, s32 force);
 Item *func_800FA5FC(Unit *self);
 
@@ -78,16 +56,16 @@ static inline s32 can_take(Unit *self, Item *item, s32 level)
 {
     s32 ok = 0;
     if (func_800FA67C(self, item)) {
-        if (((u8)level == 3 && (item->flags2 & 4) &&
-             item->vtable_8->func_14((u8 *)item + item->vtable_8->delta_10) == 0) ||
-            ((u8)level < 3 && !(item->flags2 & 4))) {
+        if (((u8)level == 3 && (item->flags02 & 4) &&
+             item->field08->test14((u8 *)item + item->field08->delta10) == 0) ||
+            ((u8)level < 3 && !(item->flags02 & 4))) {
             ok = 1;
         }
     }
     return ok;
 }
 
-static inline s32 iterator_index(ListIter *it)
+static inline s32 iterator_index(CollectionIterator *it)
 {
     return it->index;
 }
@@ -95,8 +73,8 @@ static inline s32 iterator_index(ListIter *it)
 /* Steal one item from `target`; returns the item or null. */
 Item *func_800FA298(Unit *self, Unit *target)
 {
-    ListIter it;
-    ItemList *list;
+    CollectionIterator it;
+    InventoryList *list;
     u8 pick;
     Item *item;
     s32 count;
@@ -149,8 +127,8 @@ Item *func_800FA298(Unit *self, Unit *target)
             }
             item = list->vtable_4->func_3C((u8 *)list + list->vtable_4->delta_38, pick);
             cursed = 0;
-            if (item->flags2 & 4) {
-                cursed = item->vtable_8->func_14((u8 *)item + item->vtable_8->delta_10) != 0;
+            if (item->flags02 & 4) {
+                cursed = item->field08->test14((u8 *)item + item->field08->delta10) != 0;
             }
             if (cursed) {
                 return 0;

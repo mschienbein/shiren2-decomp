@@ -26,6 +26,10 @@ static inline Dir Dir_opposite(Dir *d) {
 }
 void func_8010F9FC(Obj *self, void *name, Dir dir, void *actor, Pos *start) {
     Pos pos;
+    /* ORIGINAL BEHAVIOR (proposed exception): original sp+0x40 has no
+     * caller initialization before B5900 at VRAM 0x8010FA60. Its pre-store
+     * returns at 0x800B5930/0x800B5998 can leave the first target unset.
+     * Gameplay reachability, including producer/announcement effects, is unproved. */
     void *target;
     VEntry *e;
     s32 kind;
@@ -50,9 +54,12 @@ void func_8010F9FC(Obj *self, void *name, Dir dir, void *actor, Pos *start) {
     e = &self->vtbl[8];
     kind = e->stat((char *)self + e->delta, 5);
     func_80049CB4(0x100, actor, p);
+    /* Original VRAM 0x8010FAE4 reads sp+0x40 after the tile/stat/announcement
+     * calls, including the conditional first-probe no-write path. */
     if (target) {
         Damage damage;
         init_damage(&damage, name, kind);
+        /* Original VRAM 0x8010FB08 reloads that same sp+0x40 target. */
         func_800A7ADC(target, &damage);
     }
 }

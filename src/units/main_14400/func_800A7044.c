@@ -1,29 +1,27 @@
 #include "common.h"
+#include "map_line_iterator.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
-typedef struct { s32 x; s32 y; } Pos800A7044;
 typedef struct { u8 value; } Dir;
-typedef struct { s32 field_0; s32 field_4; s32 field_8; s32 count; s32 index; s32 field_14; } Iter800A7044;
-typedef struct { Pos800A7044 pos; u8 pad8; u8 field_9; u8 padA[0x12]; u16 flags; } Unit800A7044;
+/* Partial unit view: position +0, mode byte +9, flags +0x1C; not allocated here. */
+typedef struct { MapPos pos; u8 pad8; u8 field_9; u8 padA[0x12]; u16 flags; } Unit800A7044;
 u32 func_800B1C6C(void *pos);
 void *func_800A2594(void *out, void *from, Dir dir);
-void func_800A2758(Pos800A7044 *pos, Dir dir);
-void func_800C25D0(Iter800A7044 *iter, Pos800A7044 *pos, Dir *dir, s32 range);
-void *func_800C2758(void *out, void *iterator);
-s32 func_800A4754(Unit800A7044 *unit, Pos800A7044 *pos, Dir *dir);
-s32 func_800A4404(Unit800A7044 *unit, Pos800A7044 *pos, Unit800A7044 **hit);
+void func_800A2758(MapPos *pos, Dir dir);
+s32 func_800A4754(Unit800A7044 *unit, MapPos *pos, Dir *dir);
+s32 func_800A4404(Unit800A7044 *unit, MapPos *pos, void **hit);
 
-static inline void Pos_copy(Pos800A7044 *dst, Pos800A7044 *src) {
+static inline void Pos_copy(MapPos *dst, MapPos *src) {
     dst->x = src->x;
     dst->y = src->y;
 }
 
-Pos800A7044 *func_800A7044(Pos800A7044 *out, Unit800A7044 *unit, Dir *dir, s32 range, s32 flag) {
-    Pos800A7044 pos;
-    Pos800A7044 start;
-    Pos800A7044 cur;
-    Iter800A7044 iter;
-    Unit800A7044 *hit;
+MapPos *func_800A7044(MapPos *out, Unit800A7044 *unit, Dir *dir, s32 range, s32 flag) {
+    MapPos pos;
+    MapPos start;
+    MapPos cur;
+    MapLineIterator iter;
+    void *hit;
     s32 blocked;
     s32 stop;
 
@@ -35,9 +33,9 @@ Pos800A7044 *func_800A7044(Pos800A7044 *out, Unit800A7044 *unit, Dir *dir, s32 r
     } else {
     Pos_copy(&start, &pos);
     func_800A2594(&cur, &pos, *dir);
-    func_800C25D0(&iter, &cur, dir, range);
+    func_800C25D0(&iter, &cur, &dir->value, range);
     while (1) {
-        if (iter.index >= iter.count) break;
+        if (iter.index >= iter.length) break;
         func_800C2758(&cur, &iter);
         hit = 0;
         stop = 0;
@@ -46,7 +44,7 @@ Pos800A7044 *func_800A7044(Pos800A7044 *out, Unit800A7044 *unit, Dir *dir, s32 r
             stop = 1;
         }
         if (stop) {
-            if (hit == 0 || ((hit->flags & 1) ^ 1) == 0) {
+            if (hit == 0 || ((((Unit800A7044 *)hit)->flags & 1) ^ 1) == 0) {
                 Dir back;
                 back.value = (dir->value + 4) & 7;
                 func_800A2758(&cur, back);

@@ -13,6 +13,9 @@ listing new and source/dependency-changed matches relative to the accepted recei
 independent `review.json` bound to both receipts, checks the tree is unchanged,
 promotes `<name>-b` (full re-verification), runs default verification, writes
 `docs/harness-validation-<name>.json` and records progress.
+Live tests may be process-sharded with `prepare --test-jobs N` (default 1).
+Non-live tests run first, serially. Worker logs, timings and temporary roots live
+under `suite-shards/`; replay retention still follows each test's environment.
 """
 from __future__ import annotations
 
@@ -29,6 +32,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from certification import python_command, read_json
+from toolchain_library import match_family
 from rom import EXPECTED_SHA256, PROJECT
 from workspace import verify_manifest
 
@@ -138,7 +142,9 @@ def _fresh_builds(name: str, work: Path, concurrent: bool) -> dict[str, dict]:
     return {run: record for run, (_, record) in outcomes.items()}
 
 
-def prepare(name: str, concurrent_builds: bool = True) -> Path:
+def prepare(name: str, concurrent_builds: bool = True, *, test_jobs: int = 1) -> Path:
+    if type(test_jobs) is not int or not 1 <= test_jobs <= 32:
+        raise ValueError("test jobs must be between 1 and 32")
     work = PROJECT / "scratch/omp/accept" / name
     work.mkdir(parents=True, exist_ok=False)
     started = time.monotonic()
@@ -147,7 +153,9 @@ def prepare(name: str, concurrent_builds: bool = True) -> Path:
               "wall_seconds": round(time.monotonic() - started, 3)}
     b = PROJECT / "build" / f"{name}-b/receipt.json"
     suite_log = work / "suite.log"
-    code, elapsed = _run([python_command(), "-m", "unittest", "discover", "-s", "tests", "-v"], suite_log,
+    suite_command = [python_command(), "tools/test_suite.py", "--jobs", str(test_jobs),
+                     "--work-dir", str(work / "suite-shards")]
+    code, elapsed = _run(suite_command, suite_log,
                          env={**os.environ, "SHIREN2_RECEIPT": str(b)})
     text = suite_log.read_text()
     ran = re.search(r"^Ran (\d+) tests? in", text, re.MULTILINE)
@@ -159,11 +167,19 @@ def prepare(name: str, concurrent_builds: bool = True) -> Path:
         "receipts": receipts, "builds": builds, "frozen_manifest_sha256": receipt["input_manifest"]["sha256"],
         "coverage": receipt["coverage"],
         "prior_accepted": read_json(PROJECT / "build/latest.json"),
-        "new_functions": [{k: m[k] for k in ("image_id", "symbol", "source", "rom_start", "size")} for m in new],
-        "changed_functions": [{k: m[k] for k in ("image_id", "symbol", "source", "rom_start", "size", "changed_dependencies")} for m in changed],
+        "new_functions": [{**{k: m[k] for k in ("image_id", "symbol", "source", "rom_start", "vram_start", "size")},
+                           **({"generated": m["generated"]} if "generated" in m else {})} for m in new],
+        "changed_functions": [{**{k: m[k] for k in ("image_id", "symbol", "source", "rom_start", "size", "changed_dependencies")},
+                               **({"generated": m["generated"]} if "generated" in m else {})} for m in changed],
         "new_instruction_bytes": sum(m["size"] for m in new),
+        **({"new_generated_cpp_functions": sum("generated" in m for m in new),
+            "new_generated_cpp_instruction_bytes": sum(m["size"] for m in new if "generated" in m)}
+           if "matched_generated_cpp_functions" in receipt["coverage"] else {}),
         "suite": {"exit_code": code, "tests": int(ran[1]) if ran else 0, "elapsed_seconds": elapsed,
-                  "passed": code == 0 and bool(ran) and "OK" in text.splitlines()[-1], "log": _reference(suite_log)},
+                  "passed": code == 0 and bool(ran) and "OK" in text.splitlines()[-1], "log": _reference(suite_log),
+                  "command": (f"SHIREN2_RECEIPT=<b> python tools/test_suite.py --jobs {test_jobs}"
+                              f" --work-dir {work.relative_to(PROJECT) / 'suite-shards'}"),
+                  "test_jobs": test_jobs},
         "review_required": {"path": f"scratch/omp/accept/{name}/review.json", "fields": REVIEW_FIELDS},
     }
     (work / "prepare.json").write_text(json.dumps(summary, indent=2) + "\n")
@@ -221,15 +237,28 @@ def finalize(name: str, function_reviews: list[Path]) -> Path:
                          "matched_c_and_cpp_functions": coverage["matched_c_and_cpp_functions"],
                          "matched_c_and_cpp_instruction_bytes": coverage["matched_c_and_cpp_bytes"]}
                         if "matched_cpp_functions" in coverage else {}),
+                     **({"matched_toolchain_library_functions": coverage["matched_toolchain_library_functions"],
+                         "matched_toolchain_library_instruction_bytes": coverage["matched_toolchain_library_bytes"]}
+                        if "matched_toolchain_library_functions" in coverage else {}),
+                     **({"matched_generated_cpp_functions": coverage["matched_generated_cpp_functions"],
+                         "matched_generated_cpp_instruction_bytes": coverage["matched_generated_cpp_bytes"]}
+                        if "matched_generated_cpp_functions" in coverage else {}),
                      "complete_game_denominator_bytes": None},
-        "new_C_functions": sum(m["source"].endswith(".c") for m in prepared["new_functions"]),
-        "new_unique_C_instruction_bytes": sum(m["size"] for m in prepared["new_functions"] if m["source"].endswith(".c")),
+        "new_C_functions": sum(match_family(m) == "c" for m in prepared["new_functions"]),
+        "new_unique_C_instruction_bytes": sum(m["size"] for m in prepared["new_functions"] if match_family(m) == "c"),
         **({"new_CPP_functions": sum(m["source"].endswith(".cpp") for m in prepared["new_functions"]),
             "new_unique_CPP_instruction_bytes": sum(m["size"] for m in prepared["new_functions"] if m["source"].endswith(".cpp"))}
            if "matched_cpp_functions" in coverage else {}),
+        **({"new_generated_cpp_functions": sum("generated" in m for m in prepared["new_functions"]),
+            "new_generated_cpp_instruction_bytes": sum(m["size"] for m in prepared["new_functions"] if "generated" in m)}
+           if "matched_generated_cpp_functions" in coverage else {}),
+        **({"new_toolchain_library_functions": sum(match_family(m) == "toolchain_library" for m in prepared["new_functions"]),
+            "new_unique_toolchain_library_instruction_bytes": sum(m["size"] for m in prepared["new_functions"] if match_family(m) == "toolchain_library")}
+           if "matched_toolchain_library_functions" in coverage else {}),
         "new_functions": prepared["new_functions"],
         "changed_functions": prepared["changed_functions"],
-        "full_suite": {"command": "SHIREN2_RECEIPT=<b> python -m unittest discover -s tests -v", "tests": prepared["suite"]["tests"],
+        "full_suite": {"command": prepared["suite"].get("command", "SHIREN2_RECEIPT=<b> python -m unittest discover -s tests -v"),
+                       "tests": prepared["suite"]["tests"],
                        "passed": True, "exit_code": prepared["suite"]["exit_code"], "elapsed_seconds": prepared["suite"]["elapsed_seconds"],
                        "log": prepared["suite"]["log"]["path"], "log_sha256": prepared["suite"]["log"]["sha256"]},
         "independent_whole_rom_review": _reference(review_path),
@@ -259,6 +288,8 @@ def main() -> None:
     first.add_argument("--name", required=True)
     first.add_argument("--sequential-builds", action="store_true",
                        help="finish <name>-a before starting <name>-b (default: build both concurrently)")
+    first.add_argument("--test-jobs", type=int, default=1,
+                       help="live-test subprocesses, 1-32 (default: 1; budget disk per worker)")
     second = sub.add_parser("finalize")
     second.add_argument("--name", required=True)
     second.add_argument("--function-review", type=Path, action="append", default=[])
@@ -267,7 +298,7 @@ def main() -> None:
         parser.error("name must contain only letters, digits, underscores and hyphens")
     try:
         if args.command == "prepare":
-            path = prepare(args.name, concurrent_builds=not args.sequential_builds)
+            path = prepare(args.name, concurrent_builds=not args.sequential_builds, test_jobs=args.test_jobs)
             data = read_json(path)
             print(json.dumps({k: data[k] for k in ("receipts", "builds", "coverage", "new_instruction_bytes", "suite")}, indent=2))
             print(f"prepared: {path}\nnew functions: {len(data['new_functions'])}; changed functions: {len(data['changed_functions'])}; review file required: {data['review_required']['path']}")

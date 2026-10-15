@@ -1,22 +1,16 @@
-#include "common.h"
+#include "map_unit_iterator.h"
 typedef unsigned char u8;
 typedef struct { s32 x, y; } Pair;
 typedef struct VT { char pad[0x90]; short off; s32 (*fn)(void *, s32, s32, u8, s32); } VT;
 typedef struct { char pad[9]; unsigned char x9; char pad2[0x1A]; VT *vt; } Ent;
-typedef struct { s32 w[4]; } Area;
-typedef struct { s32 w[8]; } Iter;
-void *func_800A2FD0(Area *a, Pair *pos, u8 radius);
-Iter *func_800A9204(Iter *it, Area *a, Pair *pos);
-s32 func_800A9284(Iter *it, s32 mask);
 s32 func_80049CB4(s32 id, ...);
-Ent *func_800A942C(Iter *it);
 s32 func_800A692C(Ent *e, s32 kind);
 u32 func_800B1C6C(Ent *e);
 void func_800498E4(s32 message_id, ...);
 /* Item-effect slot +0x44 supplies self, actor and item; self and item are unused here. */
 void func_8011D050(void *unused, Pair *pos, void *item) {
-    Area area;
-    Iter it;
+    MapRect area;
+    MapUnitIterator it;
     Pair tmp;
     Ent *e;
     s32 hit = 0;

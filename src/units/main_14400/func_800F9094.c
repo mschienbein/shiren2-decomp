@@ -4,7 +4,7 @@ typedef unsigned char u8;
 typedef signed char s8;
 typedef unsigned short u16;
 typedef short s16;
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 typedef struct { s32 x, y; } Pair;
 typedef struct ShirenDirection { s8 value; } ShirenDirection;
 typedef struct Unit Unit;
@@ -62,6 +62,12 @@ static inline ShirenDirection actor_direction(Unit *unit) {
 
 s32 func_800F9094(Unit *self, Unit *target) {
     Pair origin;
+    /* ORIGINAL BUG: the non-near, non-null path leaves this pair at
+     * sp+0x30/+0x34 unset, filling sp+0x38/+0x3C at 0x800F9374/9384 instead.
+     * Only the near/effect path writes this pair (0x800F9360/9368).
+     * The 0xDA call at 0x800F939C/93A0 passes it to func_80048B04 ->
+     * func_800A251C, which reads both words; func_800507F4 also copies them.
+     * Preserved under the scoped ORIGINAL-BUG-UNINIT.md ruling. */
     Pair at;
     s32 result;
     s32 special = func_800E20CC(self) || is_special_floor();
@@ -147,6 +153,13 @@ s32 func_800F9094(Unit *self, Unit *target) {
         s32 ready = (target->flags_1C & 1) ^ 1;
         if (ready) {
             Damage damage;
+            /* ORIGINAL BUG: 0x800F939C/93A0 passes sp+0x30/+0x34, still unset
+             * on the non-near, non-null path. D_801390C0[0xDA] = {0x16,1};
+             * func_80048B04 -> func_800A251C reads both coordinates for
+             * visibility, affecting the message token passed to 0x11E.
+             * If valid, func_800507F4 also copies both words at entry, though
+             * no 0xDA area-effect case uses them. Actual stale values and
+             * dynamic path reachability are unmeasured. */
             s32 message = func_80049CB4(0xDA, &at);
             func_800497F0(0x11E, message, func_800A3B20(target));
             func_800A7ADC(target, make_damage(&damage, self));

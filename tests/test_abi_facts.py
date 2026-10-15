@@ -8,7 +8,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "tools"))
-from abi_facts import analyze_project, analyze_text  # noqa: E402
+from abi_facts import SHARED_SPACE, analyze_assembly, analyze_project, analyze_text, parse_assembly, word_spaces  # noqa: E402
 
 
 def assembly(*functions: tuple[str, list[str]], rodata: str = "") -> str:
@@ -601,6 +601,67 @@ class AbiFactsSyntheticTests(unittest.TestCase):
                       "jr $ra", "sw $a3, 12($sp)"]),
         )
         self.assertFalse(consumer(result["value"], "caller")["conservative_consumed"])
+
+
+def placed(rom: int, vram: int, *functions: tuple[str, list[tuple[str, int | None]]]) -> str:
+    """Splat-shaped text at an explicit ROM/VRAM; a `jal` names its target address."""
+    lines = [".section .text"]
+    for symbol, instructions in functions:
+        lines.append(f"glabel {symbol}")
+        for instruction, target in instructions:
+            word = "03E00008" if instruction == "jr $ra" else "00000000"
+            if target is not None:
+                word = f"{0x0C000000 | ((target >> 2) & 0x03FFFFFF):08X}"
+            lines.append(f"/* {rom:06X} {vram:08X} {word} */ {instruction}")
+            rom, vram = rom + 4, vram + 4
+        lines.append(f"endlabel {symbol}")
+    return "\n".join(lines) + "\n"
+
+
+class AbiFactsOverlayWordMapTests(unittest.TestCase):
+    images = [{"image_id": "main_14400", "load_slot": "main_14400"}, {"image_id": "resident", "load_slot": "resident"},
+              {"image_id": "overlay_1339f0", "load_slot": "overlay_801e4ea0"}, {"image_id": "overlay_136dc0", "load_slot": "overlay_801e4ea0"}]
+
+    def test_same_vram_overlays_keep_separate_word_maps_and_call_targets(self) -> None:
+        space_of = word_spaces(self.images)
+        self.assertEqual(space_of, {"main_14400": SHARED_SPACE, "resident": SHARED_SPACE,
+                                    "overlay_1339f0": "overlay_1339f0", "overlay_136dc0": "overlay_136dc0"})
+        texts = {
+            "main_14400": placed(0x23040, 0x80050000,
+                ("func_80050000", [("addu $v0, $a0, $zero", None), ("jr $ra", None), ("nop", None)]),
+                ("func_8005000C", [("jal func_801E4EB0", 0x801E4EB0), ("nop", None), ("jr $ra", None), ("addu $v0, $v0, $zero", None)])),
+            "overlay_1339f0": placed(0x1339F0, 0x801E4EA0,
+                ("func_801E4EA0_1339F0", [("jal func_801E4EB0_133A00", 0x801E4EB0), ("nop", None), ("jr $ra", None), ("addu $v0, $v0, $zero", None)]),
+                ("func_801E4EB0_133A00", [("addu $v0, $a0, $a1", None), ("jr $ra", None), ("nop", None)])),
+            "overlay_136dc0": placed(0x136DC0, 0x801E4EA0,
+                ("func_801E4EA0_136DC0", [("jal func_801E4EB0_136DD0", 0x801E4EB0), ("nop", None), ("jal func_80050000", 0x80050000), ("nop", None), ("jr $ra", None), ("nop", None)]),
+                ("func_801E4EB0_136DD0", [("addu $v0, $a0, $zero", None), ("jr $ra", None), ("nop", None)])),
+        }
+        spaces = {}
+        catalogue = []
+        for image, text in texts.items():
+            parsed = parse_assembly(text, image_id=image)
+            spaces[space_of[image]] = parsed
+            catalogue += parsed.functions
+        report = analyze_assembly(spaces, catalogue, space_of)
+        by_symbol = {fact["symbol"]: fact for fact in report["functions"]}
+        self.assertEqual(report["summary"]["images"], {"main_14400": 2, "overlay_1339f0": 2, "overlay_136dc0": 2})
+        # Each overlay's jal 0x801E4EB0 binds to its own image's function, never the other overlay's.
+        self.assertEqual([item["caller"] for item in by_symbol["func_801E4EB0_133A00"]["result_consumers"]], ["func_801E4EA0_1339F0"])
+        self.assertEqual([item["caller"] for item in by_symbol["func_801E4EB0_136DD0"]["result_consumers"]], ["func_801E4EA0_136DC0"])
+        self.assertEqual(by_symbol["func_801E4EB0_133A00"]["live_in"], 2)
+        self.assertEqual(by_symbol["func_801E4EB0_136DD0"]["live_in"], 1)
+        # An overlay call into resident/main resolves through the shared map.
+        self.assertEqual([item["caller"] for item in by_symbol["func_80050000"]["result_consumers"]], ["func_801E4EA0_136DC0"])
+        # Main's call into the slot cannot know which overlay is loaded.
+        self.assertTrue(any("uncatalogued direct callee" in warning for warning in by_symbol["func_8005000C"]["warnings"]))
+
+    def test_each_row_needs_its_own_image_word_map(self) -> None:
+        overlay = placed(0x1339F0, 0x801E4EA0, ("func_801E4EA0_1339F0", [("jr $ra", None), ("nop", None)]))
+        parsed = parse_assembly(overlay, image_id="overlay_1339f0")
+        with self.assertRaisesRegex(ValueError, "No original instructions for image overlay_136dc0"):
+            analyze_assembly({"overlay_1339f0": parsed}, parsed.functions + [dict(parsed.functions[0], image_id="overlay_136dc0", symbol="func_801E4EA0_136DC0", rom_start=0x136DC0)],
+                             word_spaces(self.images))
 
 
 class AbiFactsOriginalAssemblyTests(unittest.TestCase):

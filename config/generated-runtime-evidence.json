@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "reviewer": {"model": "gpt-6-astra", "family": "OpenAI"},
+  "rom_sha256": "4073a9f6516ef5d15cdd8b259a952a7d07633a2815f2a738fb5d98415d30a458",
+  "runtime_name": "atexit",
+  "catalogue_symbol": "func_800D8F30",
+  "image_id": "main_14400",
+  "rom_start": 704368,
+  "vram_start": 2148372272,
+  "size": 8,
+  "bytes_hex": "03e000080000102d",
+  "sha256": "adaad653172d31a2481c65220b1c56565bff36fb10341defe5b01cd6fb3850be",
+  "instructions": ["jr $ra", "daddu $v0, $zero, $zero (delay slot)"],
+  "function_pointer_behavior": "Ignores a0: neither stores nor invokes the callback. Returns zero. This game supplies a no-op atexit implementation, not an exit-handler registry.",
+  "caller_scan_scope": "Every word in every function of config/rom_cpu_catalogue.json; J/JAL decoded with the PC region. One direct caller. Indirect callers and uncatalogued code are not ruled out.",
+  "direct_callers": [{"image_id": "overlay_136dc0", "symbol": "func_801EF7F0_141710", "rom": 1316832, "vram": 2149513408, "context_hex": "3c04801f0c0363cc2484f7a0", "argument": "a0 = 0x801EF7A0 (func_801EF7A0_1416C0), formed by lui/addiu around the jal; v0 is discarded"}],
+  "identity_reason": "The caller follows guarded construction of the interpreter's function-local static. Pinned g++ 2.8.1 emits __tcf_0, the interpreter, _GLOBAL_.I.func_801EF7F0_141710 and an undefined atexit call. The ROM has exactly this registration pattern. The runtime name is identified from compiler emission plus ROM callsite, not the trivial callee body alone.",
+  "generated_catalogue": {"__tcf_0": "func_801EF7A0_1416C0", "_GLOBAL_.I.func_801EF7F0_141710": "func_801F1508_143428"}
+}

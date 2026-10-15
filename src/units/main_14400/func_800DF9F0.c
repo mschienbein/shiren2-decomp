@@ -3,7 +3,7 @@
 typedef unsigned char u8;
 typedef unsigned short u16;
 
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 
 typedef struct {
     s32 x;
@@ -67,7 +67,7 @@ void func_800498E4(s32 id, ...);
 s32 func_800E4454(Unit *unit);
 Item *func_800E8BD4(Unit *unit);
 void *func_800EB9FC(Unit *unit);
-char *func_800AC990(Item *item);
+char *func_800AC990(void *item);
 void func_8006D418(void);
 s32 func_800A692C(Unit *unit, s32 kind);
 u32 func_800B1C6C(void *pos);

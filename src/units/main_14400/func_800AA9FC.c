@@ -1,5 +1,5 @@
 #include "common.h"
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 typedef struct { unsigned char index, count, previous, field_03, masks[2], field_06, previous_count, field_08; signed char result; unsigned char field_0A; } SelectionSave;
 extern SelectionSave D_80142F24;
@@ -60,6 +60,11 @@ void func_800AA9FC(s32 argument)
         break;
     case 0x80: {
         Object *object = func_800B6E70(0xC);
+        /* The original writes the base table D_80153B40 at
+         * 0x800AAB58, then overwrites it with D_8014A7A8 at 0x800AAB70.
+         * No call observes the first table. Removing its assignment gives
+         * 484 rather than 496 bytes (45 differing words); inherited-cleanup
+         * item-08. Preserve the evidenced two-stage initialization. */
         object->vtable = &D_80153B40.prefix;
         object->kind = originalKind;
         object->field04 = 0;

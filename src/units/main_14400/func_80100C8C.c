@@ -34,7 +34,7 @@ typedef struct {
     void *link_10;
 } Command;
 
-extern Pos *func_800F13A0(Pos *ret, Object *unit, s32 range);
+extern Pos func_800F13A0(Object *unit, s32 range);
 extern s32 func_800F1244(Object *arg, Object *target, s32 distance, s32 force);
 extern Action *func_801009C0(Action *obj, void *owner);
 extern Command *func_800C4DA0(Command *obj, void *owner, void *link, u16 value);
@@ -45,7 +45,7 @@ extern void func_800C4864(Command *cmd, s32 message_id, void *position);
 s32 func_80100C8C(Object *self, void *target) {
     Pos pos;
 
-    func_800F13A0(&pos, self, self->range_89);
+    pos = func_800F13A0(self, self->range_89);
     switch (func_800F1244(self, self->target_58, self->range_89, 0)) {
     case 1:
         return 0;

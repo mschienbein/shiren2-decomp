@@ -23,10 +23,11 @@ adopted before it (`--dry-run` reports it the same way). Adoption then:
   when the parent SUBALIGN would move the unit, its padding or the tail (each must
   start on a SUBALIGN multiple; resident `main` and main_14400 are SUBALIGN(1));
 - carves owned storage (re-check status `match-with-data`): `.data`/`.rodata` at its
-  exact natural extent out of an unowned data/rodata subsegment or an adopt-generated
-  original-byte `bin` bridge (short bridges keep neighbouring bytes; main_14400 may switch
+  exact natural extent out of a contiguous run of unowned same-kind subsegments and
+  adopt-generated original-byte `bin` bridges. Replaced bridge aliases are retired and
+  regenerated for the new ownership (short bridges keep neighbouring bytes; main_14400 may switch
   its parent `subalign: 4` to `1` for byte placement; resident `main` is already
-  `subalign: 1` by reviewed configuration), `.bss`/COMMON as `{type: .bss, vram: ...,
+  `subalign: 1` by reviewed configuration). `.bss`/COMMON is carved as `{type: .bss, vram: ...,
   name: units/<image>/<unit>}` (+ a `bss` tail) out of the owning asm `bss` subsegment,
   enabling `bss_contains_common` on the segment when the unit has COMMON. A BSS plan
   is used only under the parent SUBALIGN it was computed with; a unit whose data carve
@@ -50,10 +51,11 @@ interior PROVIDE aliases are dropped (the new carve regenerates what it needs); 
 sources are removed unless the candidate reuses the path; the interface audit omits
 their TUs. Adopting A and then a joint with `absorbs: [A]` therefore yields the same
 configuration and sources as adopting the joint without A. Not reverted: a parent
-`subalign: 1` transition, `bss_contains_common`, and candidate-local headers. A data
-carve whose bridges another unit has since reused is refused; the BSS plan still comes
-from `tools/match.py` against the current layout, so a joint re-owning an absorbed
-unit's BSS is refused as `match-needs-data`.
+`subalign: 1` transition, `bss_contains_common`, and candidate-local headers. A spanning
+data carve restores shared boundary bridges and their aliases beside the remaining C
+neighbour; adjacent byte owners with no safe asm interval remain refused. The BSS plan
+still comes from `tools/match.py` against the current layout, so a joint re-owning an
+absorbed unit's BSS is refused as `match-needs-data`.
 
 `--dry-run` executes the same sequential adoption and canonical-copy rechecks in a
 temporary source snapshot, then discards it. Later candidates see earlier successful
@@ -81,28 +83,33 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 
 from evidence import COMPILED_SUFFIXES
+from images import OVERLAY_IMAGES
 from interfaces import Gate, analyse, collect
-from match import (SHN_COMMON, SHT_NOBITS, SUBSEGMENT, UNINITIALIZED, DataPart, Elf, accepted_build, bss_owner, check,
-                   default_profile, node_line_span, resolve_targets, splat_subalign, symbol_addresses, yaml_bss_subsegments,
+from match import (SHN_COMMON, SHT_NOBITS, SUBSEGMENT, UNINITIALIZED, DataPart, Elf, accepted_build, allocate_evidence_dir,
+                   bss_owner, check, default_profile, node_line_span, resolve_targets, splat_subalign, symbol_addresses, yaml_bss_subsegments,
                    yaml_data_parts, yaml_subsegments)
 from rom import CANONICAL_ROM, PROJECT
 from workspace import SOURCE_DIRECTORIES, create_snapshot, input_manifest, verify_manifest
 
 CONFIG_FILES = ("config/matches.json", "config/compiler_profiles.json", "config/images.json", "config/shiren2.jp.yaml",
                 "config/symbol_aliases.ld")
-TAIL_PREFIX = {"resident": "resident_tail", "main_14400": "main_14400_tail"}
+# Overlay units live in `src/units/<image>/func_<VRAM>_<ROM>.c`; their parents are SUBALIGN(1),
+# so the main-only SUBALIGN transition never applies.
+TAIL_PREFIX = {"resident": "resident_tail", "main_14400": "main_14400_tail", **{image: f"{image}_tail" for image in OVERLAY_IMAGES}}
 DATA_TAIL_PREFIX = {("resident", "data"): "resident_tail", ("resident", "rodata"): "resident_tail", ("resident", "bss"): "resident_tail",
-                    ("main_14400", "data"): "main_data", ("main_14400", "rodata"): "main_rodata", ("main_14400", "bss"): "main_bss"}
-# Section alignment of the asm piece left after a data carve (measured on the generated objects).
-TAIL_ALIGNMENT = {("resident", "data"): 16, ("resident", "rodata"): 16, ("main_14400", "data"): 4, ("main_14400", "rodata"): 8}
+                    ("main_14400", "data"): "main_data", ("main_14400", "rodata"): "main_rodata", ("main_14400", "bss"): "main_bss",
+                    **{(image, kind): f"{image}_{kind}" for image in OVERLAY_IMAGES for kind in ("data", "rodata", "bss")}}
+# Section alignment of the asm piece left after a data carve (measured on the generated objects;
+# the overlays' splat data/rodata objects are .data 2**2 and .rodata 2**3, as in main_14400).
+TAIL_ALIGNMENT = {("resident", "data"): 16, ("resident", "rodata"): 16, ("main_14400", "data"): 4, ("main_14400", "rodata"): 8,
+                  **{(image, kind): alignment for image in OVERLAY_IMAGES for kind, alignment in (("data", 4), ("rodata", 8))}}
 
 
 @dataclass
@@ -258,36 +265,50 @@ def _byte_subalign_line(owner: DataPart, parent_node: yaml.MappingNode, lines: l
 
 
 def split_data_yaml(text: str, image_id: str, unit: str, section: str, rom: int, size: int,
-                    *, preserved: list[tuple[int, int]] | None = None) -> str:
+                    *, preserved: list[tuple[int, int]] | None = None,
+                    consumed_bridges: list[tuple[int, int]] | None = None) -> str:
     """Carve exact C data; preserve short boundary fragments as original-byte bins.
 
     Splat's data disassembler truncates partial words and aligns doubles relative
     to each new rodata file. Bins bridge to the existing safe asm alignment; they
     have .data input sections but retain the original .data/.rodata link order.
     Neither bin bytes nor their linker aliases are C ownership or credit.
+    The complete run must be adjacent entries of one parent and one unowned kind;
+    C storage, opaque bins and custom layout options remain barriers.
+    `consumed_bridges` records full replaced bridge VRAM ranges, including leftovers,
+    so their old PROVIDE provenance can be retired before regenerating aliases.
     """
     if section not in {".data", ".rodata"} or size <= 0:
         raise ValueError("An initialized data carve requires .data/.rodata and a positive size")
     kind = section[1:]
-    owner = next((part for part in yaml_data_parts(text) if part.start <= rom < part.end), None)
+    parts = yaml_data_parts(text)
+    owner = next((part for part in parts if part.start <= rom < part.end), None)
     if owner is None or owner.kind != kind:
         raise ValueError(f"{section} at ROM 0x{rom:X} must lie inside an unowned `{kind}` subsegment")
-    spec = owner.segment["subsegments"][owner.part_index]
-    if (isinstance(spec, dict) and not owner.preserved and set(spec) != {"start", "type", "name"}
-            or isinstance(spec, list) and len(spec) != 3):
-        raise ValueError("Data subsegment options require an explicit layout review before carving")
-    end = rom + size
-    if end > owner.end:
-        raise ValueError(f"Next subsegment after {owner.name} starts before the unit's natural end 0x{end:X}")
+    near = {part.part_index: part for part in parts if part.segment_index == owner.segment_index}
+    end, run = rom + size, [owner]
+    while True:
+        part = run[-1]
+        spec = part.segment["subsegments"][part.part_index]
+        if (isinstance(spec, dict) and not part.preserved and set(spec) != {"start", "type", "name"}
+                or isinstance(spec, list) and len(spec) != 3):
+            raise ValueError("Data subsegment options require an explicit layout review before carving")
+        if end <= part.end:
+            break
+        following = near.get(part.part_index + 1)
+        if following is None or following.start != part.end or following.kind != kind:
+            raise ValueError(f"Next subsegment after {part.name} starts before the unit's natural end 0x{end:X}")
+        run.append(following)
+    final = run[-1]
     alignment = TAIL_ALIGNMENT[(image_id, kind)]
     prefix = owner.start if owner.preserved else max(owner.start, rom // alignment * alignment)
-    tail = owner.end if owner.preserved else min(owner.end, (end + alignment - 1) // alignment * alignment)
+    tail = final.end if final.preserved else min(final.end, (end + alignment - 1) // alignment * alignment)
     bridges = [(start, stop) for start, stop in ((prefix, rom), (end, tail)) if start < stop]
     # Pinned splat rejects subsegment SUBALIGN. Parent SUBALIGN(4) also rounds
     # binary inputs, so byte-started C/bridges require the guarded parent change.
     tree = yaml.compose(text)
     parent = _yaml_field(tree, "segments").value[owner.segment_index]
-    node = _yaml_field(parent, "subsegments").value[owner.part_index]
+    nodes = _yaml_field(parent, "subsegments").value[owner.part_index:final.part_index + 1]
     lines = text.splitlines(keepends=True)
     subalign = splat_subalign(owner.segment, yaml.safe_load(text).get("options") or {})
     if any(address % subalign for address in [rom, end, *[start for start, _stop in bridges]]):
@@ -302,18 +323,21 @@ def split_data_yaml(text: str, image_id: str, unit: str, section: str, rom: int,
     new.append(f"[0x{rom:X}, .{kind}, units/{image_id}/{unit}]")
     if end < tail:
         new.append(f"{{start: 0x{end:X}, type: bin, name: {owner.segment['name']}_{kind}_bytes_{end:x}, linker_section_order: .{kind}}}")
-    if tail < owner.end:
+    if tail < final.end:
         new.append(f"[0x{tail:X}, {kind}, {DATA_TAIL_PREFIX[(image_id, kind)]}_{tail:x}]")
-    # The complete owner node: a flow mapping/sequence through its closing delimiter
-    # (possibly on a later line), a block mapping through its last field.
-    first, last = node_line_span(node)
-    entry = re.fullmatch(r"(?P<indent> *)- +", lines[first][:node.start_mark.column])
-    if entry is None:
-        raise ValueError(f"Data owner {owner.name} must be its own block-sequence entry to be carved")
+    # Replace every complete node, including multiline closing delimiters.
+    for node in nodes:
+        first, _last = node_line_span(node)
+        entry = re.fullmatch(r"(?P<indent> *)- +", lines[first][:node.start_mark.column])
+        if entry is None:
+            raise ValueError(f"Data owner {owner.name} must be its own block-sequence entry to be carved")
+    first, last = node_line_span(nodes[0])[0], node_line_span(nodes[-1])[1]
     lines[first:last] = [f"{entry['indent']}- {line}\n" for line in new]
+    delta = owner.segment["vram"] - owner.segment["start"]
     if preserved is not None:
-        delta = owner.segment["vram"] - owner.segment["start"]
         preserved.extend((start + delta, stop + delta) for start, stop in bridges)
+    if consumed_bridges is not None:
+        consumed_bridges.extend((part.start + delta, part.end + delta) for part in run if part.preserved)
     return "".join(lines)
 
 
@@ -389,6 +413,56 @@ def _bss_plan_key(carve: dict[str, Any] | None) -> tuple[Any, ...] | None:
     return carve and tuple(carve[name] for name in ("segment", "subalign", "vram", "end", "tail"))
 
 
+QUALIFIED_LABEL = re.compile(r"(?:D|jtbl|func)_(?P<vram>[0-9A-F]{8})_(?P<rom>[0-9A-F]{6})\Z")
+SEGMENT_SYMBOL_SUFFIX = r"(?:ROM_START|ROM_END|VRAM|VRAM_END|bss_VRAM|(?:TEXT|DATA|RODATA|BSS)_(?:START|END|SIZE))"
+
+
+def alias_filter(image_id: str) -> Callable[[str], bool]:
+    """Which accepted-build labels a carve of `image_id` may keep at their address with a PROVIDE.
+
+    The same-VRAM overlays share addresses, so an address alone does not identify a label's owner.
+    An overlay carve keeps only labels qualified with its own image (`<kind>_<VRAM>_<ROM>`, where
+    VRAM - ROM is the image's delta). Other images' labels, unqualified absolute names in the slot
+    (split-generated `undefined_syms_auto` entries, which every link redefines) and splat's
+    linker-script segment symbols (`<segment>_DATA_END`, ...) are never data labels of the carve.
+    A main/resident carve keeps every unqualified label except those segment symbols."""
+    segments = [item for item in yaml.safe_load((PROJECT / "config/shiren2.jp.yaml").read_text())["segments"]
+                if isinstance(item, dict) and "name" in item]
+    # An overlay image is its own splat segment (same name); its delta is the segment's vram - start.
+    deltas = {item["vram"] - item["start"]: item["name"] for item in segments if item["name"] in OVERLAY_IMAGES}
+    boundary = re.compile(rf"(?:{'|'.join(re.escape(item['name']) for item in segments)})_{SEGMENT_SYMBOL_SUFFIX}\Z")
+
+    def allowed(name: str) -> bool:
+        if "." in name or boundary.match(name):
+            return False
+        found = QUALIFIED_LABEL.match(name)
+        owner = deltas.get(int(found["vram"], 16) - int(found["rom"], 16)) if found else None
+        return owner == image_id if image_id in OVERLAY_IMAGES else owner is None
+    return allowed
+
+
+def _bridge_aliases(known: dict[str, int], defined: set[str], unit: str, bridges: list[tuple[int, int]], image_id: str) -> str:
+    """Original-address labels for preserved bytes, using the same provenance as interior aliases."""
+    allowed = alias_filter(image_id)
+    lines = []
+    for start, end in bridges:
+        for name, address in sorted(known.items(), key=lambda item: item[1]):
+            if start <= address < end and allowed(name):
+                if name in defined:
+                    raise ValueError(f"C object redefines neighboring preserved-data label {name}")
+                lines.append(f"PROVIDE({name} = 0x{address:08X}); /* preserved bytes beside {unit}, not C */\n")
+    return "".join(lines)
+
+
+def _retire_bridge_aliases(text: str, bridges: list[tuple[int, int]], image_id: str) -> str:
+    """Drop only adopt-generated preserved-byte aliases of `image_id` in the replaced bridges (half-open VRAM ranges)."""
+    allowed = alias_filter(image_id)
+    return re.sub(r"^PROVIDE\((?P<name>[A-Za-z_$][\w$]*) = 0x(?P<address>[0-9A-F]{8})\); "
+                  r"/\* preserved bytes beside \S+, not C \*/\n",
+                  lambda match: "" if allowed(match["name"]) and any(start <= int(match["address"], 16) < end for start, end in bridges)
+                  else match[0], text, flags=re.MULTILINE)
+
+
 def interior_aliases(result, unit: str, *, preserved: list[tuple[int, int]] | None = None) -> str:
     """PROVIDE lines for accepted-build labels inside a newly owned data range.
 
@@ -396,11 +470,13 @@ def interior_aliases(result, unit: str, *, preserved: list[tuple[int, int]] | No
     such as `D_80139B58` (an interior element) that remaining assembly still uses.
     The C object defines only its own names; the rest keep their original addresses.
     Labels inside `preserved` original-byte bridges keep theirs too (never C).
+    Only labels of the unit's own image qualify (`alias_filter`).
     """
     if not result.data_sections:
         return ""
     known = symbol_addresses(accepted_build() / "shiren2.elf")
     defined = {s.name for s in Elf((Path(result.out_dir) / "candidate.o").read_bytes()).symbols if s.shndx}
+    allowed = alias_filter(result.image_id)
     lines = []
     for record in result.data_sections:
         # match.py blocks a BSS carve whose labels are referenced outside the unit, so BSS needs none.
@@ -408,15 +484,9 @@ def interior_aliases(result, unit: str, *, preserved: list[tuple[int, int]] | No
             continue
         start, end = record["vram"], record["vram"] + record["size"]
         for name, address in sorted(known.items(), key=lambda item: item[1]):
-            if start <= address < end and name not in defined and "." not in name:
+            if start <= address < end and name not in defined and allowed(name):
                 lines.append(f"PROVIDE({name} = 0x{address:08X}); /* inside {unit} {record['section']} */\n")
-    for start, end in preserved or ():
-        for name, address in sorted(known.items(), key=lambda item: item[1]):
-            if start <= address < end and "." not in name:
-                if name in defined:
-                    raise ValueError(f"C object redefines neighboring preserved-data label {name}")
-                lines.append(f"PROVIDE({name} = 0x{address:08X}); /* preserved bytes beside {unit}, not C */\n")
-    return "".join(lines)
+    return "".join(lines) + _bridge_aliases(known, defined, unit, preserved or [], result.image_id)
 
 
 def _header_destinations(result_files: list[dict[str, str]], candidate: Path, includes: list[Path], image_id: str) -> dict[Path, Path]:
@@ -575,8 +645,9 @@ def restore_data_yaml(text: str, unit: Absorbed) -> str:
     The inverse of `split_data_yaml` for a carve in adopt's own form: the carve, its own
     original-byte bridges (inside the grid units around an off-grid start or end) and its data
     tail (`<prefix>_<grid end>`) merge into a preceding unowned data subsegment of that kind,
-    else become one named like an adopt data tail. A carve bordering initialized data that is
-    not its own bridge (e.g. one carved out of another unit's bridge) is refused for review."""
+    else become one named like an adopt data tail. Shared boundary cells beside another
+    C owner are rebuilt as bins, without touching that owner, when a safe asm interval
+    remains. Adjacent byte owners within one cell and foreign data still refuse."""
     parts = yaml_data_parts(text)
     carve = next((part for part in parts if part.kind in {".data", ".rodata"} and part.name == unit.layout_name), None)
     if carve is None:
@@ -590,28 +661,55 @@ def restore_data_yaml(text: str, unit: Absorbed) -> str:
     first = last = carve.part_index
     foreign = (f"{unit.layout_name} {carve.kind} 0x{carve.start:X}-0x{carve.end:X} borders initialized data that is not "
                "its own bridge; absorbing it needs a layout review")
+    left_bridge = right_bridge = None
     if carve.start % alignment:
         before = near.get(first - 1)
         if before is not None and before.preserved and before.kind == kind and (before.start == floor or near.get(first - 2) is None):
             first -= 1
         elif before is not None:
-            raise ValueError(foreign)
+            if (before.preserved and before.kind == kind and floor < before.start < carve.start
+                    and (neighbor := near.get(first - 2)) is not None and neighbor.kind == carve.kind):
+                first -= 1
+            elif before.kind != carve.kind:
+                raise ValueError(foreign)
+            left_bridge = floor + alignment
     if carve.end % alignment:
         after = near.get(last + 1)
         if after is not None and after.preserved and after.kind == kind and (after.end == ceil or near.get(last + 2) is None):
             last += 1
         elif after is not None:
-            raise ValueError(foreign)
+            if (after.preserved and after.kind == kind and carve.end < after.end < ceil
+                    and (neighbor := near.get(last + 2)) is not None and neighbor.kind == carve.kind):
+                last += 1
+            elif after.kind != carve.kind:
+                raise ValueError(foreign)
+            right_bridge = ceil - alignment
     tail = near.get(last + 1)
     if tail is not None and not tail.preserved and tail.kind == kind and tail.start == ceil and tail.name == f"{prefix}_{ceil:x}":
         last += 1
+    # Include the carve's own bridges/tail when finding the safe asm interval.
+    # Adjacent byte owners within one shared grid cell still cannot be restored.
+    if left_bridge is not None or right_bridge is not None:
+        raw_start = near[first].start if left_bridge is None else left_bridge
+        raw_end = near[last].end if right_bridge is None else right_bridge
+        if raw_start >= raw_end:
+            raise ValueError(foreign)
     entries = _layout_entries(text)[carve.segment_index]
     if entries[first][3] is None:
         raise ValueError(f"{unit.layout_name} {carve.kind} must be its own block-sequence entry to be restored")
     start, before = near[first].start, near.get(first - 1)
-    merged = before is not None and not before.preserved and before.kind == kind
-    replacement = [] if merged else [f"{entries[first][3]}- [0x{start:X}, {kind}, {_fresh_name(text, f'{prefix}_{start:x}')}]\n"]
+    merged = left_bridge is None and before is not None and not before.preserved and before.kind == kind
     lines = text.splitlines(keepends=True)
+    new = []
+    if left_bridge is not None:
+        new.append(f"{{start: 0x{start:X}, type: bin, name: {carve.segment['name']}_{kind}_bytes_{start:x}, linker_section_order: .{kind}}}")
+        start = left_bridge
+    if not merged:
+        remaining = "".join(lines[:entries[first][1]] + lines[entries[last][2]:])
+        new.append(f"[0x{start:X}, {kind}, {_fresh_name(remaining, f'{prefix}_{start:x}')}]")
+    if right_bridge is not None:
+        new.append(f"{{start: 0x{right_bridge:X}, type: bin, name: {carve.segment['name']}_{kind}_bytes_{right_bridge:x}, linker_section_order: .{kind}}}")
+    replacement = [f"{entries[first][3]}- {line}\n" for line in new]
     lines[entries[first][1]:entries[last][2]] = replacement
     return "".join(lines)
 
@@ -666,7 +764,9 @@ def retire_aliases(text: str, unit: Absorbed) -> str:
 
 def retire_units(originals: dict[str, str], absorbed: list[Absorbed]) -> dict[str, str]:
     """Configuration without the absorbed units: matches rows, TU profiles, image bindings and
-    interior aliases removed, layout restored to the neighbouring asm/data/bss form."""
+    interior aliases removed, layout restored to the neighbouring asm/data/bss form.
+    Shared boundary bridges retain accepted-build labels under the remaining neighbour,
+    even if the replacement candidate no longer touches those bytes."""
     updated = dict(originals)
     if not absorbed:
         return updated
@@ -681,8 +781,21 @@ def retire_units(originals: dict[str, str], absorbed: list[Absorbed]) -> dict[st
             raise ValueError(f"Absorbed unit {unit.source} lacks its TU profile or {unit.image_id} image binding")
         del profiles["tu_profiles"][unit.source]
         del images["source_bindings"][unit.source]
+        owned = [part for part in yaml_data_parts(layout) if part.name == unit.layout_name]
         layout = restore_layout(layout, unit)
         aliases = retire_aliases(aliases, unit)
+        parts = yaml_data_parts(layout)
+        bridges = [part for part in parts if part.preserved and any(
+            old.segment_index == part.segment_index and old.start < part.end and part.start < old.end for old in owned)]
+        if bridges:
+            known = symbol_addresses(accepted_build() / "shiren2.elf")
+            for part in bridges:
+                neighbor = next(other for other in parts if other.segment_index == part.segment_index
+                                and abs(other.part_index - part.part_index) == 1 and other.kind == f".{part.kind}")
+                delta = part.segment["vram"] - part.segment["start"]
+                ranges = [(part.start + delta, part.end + delta)]
+                aliases = _retire_bridge_aliases(aliases, ranges, unit.image_id)
+                aliases += _bridge_aliases(known, set(), Path(neighbor.name).name, ranges, unit.image_id)
     updated["config/matches.json"] = json.dumps(rows, indent=2, ensure_ascii=False) + "\n"
     updated["config/compiler_profiles.json"] = json.dumps(profiles, indent=2, ensure_ascii=False) + "\n"
     updated["config/images.json"] = json.dumps(images, indent=2, ensure_ascii=False) + "\n"
@@ -729,8 +842,7 @@ def adopt(unit: Unit, *, rom: bytes, log: list[str], gate: Gate, index: int) -> 
                 if path.exists() and path.relative_to(PROJECT).as_posix() not in retired]
     if existing:
         raise ValueError(f"Canonical source already exists: {existing[0].relative_to(PROJECT)}")
-    stamp = time.strftime("%Y%m%dT%H%M%S")
-    work = PROJECT / "scratch/omp/adopt" / f"{name}-{stamp}"
+    work = allocate_evidence_dir(PROJECT / "scratch/omp/adopt", prefix=f"{name}-")
     result, _ = check(targets, unit.source, profile, work / "candidate", includes=unit.includes, rom=rom)
     if result.status not in {"match", "match-with-data"}:
         raise ValueError(f"{name}: tools/match.py status {result.status}: {result.problems or result.out_dir}")
@@ -755,10 +867,13 @@ def adopt(unit: Unit, *, rom: bytes, log: list[str], gate: Gate, index: int) -> 
     rows = json.loads(base["config/matches.json"])
     evidence = unit.evidence or (f"omp tools/match.py exact natural {result.text_bytes}-byte {profile} text"
                                  f" (source sha256 {result.source['sha256'][:16]}); full-ROM acceptance required")
+    generated = {record["symbol"]: record["generated"] for record in result.generated_functions}
     for target in targets:
         rows["functions"].append({"image_id": image_id, "symbol": target.symbol, "source": source_rel,
                                   "rom_start": target.rom_start, "vram_start": target.vram_start,
                                   "size": target.size, "evidence": evidence})
+        if target.symbol in generated:
+            rows["functions"][-1]["generated"] = generated[target.symbol]
     updated["config/matches.json"] = json.dumps(rows, indent=2, ensure_ascii=False) + "\n"
     profiles = json.loads(base["config/compiler_profiles.json"])
     profiles["tu_profiles"][source_rel] = profile
@@ -770,19 +885,23 @@ def adopt(unit: Unit, *, rom: bytes, log: list[str], gate: Gate, index: int) -> 
     updated["config/shiren2.jp.yaml"] = split_yaml(base["config/shiren2.jp.yaml"], image_id, name,
                                                    targets[0].rom_start, result.text_bytes, slot_end, kind)
     preserved_data: list[tuple[int, int]] = []
+    consumed_bridges: list[tuple[int, int]] = []
     for record in result.data_sections:
         if record["section"] in UNINITIALIZED:
             continue  # carved below as the unit's `.bss` subsegment
         updated["config/shiren2.jp.yaml"] = split_data_yaml(updated["config/shiren2.jp.yaml"], image_id, name,
                                                             record["section"], record["rom_start"], record["size"],
-                                                            preserved=preserved_data)
+                                                            preserved=preserved_data, consumed_bridges=consumed_bridges)
     if result.bss_carve:
         # After the data carves: refused if they changed the parent SUBALIGN the plan assumed.
         updated["config/shiren2.jp.yaml"] = carve_bss_plan(updated["config/shiren2.jp.yaml"], image_id, name, result.bss_carve)
+    updated["config/symbol_aliases.ld"] = _retire_bridge_aliases(updated["config/symbol_aliases.ld"], consumed_bridges, image_id)
     updated["config/symbol_aliases.ld"] += interior_aliases(result, name, preserved=preserved_data)
     copies = {candidate: destination, **headers}
     log.append(f"== {name}: {len(targets)} function(s), {result.instruction_bytes} instruction bytes, "
                f"text {result.text_bytes}/{result.slot_bytes}, profile {profile}")
+    for record in result.generated_functions:
+        log.append(f"   generated {record['generated']} -> {record['symbol']}: {record['size']} C++ instruction bytes")
     for origin, target in copies.items():
         log.append(f"   copy {origin} -> {target.relative_to(PROJECT)}")
     removed_sources = [PROJECT / item.source for item in absorbed if PROJECT / item.source not in copies.values()]
@@ -805,7 +924,7 @@ def adopt(unit: Unit, *, rom: bytes, log: list[str], gate: Gate, index: int) -> 
             (PROJECT / path).write_text(updated[path], encoding="utf-8")
         # A relocated header can resolve differently from canonical paths; with no moved
         # headers the canonical compile has identical inputs, and the full build re-proves it.
-        if headers or result.data_sections:
+        if headers or result.data_sections or result.generated_functions:
             final, _ = check(targets, destination, profile, work / "canonical", rom=rom)
             if final.status != result.status:
                 raise ValueError(f"{name}: canonical copy no longer matches ({final.status}): {final.problems or final.out_dir}")

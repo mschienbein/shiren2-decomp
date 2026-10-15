@@ -1,15 +1,16 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
-typedef struct VTable VTable;
+/* Item list: pool +0 (always D_80143094 here), method table +4, entry buffer +8,
+ * capacity +0xC and limit +0xD. */
 typedef struct {
-    const VTable *field_00;
+    ItemPool *field_00;
     u8 pad_04[4];
     u8 *field_08;
     u8 field_0C;
     u8 field_0D;
 } Obj;
-extern const VTable D_80143094;
 extern void func_800CCF80(Obj *o);
 
 void func_800CE658(Obj *obj, u8 *arg1, u8 arg2) {

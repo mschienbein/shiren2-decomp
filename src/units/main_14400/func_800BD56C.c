@@ -1,9 +1,10 @@
 #include "common.h"
+#include "map_rect.h"
 typedef unsigned char u8;
 typedef signed char s8;
 typedef unsigned short u16;
-/* 0x14-byte room record: bounds words plus four per-side bytes (unused here). */
-typedef struct { s32 data[4]; u8 pad10[4]; } Entry;
+/* 0x14-byte room record: actual rectangle plus four per-side bytes. */
+typedef struct { MapRect bounds; u8 side_counts[4]; } Entry;
 typedef struct {
     char pad0[0x3DC];
     s32 count;
@@ -16,12 +17,12 @@ extern Entry D_801431F0[];
 extern s32 D_80147620[];
 u8 func_800C57A0(void *);
 u8 func_800C57CC(void *, s32);
-s32 func_800A3138(Entry *);
-s32 func_800A315C(Entry *);
-s32 func_800BB22C(Obj *, Entry *);
-s32 func_800BAFE4(Obj *, Entry *);
-void func_800BD394(Obj *, Entry *);
-void func_800BD428(Obj *, Entry *);
+s32 func_800A3138(MapRect *);
+s32 func_800A315C(MapRect *);
+s32 func_800BB22C(Obj *, MapRect *);
+s32 func_800BAFE4(Obj *, MapRect *);
+void func_800BD394(Obj *, MapRect *);
+void func_800BD428(Obj *, MapRect *);
 s32 func_800BD56C(Obj *obj) {
     Entry *entry;
     s32 tries;
@@ -46,16 +47,16 @@ s32 func_800BD56C(Obj *obj) {
         }
         entry = &D_801431F0[idx];
         if (checked) {
-            hasA = func_800A3138(entry);
-            hasB = func_800A315C(entry);
+            hasA = func_800A3138(&entry->bounds);
+            hasB = func_800A315C(&entry->bounds);
             if (!(hasA & 1)) {
-                failed = func_800BB22C(obj, entry) ^ 1;
+                failed = func_800BB22C(obj, &entry->bounds) ^ 1;
                 if (failed) {
                     continue;
                 }
             }
             if (!(hasB & 1)) {
-                failed = func_800BAFE4(obj, entry) ^ 1;
+                failed = func_800BAFE4(obj, &entry->bounds) ^ 1;
                 if (failed) {
                     continue;
                 }
@@ -68,9 +69,9 @@ s32 func_800BD56C(Obj *obj) {
         return 0;
     }
     if (checked) {
-        func_800BD394(obj, entry);
+        func_800BD394(obj, &entry->bounds);
     } else {
-        func_800BD428(obj, entry);
+        func_800BD428(obj, &entry->bounds);
     }
     return 1;
 }

@@ -14,63 +14,63 @@
 
 typedef unsigned char u8;
 
-struct Pos {
+struct Pos_800E7AA8 {
     s32 x;
     s32 y;
-    Pos() {}
-    Pos(const Pos &o) : x(o.x), y(o.y) {}
+    Pos_800E7AA8() {}
+    Pos_800E7AA8(const Pos_800E7AA8 &o) : x(o.x), y(o.y) {}
 };
 
-struct Dir {
+struct Dir_800E7AA8 {
     u8 v;
-    Dir() {}
-    Dir(s32 d) : v(d & 7) {}
+    Dir_800E7AA8() {}
+    Dir_800E7AA8(s32 d) : v(d & 7) {}
 };
 
-struct Unit {
-    Pos pos;            /* 0x00 */
+struct Unit_800E7AA8 {
+    Pos_800E7AA8 pos;            /* 0x00 */
     char pad8[0x4C];
     u8 flags;           /* 0x54 */
     char pad55[3];
-    Unit *target;       /* 0x58 */
+    Unit_800E7AA8 *target;       /* 0x58 */
     char pad5C[8];
-    Pos dest;           /* 0x64 */
+    Pos_800E7AA8 dest;           /* 0x64 */
 };
 
 extern "C" {
-s32 func_800E66EC(Unit *unit);
-s32 func_800A650C(Unit *unit, Pos *pos);
-u8 func_800A6420(Unit *unit, Unit *target);
+s32 func_800E66EC(Unit_800E7AA8 *unit);
+s32 func_800A650C(Unit_800E7AA8 *unit, Pos_800E7AA8 *pos);
+u8 func_800A6420(Unit_800E7AA8 *unit, Unit_800E7AA8 *target);
 void *func_800B1F90(void *pos);
-s32 func_800B68F0(void *room, Pos *pos);
-s32 func_800E65C0(Unit *unit, Pos *pos, s32 mode);
-s32 func_800A282C(Pos *from, const Pos &to);
+s32 func_800B68F0(void *room, Pos_800E7AA8 *pos);
+s32 func_800E65C0(Unit_800E7AA8 *unit, Pos_800E7AA8 *pos, s32 mode);
+s32 func_800A282C(Pos_800E7AA8 *from, const Pos_800E7AA8 &to);
 void *func_800A6538(void *out, void *unit, void *pos);
-void func_800A665C(Unit *unit, u8 *dir);
-void *func_800A2594(Pos *out, void *from, Dir dir);
-s32 func_800A23E8(Pos *origin, Pos *pos);
+void func_800A665C(Unit_800E7AA8 *unit, u8 *dir);
+void *func_800A2594(Pos_800E7AA8 *out, void *from, Dir_800E7AA8 dir);
+s32 func_800A23E8(Pos_800E7AA8 *origin, Pos_800E7AA8 *pos);
 void *func_800A7DEC(void *unit);
 s32 func_800A4CC4(void *unit, void *pos, void *dir);
 void *func_800A65E4(void *out, void *unit, void *target);
-Dir *func_800A22B8(Dir *out, Pos *from, Pos *to);
-void func_800A4F58(void *unit, Dir *dir);
+Dir_800E7AA8 *func_800A22B8(Dir_800E7AA8 *out, Pos_800E7AA8 *from, Pos_800E7AA8 *to);
+void func_800A4F58(void *unit, Dir_800E7AA8 *dir);
 }
 
-static inline s32 canStep(Unit *u, Dir *dir) { return func_800A4CC4(u, func_800A7DEC(u), dir); }
+static inline s32 canStep(Unit_800E7AA8 *u, Dir_800E7AA8 *dir) { return func_800A4CC4(u, func_800A7DEC(u), dir); }
 
 /* func_800A23E8 rewrites the Pos it is given: pass it the full-expression
  * temporary copy (a non-const object, so writing through it is valid). */
-static inline Pos *scratch(const Pos &copy) { return const_cast<Pos *>(&copy); }
+static inline Pos_800E7AA8 *scratch(const Pos_800E7AA8 &copy) { return const_cast<Pos_800E7AA8 *>(&copy); }
 
-extern "C" s32 func_800E7AA8(Unit *u, s32 range)
+extern "C" s32 func_800E7AA8(Unit_800E7AA8 *u, s32 range)
 {
-    Unit *target = u->target;
+    Unit_800E7AA8 *target = u->target;
 
     if (target == 0) {
         return func_800E66EC(u);
     }
-    Pos me(u->pos);
-    Pos goal(target->pos);
+    Pos_800E7AA8 me(u->pos);
+    Pos_800E7AA8 goal(target->pos);
     s32 dist = func_800A650C(u, &goal);
     u8 kind = func_800A6420(u, target);
 
@@ -85,24 +85,24 @@ extern "C" s32 func_800E7AA8(Unit *u, s32 range)
     if (range + 1 < dist) {
         return func_800E65C0(u, &goal, 0);
     }
-    if (dist == range && func_800A282C(&me, Pos(goal))) {
+    if (dist == range && func_800A282C(&me, Pos_800E7AA8(goal))) {
         u8 act;
         func_800A6538(&act, u, &goal);
         func_800A665C(u, &act);
         return 0;
     }
 
-    Pos next;
-    Dir dir;
+    Pos_800E7AA8 next;
+    Dir_800E7AA8 dir;
     s32 i;
     for (i = 0; i < 8; i++) {
-        func_800A2594(&next, &me, dir = Dir(i));
-        if (func_800A23E8(&goal, scratch(Pos(next))) != range) {
+        func_800A2594(&next, &me, dir = Dir_800E7AA8(i));
+        if (func_800A23E8(&goal, scratch(Pos_800E7AA8(next))) != range) {
             continue;
         }
         s32 ok = 0;
         if (canStep(u, &dir)) {
-            ok = func_800A282C(&next, Pos(goal)) != 0;
+            ok = func_800A282C(&next, Pos_800E7AA8(goal)) != 0;
         }
         if (ok) {
             break;
@@ -110,8 +110,8 @@ extern "C" s32 func_800E7AA8(Unit *u, s32 range)
     }
     if (i == 8) {
         for (i = 0; i < 8; i++) {
-            func_800A2594(&next, &me, dir = Dir(i));
-            if (func_800A23E8(&goal, scratch(Pos(next))) != range) {
+            func_800A2594(&next, &me, dir = Dir_800E7AA8(i));
+            if (func_800A23E8(&goal, scratch(Pos_800E7AA8(next))) != range) {
                 continue;
             }
             if (canStep(u, &dir)) {
@@ -120,13 +120,13 @@ extern "C" s32 func_800E7AA8(Unit *u, s32 range)
         }
         if (i == 8) {
             for (i = 0; i < 8; i++) {
-                func_800A2594(&next, &me, dir = Dir(i));
-                if (func_800A23E8(&goal, scratch(Pos(next))) < 2) {
+                func_800A2594(&next, &me, dir = Dir_800E7AA8(i));
+                if (func_800A23E8(&goal, scratch(Pos_800E7AA8(next))) < 2) {
                     continue;
                 }
                 s32 ok = 0;
                 if (canStep(u, &dir)) {
-                    ok = func_800A282C(&next, Pos(goal)) != 0;
+                    ok = func_800A282C(&next, Pos_800E7AA8(goal)) != 0;
                 }
                 if (ok) {
                     break;
@@ -144,7 +144,7 @@ extern "C" s32 func_800E7AA8(Unit *u, s32 range)
         }
     }
     func_800A2594(&next, &me, dir);
-    Dir step;
+    Dir_800E7AA8 step;
     func_800A22B8(&step, &next, &goal);
     func_800A665C(u, &step.v);
     func_800A4F58(u, &dir);

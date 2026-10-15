@@ -1,82 +1,69 @@
 #include "common.h"
+#include "map_position_iterator.h"
 
 /*
  * Walk toward the nearest 0x2000-flagged cell of the unit's area (C++ TU, g++ 2.8.1).
- * Evidence for C++: every Pos handed to func_800A23E8/func_800A27A4 is first
- * copied member-wise (user copy constructor) into a temporary whose stack slot
- * is reused by later temporaries and block-scope locals (sp+0x38), and loop 2
- * recomputes that address each iteration; the C spelling hoists it.
- * func_800A23E8 rewrites the Pos it receives (it subtracts the origin in
- * place), so it gets a pointer to an explicit scratch copy, matching its C
- * definition; the read-only func_800A27A4 takes its copy by const reference
- * (pointer ABI).
+ * The original copies each position handed to func_800A23E8/func_800A27A4
+ * member-wise into a separate temporary. The scan's distance copy is at
+ * sp+0x40; bound copies, scan output and later block-scope objects reuse
+ * sp+0x38. Keep their source scopes and the shared MapPos copy constructor.
+ * func_800A23E8 subtracts the origin from its target in place, so it receives
+ * a non-const temporary copy, never the live current, best or iterator state.
+ * func_800A27A4 receives its separate copy by const reference (pointer ABI).
  */
 
 typedef unsigned char u8;
 
-struct Pos {
-    s32 x;
-    s32 y;
-    Pos() {}
-    Pos(const Pos &o) : x(o.x), y(o.y) {}
-};
-
-struct Dir {
+struct Dir_800E7EB4 {
     u8 v;
 };
 
-struct RectIter {
-    Pos pos;    /* 0x00 */
-    Pos start;  /* 0x08 */
-    Pos end;    /* 0x10 */
-};
-
-struct Obj {
-    Pos pos;            /* 0x00 */
+/* Partial foreign-object view; these offsets do not establish its lifetime. */
+struct Obj_800E7EB4 {
+    MapPos pos;         /* 0x00 */
     char pad8[4];
-    Pos min;            /* 0x0C */
-    Pos max;            /* 0x14 */
+    MapPos min;         /* 0x0C */
+    MapPos max;         /* 0x14 */
     char pad1C[0x48];
-    Pos target;         /* 0x64 */
+    MapPos target;      /* 0x64 */
     char pad6C[6];
     u8 flags;           /* 0x72 */
 };
 
 extern "C" {
-Pos *func_800A3610(Pos *out, RectIter *it);
-s32 func_800A23E8(Pos *origin, Pos *pos);
-u32 func_800B1C6C(Pos *pos);
-void *func_800A27A4(Dir *out, Pos *from, const Pos &to);
-void *func_800A2594(Pos *out, Pos *from, Dir dir);
-s32 func_800A4360(Obj *obj, Pos *pos);
-s32 func_800A422C(Obj *obj, Pos *pos, s32 arg);
-s32 func_800E66EC(Obj *obj);
+s32 func_800A23E8(MapPos *origin, MapPos *pos);
+u32 func_800B1C6C(MapPos *pos);
+void *func_800A27A4(Dir_800E7EB4 *out, MapPos *from, const MapPos &to);
+void *func_800A2594(MapPos *out, MapPos *from, Dir_800E7EB4 dir);
+s32 func_800A4360(Obj_800E7EB4 *obj, MapPos *pos);
+s32 func_800A422C(Obj_800E7EB4 *obj, MapPos *pos, s32 arg);
+s32 func_800E66EC(Obj_800E7EB4 *obj);
 }
 
-static inline s32 RectIter_valid(RectIter *it) { return it->pos.x <= it->end.x; }
+static inline s32 MapPositionIterator_valid(MapPositionIterator *it) { return it->cur.x <= it->end.x; }
 static inline s32 isPositive(s32 v) { return v > 0; }
 
-/* func_800A23E8 rewrites the Pos it is given: pass it the full-expression
- * temporary copy (a non-const object, so writing through it is valid). */
-static inline Pos *scratch(const Pos &copy) { return const_cast<Pos *>(&copy); }
+/* Both callers bind this reference to a fresh, non-const MapPos temporary.
+ * Its lifetime lasts through the enclosing distance-call full-expression. */
+static inline MapPos *scratch(const MapPos &copy) { return const_cast<MapPos *>(&copy); }
 
-extern "C" s32 func_800E7EB4(Obj *obj)
+extern "C" s32 func_800E7EB4(Obj_800E7EB4 *obj)
 {
     obj->flags |= 2;
     if ((obj->target.y | obj->target.x) != 0) {
         return func_800E66EC(obj);
     }
-    Pos cur(obj->pos);
-    Pos best;
-    RectIter iter;
-    iter.start = Pos(obj->min);
-    iter.pos = iter.start;
-    iter.end = Pos(obj->max);
+    MapPos cur(obj->pos);
+    MapPos best;
+    MapPositionIterator iter;
+    iter.start = MapPos(obj->min);
+    iter.cur = iter.start;
+    iter.end = MapPos(obj->max);
     s32 bestDist = 1000;
-    while (RectIter_valid(&iter)) {
-        Pos p;
+    while (MapPositionIterator_valid(&iter)) {
+        MapPos p;
         func_800A3610(&p, &iter);
-        s32 dist = func_800A23E8(&cur, scratch(Pos(p)));
+        s32 dist = func_800A23E8(&cur, scratch(MapPos(p)));
         if ((func_800B1C6C(&p) & 0x2000) && dist < bestDist) {
             best = p;
             bestDist = dist;
@@ -85,11 +72,11 @@ extern "C" s32 func_800E7EB4(Obj *obj)
     if (bestDist == 1000) {
         return 0;
     }
-    s32 steps = func_800A23E8(&cur, scratch(Pos(best))) * 2;
+    s32 steps = func_800A23E8(&cur, scratch(MapPos(best))) * 2;
     while (isPositive(steps--)) {
-        Dir dir;
-        func_800A27A4(&dir, &cur, Pos(best));
-        Pos next;
+        Dir_800E7EB4 dir;
+        func_800A27A4(&dir, &cur, MapPos(best));
+        MapPos next;
         func_800A2594(&next, &cur, dir);
         if (!func_800A422C(obj, &next, func_800A4360(obj, &next))) {
             continue;

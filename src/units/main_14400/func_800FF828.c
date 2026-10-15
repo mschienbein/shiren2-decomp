@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef signed char s8;
 typedef unsigned char u8;
@@ -6,7 +7,8 @@ typedef short s16;
 typedef unsigned short u16;
 
 typedef struct { s32 x; s32 y; } Pt;
-typedef struct { s32 type; s32 unk4[7]; } Msg;
+/* Kind-0x18 message: the handler-message base and the later words. */
+typedef struct { ItemMessage base; s32 unk4[7]; } Msg;
 /*
  * Unit vtable (partial): slot 0x90 targets are func_800F212C and its override
  * func_800FF544 (u8 fourth argument); slot 0x98 returns the unit's
@@ -21,13 +23,6 @@ typedef struct {
     s16 index_9A;
     void *(*items_9C)(void *self);
 } ActorVTable;
-/* Item vtable (partial): slot 0x38 handles a message and reports whether it applied. */
-typedef struct {
-    u8 pad0[0x38];
-    s16 delta_38;
-    s16 index_3A;
-    s32 (*message_3C)(void *self, Msg *msg);
-} ItemVTable;
 typedef struct {
     Pt pos;
     u8 pad8[0x1E - 8];
@@ -37,13 +32,6 @@ typedef struct {
     u8 pad28[0x89 - 0x28];
     u8 unk89;
 } Actor;
-typedef struct {
-    u8 unk0;
-    u8 pad1[7];
-    ItemVTable *vtable;
-    u8 padC[3];
-    s8 unkF;
-} Item;
 extern u8 D_80147620[];
 s32 func_80049CB4(s32, ...);
 void func_800497F0(s32, ...);
@@ -58,11 +46,9 @@ void *func_800E8A68(Actor *, u8);
 Item *func_800FF77C(Actor *, Actor *);
 s32 func_8010BEC4(void *, u8);
 s32 func_8010BD3C(Item *, s32);
-char *func_800AE674(void *);
 s32 func_8010BC2C(void *, u8);
 s32 func_800A2D90(u8, u8);
 u8 func_800C57CC(u8 *, s32);
-s32 func_8010BE60(Item *, u8);
 void func_800E3678(Actor *, Actor *);
 s32 func_800A08D8(s32, s32, s32);
 
@@ -71,8 +57,14 @@ static __inline__ void copyPt(Pt *dst, Pt *src) {
     dst->y = src->y;
 }
 
+/* The seal count is read sign-extended here (lb at 0x800FFA74); the field is unsigned
+ * (func_8010BE60 reads it with lbu). */
+static __inline__ s8 seal_count(Item *item) {
+    return item->payload.seals.count0F;
+}
+
 static __inline__ s32 isFilled(Item *item, u8 slot) {
-    s32 type = item->unk0;
+    s32 type = item->field00;
     return func_800A2D90(type, (u8)func_8010BC2C(item, slot)) == 1;
 }
 
@@ -160,7 +152,7 @@ s32 func_800FF828(Actor *self, Actor *target) {
             func_800497F0(0x13A, sound, func_800AE674(item));
             break;
         }
-        count = item->unkF;
+        count = seal_count(item);
         misses = 0;
         if (count == 0) {
             break;
@@ -196,8 +188,8 @@ s32 func_800FF828(Actor *self, Actor *target) {
     if (item == 0) {
         goto fail;
     }
-    msg.type = 0x18;
-    if (item->vtable->message_3C((u8 *)item + item->vtable->delta_38, &msg)) {
+    msg.base.kind = 0x18;
+    if (item->field08->handle3C((u8 *)item + item->field08->delta38, &msg.base)) {
         func_80049CB4(0x23, target, 0, 0x8000);
         func_800E3678(target, self);
         func_800A08D8(1, sound, 0);

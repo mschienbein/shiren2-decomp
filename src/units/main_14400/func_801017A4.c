@@ -1,12 +1,9 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
 
-typedef struct {
-    u8 pad0[4];
-    u8 unk4;
-} Item;
 
 typedef struct {
     u8 pad0[0x28];
@@ -33,7 +30,7 @@ extern s32 func_800E0F40(Obj *obj);
 extern s32 func_800CD61C(void *container, Item *item, s32 any);
 
 s32 func_801017A4(Obj *obj, Item *item) {
-    s32 enough = (u32)func_800CD278(obj->unk8C) >= item->unk4;
+    s32 enough = (u32)func_800CD278(obj->unk8C) >= item->field04;
     u16 percent;
 
     if (enough) {
@@ -64,7 +61,7 @@ s32 func_801017A4(Obj *obj, Item *item) {
         obj->unk2E = obj->unk2E * percent / 100;
         func_800CD61C(obj->unkA8, item, 1);
         {
-            u8 n = item->unk4;
+            u8 n = item->field04;
             obj->unkC0 += n;
         }
         return 1;

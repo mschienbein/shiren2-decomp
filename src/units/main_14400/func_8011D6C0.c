@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef struct { s32 x, y; } Position;
@@ -10,13 +11,13 @@ typedef struct {
 } Event;
 extern s32 func_800A6EE0(void *object);
 extern void func_8011D7A8(void *object, Actor *actor, Position *position, Direction direction, u16 flags);
-extern s32 func_8011276C(void *object, Event *event);
+extern s32 func_8011276C(Item *object, Event *event);
 static inline Position *copy_position(Position *out, Position *in) {
     out->x = in->x;
     out->y = in->y;
     return out;
 }
-s32 func_8011D6C0(void *object, Event *event) {
+s32 func_8011D6C0(Item *object, Event *event) {
     Position position;
     switch (event->kind) {
     case 9: {

@@ -1,9 +1,10 @@
 #include "common.h"
 
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 
-/* Current track id, owned by this file (func_80045650 stores it in a jal delay slot). */
+/* Owned by func_80045754.c: four initialized bytes at 0x80138BD4.
+ * This file owns D_80138BD8, the next four bytes, instead. */
 extern s32 D_80138BD4;
 s32 D_80138BD8 = -1;
 extern s32 D_80138BDC;

@@ -1,25 +1,15 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 
-typedef struct List List;
-
-/* 48-byte list entry (copied whole when entries are shifted). */
+/* Item container: pool +0, method table +4, +8 word. */
 typedef struct {
-    s32 words[12];
-} Item;
-
-typedef struct {
-    List *list;
+    ItemPool *list;
     void **vtable;
     s32 field08;
 } Container;
 
-extern u32 func_800D07D8(Container *owner, s32 index);
-extern Item *func_800AFD78(List *table, u8 index);
-extern void func_800AFCA8(List *table, u8 id);
-extern void func_800AFCD8(List *table, u8 id);
-extern s32 func_800AF920(List *s, unsigned char n);
 extern void func_800AE648(Item *obj);
 
 /* Item-family slot +0x54 override (D_80154668+0x54): void (void *self, s32 source, s32 destination).
@@ -38,8 +28,8 @@ void func_800D0C18(Container *self, s32 from, s32 to)
     if (from == to) {
         return;
     }
-    src = func_800D07D8(self, from);
-    dst = func_800D07D8(self, to);
+    src = func_800D07D8(&self->list, from);
+    dst = func_800D07D8(&self->list, to);
     item = func_800AFD78(self->list, src);
     saved = *item;
     func_800AFCA8(self->list, src);

@@ -1,13 +1,13 @@
 #include "common.h"
+#include "map_position_iterator.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef short s16;
 typedef signed char s8;
 
-typedef struct { s32 x; s32 y; } Pos800B4098;
-typedef struct { Pos800B4098 tl; Pos800B4098 br; u8 pad10[4]; } Room800B4098;
-typedef struct { Pos800B4098 cur; Pos800B4098 start; Pos800B4098 end; } RectIter800B4098;
+/* The complete 0x14-byte room record includes the four exit counts used by B6590. */
+typedef struct { MapRect rect; u8 exits[4]; } Room800B4098;
 /* One of the two 0x18-byte region records initialized by func_800B1080: owner byte +0
  * (func_800D1D90 clears it with sb zero,0(a0)) plus 3 padding bytes, room pointer +4. */
 typedef struct { s8 owner; u8 pad1[3]; Room800B4098 *room; u8 pad8[0x10]; } Ent800B4098;
@@ -17,8 +17,7 @@ typedef struct { void *room; s32 opaque[3]; } RoomState;
 extern RoomState D_80143434;
 extern u8 D_80143448;
 extern u16 D_80143450[][0x4C];
-Pos800B4098 *func_800A3610(Pos800B4098 *out, RectIter800B4098 *it);
-void func_800B6590(Room800B4098 *room, Pos800B4098 *tl, Pos800B4098 *br);
+void func_800B6590(Room800B4098 *room, MapPos *tl, MapPos *br);
 void func_800D28D8(Ent800B4098 *ent);
 void func_800B1820(s32 id);
 static inline Room800B4098 *state_room(RoomState *state) { return state->room; }
@@ -30,23 +29,23 @@ void func_800B4098(u8 idA, u8 idB) {
     s32 bx, by, bxe, bye;
     s32 m;
     s32 v;
-    Pos800B4098 tl;
-    Pos800B4098 br;
-    RectIter800B4098 it;
+    MapPos tl;
+    MapPos br;
+    MapPositionIterator it;
     Room800B4098 *merged;
     Room800B4098 *dst;
     s32 i;
     u8 lo;
     u8 hi;
     u8 flag;
-    ay = a->tl.y;
-    by = b->tl.y;
-    ax = a->tl.x;
-    aye = a->br.y;
-    axe = a->br.x;
-    bx = b->tl.x;
-    bye = b->br.y;
-    bxe = b->br.x;
+    ay = a->rect.min.y;
+    by = b->rect.min.y;
+    ax = a->rect.min.x;
+    aye = a->rect.max.y;
+    axe = a->rect.max.x;
+    bx = b->rect.min.x;
+    bye = b->rect.max.y;
+    bxe = b->rect.max.x;
     m = ay;
     if (by < m) {
         m = by;
@@ -80,7 +79,7 @@ void func_800B4098(u8 idA, u8 idB) {
     it.cur = it.start;
     it.end = br;
     for (;;) {
-        Pos800B4098 cell;
+        MapPos cell;
         s32 more = it.cur.x <= it.end.x;
         if (!more) {
             break;

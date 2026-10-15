@@ -53,11 +53,11 @@ typedef char SchedulerQueueSize[(sizeof(SchedulerQueue) == 0x18) ? 1 : -1];
 typedef char SchedulerSize[(sizeof(Scheduler) == 0xA00) ? 1 : -1];
 extern Scheduler D_801D85D0;
 
-extern void func_801E77A4(void *, void *);
+extern s32 func_801E77A4_1362F4(void *, void *);
 extern void func_80025DCC(void *, void *, s32);
 extern char D_801E00D4[], D_136DC0[], D_00148460[];
 extern s32 func_801E4EA0(void);
 void func_80058E8C(void) {
-    func_801E77A4(D_801E00D4, &D_801D85D0.mq08);
+    func_801E77A4_1362F4(D_801E00D4, &D_801D85D0.mq08);
     func_80025DCC(D_136DC0, (void *)func_801E4EA0, D_00148460 - D_136DC0);
 }

@@ -1,19 +1,11 @@
-#include "common.h"
+#include "map_unit_iterator.h"
 
-typedef struct { s32 x; s32 y; } Pair;
-typedef struct { Pair min; Pair max; } Region;
-typedef struct { s32 index; Pair *origin; Pair position; Region bounds; } Iterator;
 typedef struct { void *source; u32 kind, auxiliary; unsigned short amount, options; unsigned char scale; } Action;
-typedef struct { Pair position; } Actor;
+typedef struct { MapPos position; } Actor;
 extern s32 D_80147620[];
 extern unsigned short D_801569C4;
 extern unsigned short D_801569C6;
-/* Returns its rectangle by value through the hidden result pointer. */
-extern Region func_800B3080(void *);
-extern Iterator *func_800A9204(Iterator *, Region *, Pair *);
-extern s32 func_800A9284(Iterator *, s32);
-extern Actor *func_800A942C(Iterator *);
-extern u32 func_800B1C6C(Pair *);
+extern u32 func_800B1C6C(MapPos *);
 extern s32 func_800A6E90(Actor *);
 extern s32 func_800A692C(Actor *, s32);
 extern s32 func_800A44F4(Actor *, Actor *);
@@ -29,18 +21,18 @@ static inline void init_action(Action *action, Actor *source, s32 amount) {
     func_80136910(action, source, (short)amount, 6, 0x1008);
 }
 
-static inline Pair *copy_pair(Pair *destination, Pair *source) {
+static inline MapPos *copy_pair(MapPos *destination, MapPos *source) {
     destination->x = source->x;
     destination->y = source->y;
     return destination;
 }
 
 void func_8011C7F0(void *unused /* unused receiver */, Actor *actor, void *other /* unused scroll callback input */) {
-    Pair origin;
-    Iterator iterator;
+    MapPos origin;
+    MapUnitIterator iterator;
     /* Search area; once func_800A9204 has copied it into the iterator, its first corner is
        reused as the scratch position of each visited unit (as in func_80048B04). */
-    Region area;
+    MapRect area;
     s32 any = 0;
     area = func_800B3080(copy_pair(&origin, &actor->position));
     func_800A9204(&iterator, &area, &actor->position);

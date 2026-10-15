@@ -7,11 +7,22 @@ typedef struct {
     s32 y;
 } Pos;
 typedef struct {
-    u8 data[0x18];
+    void *field_0;
+    u32 field_4;
+    u32 field_8;
+    unsigned short field_C;
+    unsigned short field_E;
+    u8 field_10;
 } Buffer;
+/* E552C writes amount at +2 (VRAM 0x800E5900/0x800E591C).
+ * The caller initializes only flags at VRAM 0x80109828. */
+typedef struct {
+    unsigned short flags;
+    unsigned short amount;
+} Outcome;
 typedef union {
     Pos pos;
-    s16 result;
+    Outcome result;
 } Scratch;
 typedef struct Object {
     Pos pos;
@@ -40,7 +51,7 @@ extern void *func_800B4928(Pos *pos);
 extern void *func_800A6538(void *out_direction, void *obj, void *target);
 extern s32 func_80049CB4(s32 id, ...);
 extern void func_80136910(Buffer *obj, void *a, u32 c, u32 b, u32 e);
-extern void func_800A7A9C(Object *obj, Buffer *message, s16 *result);
+extern void func_800A7A9C(Object *obj, Buffer *message, Outcome *result);
 
 static inline void turn_toward(Object *actor, Pos *target)
 {
@@ -110,7 +121,7 @@ s32 func_80109610(Object *actor, Object *other)
     func_80049CB4(0x10D, &origin, &target);
     if (other != 0) {
         init_attack(&message, actor, params->field_6);
-        tmp.result = 0;
+        tmp.result.flags = 0;
         func_800A7A9C(other, &message, &tmp.result);
     }
     return 1;

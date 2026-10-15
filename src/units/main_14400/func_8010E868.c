@@ -1,13 +1,13 @@
 #include "common.h"
+#include "item_records.h"
 typedef struct { s32 x, y; } Position;
 typedef struct { s32 kind_00; void *actor_04; void *target_08; s32 field_0C; Position position_10; s32 field_18, field_1C; } Event;
+/* Kind 11 constructor 8010E5C0 installs D_8015D398. */
 typedef struct {
-    unsigned char pad_00[8]; short destroy_adjustment_08; short reserved_0A;
-    void (*destroy_0C)(void *, s32);
-    unsigned char pad_10[0x30]; short action_adjustment_40; short reserved_42;
-    void (*action_44)(void *, void *);
-} ItemVTable;
-typedef struct { unsigned char pad_00[8]; ItemVTable *vtable_08; } Item;
+    ItemMethods base;
+    short delta40, index42;
+    void (*action44)(void *, void *);
+} ItemActionMethods;
 void func_8010E988(Item *item, Event *event);
 void func_800D3650(void *item);
 s32 func_80049CB4(s32 id, ...);
@@ -29,14 +29,14 @@ s32 func_8010E868(Item *item, Event *event)
     s32 result;
     switch (event_kind(event)) {
     case 9:
-        item->vtable_08->action_44((unsigned char *)item + item->vtable_08->action_adjustment_40, event->actor_04);
+        ((ItemActionMethods *)item->field08)->action44((unsigned char *)item + ((ItemActionMethods *)item->field08)->delta40, event->actor_04);
         result = 1;
         break;
     case 18:
         func_8010E988(item, event);
         func_800D3650(item);
         if (item) {
-            item->vtable_08->destroy_0C((unsigned char *)item + item->vtable_08->destroy_adjustment_08, 3);
+            item->field08->method0C((unsigned char *)item + item->field08->delta08, 3);
         }
         result = 1;
         break;
@@ -48,7 +48,7 @@ s32 func_8010E868(Item *item, Event *event)
         func_80049CB4(0x114, event_position(&position, event));
         func_800D3650(item);
         if (item) {
-            item->vtable_08->destroy_0C((unsigned char *)item + item->vtable_08->destroy_adjustment_08, 3);
+            item->field08->method0C((unsigned char *)item + item->field08->delta08, 3);
         }
         result = 1;
         break;

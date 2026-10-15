@@ -1,12 +1,13 @@
 #include "common.h"
+#include "item_records.h"
 typedef struct { s32 type; } Ev;
 void func_801127F8(void *a, Ev *e);
 void func_80112864(void *a, Ev *e);
 void func_801124B4(void *a);
-s32 func_8010C96C(void *a, Ev *e);
+s32 func_8010C96C(Item *a, Ev *e);
 static inline s32 event_type(Ev *e) { return e->type; }
 
-s32 func_8011276C(void *a, Ev *e) {
+s32 func_8011276C(Item *a, Ev *e) {
     switch (event_type(e)) {
     case 0x12:
         func_801127F8(a, e);

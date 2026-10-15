@@ -20,7 +20,7 @@ typedef struct {
 } Context;
 
 extern s32 func_800A0E00(void **owner_slot, Predicate callback);
-extern void func_80097B90(void *object, void *owner, void *holder, s32 mode, void *description, s32 flag);
+extern void func_80097B90(void *object, void *owner, void *holder, s32 mode, const void *description, s32 flag);
 extern s32 func_800957C0(void *object, void *output, s32 modal, void *history, s32 event);
 extern s32 func_8009A0EC(void *object);
 extern Context D_801404E0;

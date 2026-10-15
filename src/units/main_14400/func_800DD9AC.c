@@ -1,13 +1,13 @@
 #include "common.h"
+#include "item_records.h"
 typedef struct { short delta; short index; s32 (*fn)(void *, void *, s32); } VtEntry;
 typedef struct { unsigned b0 : 8; unsigned locked : 1; unsigned rest : 23; } Flags;
 typedef struct { char pad[0x20]; Flags flags; } Player;
 typedef struct { char pad0[4]; VtEntry *vt; } Base;
-typedef struct { Base *base; void *arg; } Ref;
+typedef struct { Base *base; Item *arg; } Ref;
 typedef struct { char pad[8]; Ref ref; } Obj;
 extern Player *D_801476B8;
 s32 func_800A692C(Player *, s32);
-char *func_800AE674(void *);
 void func_800498E4(s32, ...);
 void func_80045A24(s32);
 void func_800D0348(Ref *);

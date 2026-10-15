@@ -10,7 +10,7 @@ typedef struct { Stream *stream; s8 mode04, mode05, mode06, mode07; u8 command08
 typedef struct { s16 delta, index; s32 (*call)(void *); } CheckSlot;
 typedef struct { u8 pad00[0x20]; CheckSlot check; } CommandVTable;
 typedef struct { u32 kind; CommandVTable *vtable; } Command;
-typedef struct { u8 kind, variant, field02, flags, row, field05, field06, field07, mode; s8 coordinates[2], status; } SelectionRecord;
+typedef struct { u8 kind, variant, field02, flags, row, field05; unsigned short field06; u8 mode; s8 coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 extern const u8 D_80151A3C[];
 extern const char D_80151C78[], D_80151CA4[], D_80151CC0[];

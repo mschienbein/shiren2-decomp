@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef struct {
     s32 x;
@@ -16,7 +17,7 @@ extern s32 func_800F0EC4(Unit *obj);
 extern void *func_800B4D80(Pos *p);
 extern void func_800AD868(Pos *pos);
 extern s32 func_80049CB4(s32 id, ...);
-extern s32 func_801017A4(Unit *self, void *target);
+extern s32 func_801017A4(Unit *self, Item *target);
 extern s32 func_800ADC90(void *object, Pos *position, void *origin);
 extern void func_800498E4(s32 id, ...);
 
@@ -27,7 +28,7 @@ extern void func_800498E4(s32 id, ...);
  * rematerialises sp+16 at each call instead. */
 static inline s32 strike_from(Unit *unit, Pos *square) {
     s32 usable = 0;
-    void *target;
+    Item *target;
     s32 blocked;
 
     square->x = unit->pos.x;

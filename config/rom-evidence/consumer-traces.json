@@ -1,0 +1,731 @@
+{
+  "target_sha256": "4073a9f6516ef5d15cdd8b259a952a7d07633a2815f2a738fb5d98415d30a458",
+  "source_hashes": {
+    "src/units/main_14400/func_8006AAF0.c": "1462ac9be9927d0da72f8ac3cd9aae0166d35bd657985638893fa8c439bef164",
+    "src/units/main_14400/func_8006ABC4.c": "f5eee7abfd6b81e2bb0ddb170a1ea6f9392f54878843f455fc26ee04a08de191",
+    "src/units/main_14400/func_8006AC30.c": "c6b5ce9d3ade930f7e45f1d235f171842f23aca58c6f12c1b73ffe6d3bc4ba80",
+    "src/units/main_14400/func_8008E264.c": "a65581552359dc7ab691e3ef3f11c561526d88cefe8888cb99f839a5203f3a03",
+    "src/units/main_14400/func_8008E354.c": "d94909c68d980ff1d574477ce0b26b43fba2bdf01d6ea6be963379ad6e8a76c5",
+    "src/units/main_14400/func_8012D688.c": "918c555ce03b0f1733fe749d10311d82935e3711e41e6354fbc7620897f48a23",
+    "src/units/main_14400/func_8012D474.c": "6457691b430d5a5099ae60e09c0543fbb126f1de646edc707ca019a77eb29596",
+    "scratch/omp/denominator-review/structure-audit.json": "77eff5240017bc67dce0044595037b42d2582eb96a1354d50d9493cf5f93bd2d",
+    "scratch/reviewer-p75-p71-rsp-task-chain-2026-10-06/attempt-001/bootstrap-request-proof.json": "4e074eac300cf6323a4bc88b5b94805433cdbff163459029bde7f7eabe142643",
+    "scratch/chat-pools/sdk-a/rsp-inventory/attempt-001/worker-b/phase-06-rsp.json": "6417394ac9b780060fb4ae1fc3662ebba76041f9188c5df68e45d4c49488e81e",
+    "scratch/chat-pools/sdk-a/rsp-inventory/attempt-001/worker-b/phase-04-contexts.json": "4d5fab6aee8483e768f6df0bf3cac7c77007c7826bb648f7df87faa39b68e20d",
+    "scratch/chat-pools/sdk-a/rsp-inventory/attempt-001/worker-b/phase-10-data.json": "ef7be2c7850d9649a3f2e26567373b88d3af695ce3d6e74dc0de2ababb91bf6f",
+    "scratch/chat-pools/sdk-a/rsp-inventory/attempt-001/worker-b/phase-05-edges.json": "a4756552497434494cc7b282ab5d7dde7e14c272537494c65128a6515bf4bf75",
+    "src/units/main_14400/func_80064A70.c": "35bb101bd73a3c1d2c2cf6eaf8e34e01a97218e5efe05f5d5d5dd8263b2d6cb6",
+    "src/units/main_14400/func_80064D5C.c": "da51080aa3112193a1a627b592506639410589bedbdf82b22c8cc5eff51ca689",
+    "src/units/main_14400/func_80067628.c": "970e30f76fe9bebac1be34abae5c37a4a33512cfa5327f808160a08ea3d56704",
+    "src/units/main_14400/func_80067804.c": "832d4daee401f152b93a42f66cd3501768c0561585c4ce27a498508e8a2b6d51",
+    "src/units/main_14400/func_80069A68.c": "63c01858702f66389c815d0ce53bc233defd2da4e1d58aad1a8c1c7aa750251d",
+    "src/units/main_14400/func_8005EFF0.c": "63af127a07f149bfee7547b071cabd287d82fcd7aaa37c4834687588f494f94d",
+    "src/units/main_14400/func_80052944.c": "de23208fce9d01bf36834616c2dee081cfeae10a8e93e627e7960e636deaecb9",
+    "src/units/main_14400/func_80052914.c": "42ca2f3fa0b30d5f9f44d5220e528f2a2aae1adf97cb0aa22f805e2cedf39c10",
+    "src/units/main_14400/func_80051D94.c": "ef91d1872b53e07d0c161468239b224922035985f6e035f333b5d8d48b4f2189",
+    "src/units/main_14400/func_8012C4B0.c": "326bc110f262007456b1aa9050261c2f359e357bf4a49574ebd0610849011178",
+    "src/units/main_14400/func_8012AF30.c": "9190f9e0fa481cdf3fc3f0af42536315b7f95033e6a79edcd115b526a69cc497",
+    "src/units/main_14400/func_8012BDD0.c": "44bf86ba134a7c447980fa2750149b88c6c664a2cf1b9543e2ca8afaad256401",
+    "src/units/main_14400/func_8012A910.c": "f61f52bac5b16a46e8e7d4958874e79b3b4b65a8383f3cbc73f74f783e28cc23",
+    "src/units/main_14400/func_80044308.c": "9db3bace5e5fbdda40216bfda9aeeda6b47cb3ddb72eeb2a44bc466d910fffcf",
+    "src/units/main_14400/func_800CA118.c": "79860599064121ca893ad60fe8f66c433eafa1de8b7c3bf52d8fda33261d197c",
+    "src/units/main_14400/func_800CAD44.c": "7b450f698957b660d952b62d8295ab94e1ec7ce8d3eb467663627acc33d45d88",
+    "build/omp-b6r-b/generated/asm/data/main_rodata_126fe8.rodata.s": "55c101c14b902fa1149238fbbe8264a529f359f2fa5c0ea6b894ec1d11350533",
+    "build/omp-b6r-b/generated/asm/main_14400_tail_440c8.s": "41d6164ee0c20b43b65566fd84c244747a342b46a307dedf34310b85192ae942",
+    "build/omp-b6r-b/generated/asm/main_14400_tail_52390.s": "71c012893fedaf1a9e2122aaee4feb2f8010ca4db5e1307942625d121c8edf9c",
+    "src/units/main_14400/func_80071CCC.c": "8d13a8db4b40faa7365974d97f009f8637d9ba6b556fda76d46e5c70e1d847c7",
+    "src/units/main_14400/func_8005F1D4.c": "b5da5eaab3124aa8a6efb77970327d25cd81f814a077ece4b092f4339e7873af",
+    "src/units/main_14400/func_8007F2D8.c": "5e309ce0fa1ec34d7be57948bd95a48ba2ff13739c9741246e5c3e4a8e609971",
+    "src/units/main_14400/func_8005DCEC.c": "e4df938dd1b3aefb3e657e03ffb7b0f5aed33400f514c049cebc44af9c99a015",
+    "src/units/main_14400/func_8005DCB0.c": "653794e4005ef35687dcc3dcb8f5613df282167c4c802cbd5a48641d3c81be4f",
+    "src/units/main_14400/func_8005DD80.c": "1140564eb3ff01f3b4980a7f7227f6b0dc5ff5ff56a15bad215ad8898201adc5",
+    "src/units/main_14400/func_8005DE08.c": "f48d5bf02b9125503e9acc4f617f9e1f0ec092e9f1b4076c2449621826bdbbd7",
+    "src/units/main_14400/func_80048480.c": "909d6262ae1d6734a6d8168920277fa6373aed4f7d75c33d4755542400487036",
+    "src/units/main_14400/func_80044C60.c": "629406ff3a79198bb38093437455f41727b8cc85aca8736cb99d8d3a10f46414",
+    "src/units/main_14400/func_80072440.c": "7316d0c4adf904c21a8bdde3fc33ba4bc48e7d53a0c5858a8e07acf2c9b0fbf2",
+    "src/units/main_14400/func_8007248C.c": "01414b8c1d194dbc35a03b8f43810c12e15c6bc7d6662b3a852eccf97644429b",
+    "src/units/main_14400/func_80068BC8.c": "20835a1c1a2770ccaf0dc189a3f8e44c9ff6d3ef1a7ad562ce1b05a13c99b3a6",
+    "scratch/omp/denominator-review/followup-audit.json": "50ebd30662a3fa7c881b1afae88a6bec5c64cf117f16b9deca402de9e82d7db4",
+    "src/units/main_14400/func_8007CE28.c": "ff7dab160cb5aa25e7b14208f72c1a4c40a5a3d0755a1d3bf3d9249129b4defb"
+  },
+  "kind": "Astra consumer-trace delta; ROM offsets are not physical RAM addresses",
+  "pi_reader": {
+    "symbol": "func_8006AAF0",
+    "sources": [
+      "src/units/main_14400/func_8006AAF0.c:15-45",
+      "src/units/main_14400/func_8006ABC4.c:1-5",
+      "src/units/main_14400/func_8006AC30.c:1-5"
+    ],
+    "proof": "devAddr enters OSIoMesg.devAddr and func_800299E0(..., direction=0); func_8006ABC4 allocates then calls this reader. func_8006AC30 adds (segAddr & 0xFFFFFF) and stride*first to romBase before the same reader."
+  },
+  "rejected_bases": [
+    {
+      "value": "0x16dc18",
+      "kind": "physical_ram_matrix",
+      "instruction_intervals": [
+        [
+          "0x3c108",
+          "0x3c128"
+        ]
+      ],
+      "sources": [
+        "src/units/main_14400/func_80068BC8.c:108-111",
+        "src/units/main_14400/func_80068BC8.c:141-149"
+      ],
+      "trace": "D_8016DC18 is constructed at runtime; OS_K0_TO_PHYSICAL produces the second word of DA380003 matrix command. No PI transfer consumes this constant.",
+      "instruction_evidence": [
+        {
+          "start": "0x003c108",
+          "end": "0x003c128",
+          "size": 32,
+          "sha256": "3551dbd3e852f385efdb1cc32a06d887d01a4ea4031fc9c00572b85d93b31825",
+          "md5": "7256a58161ddc62f23d79cb1b9c8935c",
+          "loaded_image": "main_14400",
+          "vram_start": "0x800690c8",
+          "vram_end": "0x800690e8",
+          "words": [
+            "ROM 0003c108 RAM 800690c8 3c028017 lui         $v0, 0x8017",
+            "ROM 0003c10c RAM 800690cc 9042dc12 lbu         $v0, -0x23EE($v0)",
+            "ROM 0003c110 RAM 800690d0 3c0c0017 lui         $t4, 0x17",
+            "ROM 0003c114 RAM 800690d4 258cdc18 addiu       $t4, $t4, -0x23E8",
+            "ROM 0003c118 RAM 800690d8 ac830000 sw          $v1, 0x0($a0)",
+            "ROM 0003c11c RAM 800690dc 00021180 sll         $v0, $v0, 6",
+            "ROM 0003c120 RAM 800690e0 004c1021 addu        $v0, $v0, $t4",
+            "ROM 0003c124 RAM 800690e4 ac820004 sw          $v0, 0x4($a0)"
+          ]
+        }
+      ]
+    },
+    {
+      "value": "0x16dc98",
+      "kind": "physical_ram_matrix",
+      "instruction_intervals": [
+        [
+          "0x3c0e4",
+          "0x3c128"
+        ]
+      ],
+      "sources": [
+        "src/units/main_14400/func_80068BC8.c:108-111",
+        "src/units/main_14400/func_80068BC8.c:141-149"
+      ],
+      "trace": "D_8016DC98 is a runtime matrix; OS_K0_TO_PHYSICAL produces a DA380003 operand, not a cartridge offset.",
+      "instruction_evidence": [
+        {
+          "start": "0x003c0e4",
+          "end": "0x003c128",
+          "size": 68,
+          "sha256": "3de6132dc0102852da79679c2faf6cdfdc840e68db02c8b2b0823030bd896bbf",
+          "md5": "35471d6d0e3aa35e55427143f2f6c320",
+          "loaded_image": "main_14400",
+          "vram_start": "0x800690a4",
+          "vram_end": "0x800690e8",
+          "words": [
+            "ROM 0003c0e4 RAM 800690a4 3c028017 lui         $v0, 0x8017",
+            "ROM 0003c0e8 RAM 800690a8 9042dc12 lbu         $v0, -0x23EE($v0)",
+            "ROM 0003c0ec RAM 800690ac 3c0c0017 lui         $t4, 0x17",
+            "ROM 0003c0f0 RAM 800690b0 258cdc98 addiu       $t4, $t4, -0x2368",
+            "ROM 0003c0f4 RAM 800690b4 0801a436 j           func_800690D8",
+            "ROM 0003c0f8 RAM 800690b8 34630003 ori         $v1, $v1, 0x3",
+            "ROM 0003c0fc RAM 800690bc 26520008 addiu       $s2, $s2, 0x8",
+            "ROM 0003c100 RAM 800690c0 3c03da38 lui         $v1, 0xDA38",
+            "ROM 0003c104 RAM 800690c4 34630003 ori         $v1, $v1, 0x3",
+            "ROM 0003c108 RAM 800690c8 3c028017 lui         $v0, 0x8017",
+            "ROM 0003c10c RAM 800690cc 9042dc12 lbu         $v0, -0x23EE($v0)",
+            "ROM 0003c110 RAM 800690d0 3c0c0017 lui         $t4, 0x17",
+            "ROM 0003c114 RAM 800690d4 258cdc18 addiu       $t4, $t4, -0x23E8",
+            "ROM 0003c118 RAM 800690d8 ac830000 sw          $v1, 0x0($a0)",
+            "ROM 0003c11c RAM 800690dc 00021180 sll         $v0, $v0, 6",
+            "ROM 0003c120 RAM 800690e0 004c1021 addu        $v0, $v0, $t4",
+            "ROM 0003c124 RAM 800690e4 ac820004 sw          $v0, 0x4($a0)"
+          ]
+        }
+      ]
+    },
+    {
+      "value": "0x1ce000",
+      "kind": "rdp_loadtile_operand",
+      "instruction_intervals": [
+        [
+          "0x5177c",
+          "0x51788"
+        ],
+        [
+          "0x51878",
+          "0x518d4"
+        ]
+      ],
+      "sources": [
+        "scratch/omp/denominator-review/followup-audit.json:107-200"
+      ],
+      "trace": "Materialized into s2 at ROM 0x5177C, saved at 0x51784, reloaded at 0x518C4, ORed with 0x07000000 and coordinates, stored at 0x518D0 as the second word beneath F4 LoadTile. It is not an address.",
+      "instruction_evidence": [
+        {
+          "start": "0x005177c",
+          "end": "0x0051788",
+          "size": 12,
+          "sha256": "505a402b8be58d3e0feee53513d81577dc9eb23cb2fb8aa89fa707e3fe64d4f0",
+          "md5": "1964a53bed6b8e95c51843a483f7ab8c",
+          "loaded_image": "main_14400",
+          "vram_start": "0x8007e73c",
+          "vram_end": "0x8007e748",
+          "words": [
+            "ROM 0005177c RAM 8007e73c 3c12001c lui         $s2, 0x1C",
+            "ROM 00051780 RAM 8007e740 3652e000 ori         $s2, $s2, 0xE000",
+            "ROM 00051784 RAM 8007e744 afb20034 sw          $s2, 0x34($sp)"
+          ]
+        },
+        {
+          "start": "0x0051878",
+          "end": "0x00518d4",
+          "size": 92,
+          "sha256": "eb454c4b744eb109e3150f46bcba2dacc5fe800ef8c7e17ffede7b9ca11b526f",
+          "md5": "5a2460532e076b157e3daa84464de285",
+          "loaded_image": "main_14400",
+          "vram_start": "0x8007e838",
+          "vram_end": "0x8007e894",
+          "words": [
+            "ROM 00051878 RAM 8007e838 8fb2002c lw          $s2, 0x2C($sp)",
+            "ROM 0005187c RAM 8007e83c 3c03f400 lui         $v1, 0xF400",
+            "ROM 00051880 RAM 8007e840 ac92fffc sw          $s2, -0x4($a0)",
+            "ROM 00051884 RAM 8007e844 8fb20030 lw          $s2, 0x30($sp)",
+            "ROM 00051888 RAM 8007e848 ac920000 sw          $s2, 0x0($a0)",
+            "ROM 0005188c RAM 8007e84c 24840008 addiu       $a0, $a0, 0x8",
+            "ROM 00051890 RAM 8007e850 ac82fffc sw          $v0, -0x4($a0)",
+            "ROM 00051894 RAM 8007e854 ac800000 sw          $zero, 0x0($a0)",
+            "ROM 00051898 RAM 8007e858 24840008 addiu       $a0, $a0, 0x8",
+            "ROM 0005189c RAM 8007e85c 00131080 sll         $v0, $s3, 2",
+            "ROM 000518a0 RAM 8007e860 30420fff andi        $v0, $v0, 0xFFF",
+            "ROM 000518a4 RAM 8007e864 00431025 or          $v0, $v0, $v1",
+            "ROM 000518a8 RAM 8007e868 34420000 ori         $v0, $v0, 0x0",
+            "ROM 000518ac RAM 8007e86c ac82fffc sw          $v0, -0x4($a0)",
+            "ROM 000518b0 RAM 8007e870 02651021 addu        $v0, $s3, $a1",
+            "ROM 000518b4 RAM 8007e874 2442ffff addiu       $v0, $v0, -0x1",
+            "ROM 000518b8 RAM 8007e878 00021080 sll         $v0, $v0, 2",
+            "ROM 000518bc RAM 8007e87c 30420fff andi        $v0, $v0, 0xFFF",
+            "ROM 000518c0 RAM 8007e880 3c030700 lui         $v1, 0x700",
+            "ROM 000518c4 RAM 8007e884 8fb20034 lw          $s2, 0x34($sp)",
+            "ROM 000518c8 RAM 8007e888 00431025 or          $v0, $v0, $v1",
+            "ROM 000518cc RAM 8007e88c 02421025 or          $v0, $s2, $v0",
+            "ROM 000518d0 RAM 8007e890 ac820000 sw          $v0, 0x0($a0)"
+          ]
+        }
+      ]
+    },
+    {
+      "value": "0x1ec080",
+      "kind": "rdp_fillrectangle_coordinates",
+      "instruction_intervals": [
+        [
+          "0x4ff48",
+          "0x4ff58"
+        ]
+      ],
+      "sources": [
+        "src/units/main_14400/func_8007CE28.c:17-18",
+        "src/units/main_14400/func_8007CE28.c:45-48"
+      ],
+      "trace": "(123 << 14) | (32 << 2) is the FillRectangle upper-left coordinate word.",
+      "instruction_evidence": [
+        {
+          "start": "0x004ff48",
+          "end": "0x004ff58",
+          "size": 16,
+          "sha256": "fde539d34c515dd7be37962eeccac58bc3f0b1d06993e937b7ad82d6e66df69b",
+          "md5": "8d6f0e06352404a1f8332f5f9c886249",
+          "loaded_image": "main_14400",
+          "vram_start": "0x8007cf08",
+          "vram_end": "0x8007cf18",
+          "words": [
+            "ROM 0004ff48 RAM 8007cf08 3c17f600 lui         $s7, 0xF600",
+            "ROM 0004ff4c RAM 8007cf0c 36f70090 ori         $s7, $s7, 0x90",
+            "ROM 0004ff50 RAM 8007cf10 3c18001e lui         $t8, 0x1E",
+            "ROM 0004ff54 RAM 8007cf14 3718c080 ori         $t8, $t8, 0xC080"
+          ]
+        }
+      ]
+    },
+    {
+      "value": "0x1f0084",
+      "kind": "rdp_fillrectangle_coordinates",
+      "instruction_intervals": [
+        [
+          "0x4ff7c",
+          "0x4ff88"
+        ]
+      ],
+      "sources": [
+        "src/units/main_14400/func_8007CE28.c:17-18",
+        "src/units/main_14400/func_8007CE28.c:45-48"
+      ],
+      "trace": "(124 << 14) | (33 << 2) is the FillRectangle upper-left coordinate word.",
+      "instruction_evidence": [
+        {
+          "start": "0x004ff7c",
+          "end": "0x004ff88",
+          "size": 12,
+          "sha256": "05cbe0bd1e2254b7fb88f1137cf4d89baf8940e7103a104b00692457fb752c1b",
+          "md5": "87567089be4ee3b15c7ac16542aba5a0",
+          "loaded_image": "main_14400",
+          "vram_start": "0x8007cf3c",
+          "vram_end": "0x8007cf48",
+          "words": [
+            "ROM 0004ff7c RAM 8007cf3c afb50018 sw          $s5, 0x18($sp)",
+            "ROM 0004ff80 RAM 8007cf40 3c15001f lui         $s5, 0x1F",
+            "ROM 0004ff84 RAM 8007cf44 36b50084 ori         $s5, $s5, 0x84"
+          ]
+        }
+      ]
+    }
+  ],
+  "retained_bases": [
+    {
+      "start": "0x157460",
+      "end": "0x1575c0",
+      "extent": "explicit_loader_pair",
+      "instruction_intervals": [
+        [
+          "0x32218",
+          "0x3223c"
+        ]
+      ],
+      "sources": [
+        "src/units/main_14400/func_8005F1D4.c:14-16"
+      ],
+      "trace": "end-start passed to func_8006ABC4, then the PI reader",
+      "next_proof": "Parse the complete resource, including the initial non-GBI header, and bind the loaded object's graphics consumer; a loader name alone is not format proof.",
+      "instruction_evidence": [
+        {
+          "start": "0x0032218",
+          "end": "0x003223c",
+          "size": 36,
+          "sha256": "92f27a44ea71ab9d5149c1b04f158edb4e7ced1fd29740c5ec2ba8b629ecb90a",
+          "md5": "7be909d237c1ff254690a28be1180afb",
+          "loaded_image": "main_14400",
+          "vram_start": "0x8005f1d8",
+          "vram_end": "0x8005f1fc",
+          "words": [
+            "ROM 00032218 RAM 8005f1d8 3c060015 lui         $a2, 0x15",
+            "ROM 0003221c RAM 8005f1dc 24c675c0 addiu       $a2, $a2, 0x75C0",
+            "ROM 00032220 RAM 8005f1e0 3c050015 lui         $a1, 0x15",
+            "ROM 00032224 RAM 8005f1e4 24a57460 addiu       $a1, $a1, 0x7460",
+            "ROM 00032228 RAM 8005f1e8 3c048015 lui         $a0, 0x8015",
+            "ROM 0003222c RAM 8005f1ec 2484c434 addiu       $a0, $a0, -0x3BCC",
+            "ROM 00032230 RAM 8005f1f0 afbf0010 sw          $ra, 0x10($sp)",
+            "ROM 00032234 RAM 8005f1f4 0c01aaf1 jal         func_8006ABC4",
+            "ROM 00032238 RAM 8005f1f8 00c53023 subu        $a2, $a2, $a1"
+          ]
+        }
+      ]
+    },
+    {
+      "start": "0x1575c0",
+      "end": "0x157840",
+      "extent": "explicit_loader_pair",
+      "instruction_intervals": [
+        [
+          "0x52324",
+          "0x52340"
+        ]
+      ],
+      "sources": [
+        "src/units/main_14400/func_8007F2D8.c:22-24"
+      ],
+      "trace": "end-start passed to func_8006ABC4, then the PI reader",
+      "next_proof": "Parse the whole resource header and display-list layout against its graphics consumer.",
+      "instruction_evidence": [
+        {
+          "start": "0x0052324",
+          "end": "0x0052340",
+          "size": 28,
+          "sha256": "1037bf625cf24d554cbe0089fa8bdd3169f0c80ccff2275cd7e01863d23bd8bb",
+          "md5": "a45e962a6d8358ae87fc08daaaad4b03",
+          "loaded_image": "main_14400",
+          "vram_start": "0x8007f2e4",
+          "vram_end": "0x8007f300",
+          "words": [
+            "ROM 00052324 RAM 8007f2e4 3c050015 lui         $a1, 0x15",
+            "ROM 00052328 RAM 8007f2e8 24a575c0 addiu       $a1, $a1, 0x75C0",
+            "ROM 0005232c RAM 8007f2ec 3c060015 lui         $a2, 0x15",
+            "ROM 00052330 RAM 8007f2f0 24c67840 addiu       $a2, $a2, 0x7840",
+            "ROM 00052334 RAM 8007f2f4 afbf0010 sw          $ra, 0x10($sp)",
+            "ROM 00052338 RAM 8007f2f8 0c01aaf1 jal         func_8006ABC4",
+            "ROM 0005233c RAM 8007f2fc 00c53023 subu        $a2, $a2, $a1"
+          ]
+        }
+      ]
+    },
+    {
+      "start": "0x157840",
+      "end": "0x157b80",
+      "extent": "explicit_loader_pair",
+      "instruction_intervals": [
+        [
+          "0x52340",
+          "0x52364"
+        ]
+      ],
+      "sources": [
+        "src/units/main_14400/func_8007F2D8.c:22-24"
+      ],
+      "trace": "end-start passed to func_8006ABC4, then the PI reader",
+      "next_proof": "Bind texture dimensions, texel format and complete payload extent to the consumer; recognizable nibbles are not sufficient.",
+      "instruction_evidence": [
+        {
+          "start": "0x0052340",
+          "end": "0x0052364",
+          "size": 36,
+          "sha256": "db196135eeb79f24cd5cc1f955b259f85cbc38fbde4d11c17122cffe012c3932",
+          "md5": "47bc9c2f5139cbad75fe62320b61300b",
+          "loaded_image": "main_14400",
+          "vram_start": "0x8007f300",
+          "vram_end": "0x8007f324",
+          "words": [
+            "ROM 00052340 RAM 8007f300 3c048015 lui         $a0, 0x8015",
+            "ROM 00052344 RAM 8007f304 2484d298 addiu       $a0, $a0, -0x2D68",
+            "ROM 00052348 RAM 8007f308 3c050015 lui         $a1, 0x15",
+            "ROM 0005234c RAM 8007f30c 24a57840 addiu       $a1, $a1, 0x7840",
+            "ROM 00052350 RAM 8007f310 3c060015 lui         $a2, 0x15",
+            "ROM 00052354 RAM 8007f314 24c67b80 addiu       $a2, $a2, 0x7B80",
+            "ROM 00052358 RAM 8007f318 3c018014 lui         $at, 0x8014",
+            "ROM 0005235c RAM 8007f31c ac22e8e8 sw          $v0, -0x1718($at)",
+            "ROM 00052360 RAM 8007f320 0c01aaf1 jal         func_8006ABC4"
+          ]
+        }
+      ]
+    },
+    {
+      "start": "0x157b80",
+      "end": "0x175150",
+      "extent": "inferred_next_real_start",
+      "instruction_intervals": [
+        [
+          "0x30d6c",
+          "0x30d88"
+        ]
+      ],
+      "sources": [
+        "src/units/main_14400/func_8005DCEC.c:7-14",
+        "src/units/main_14400/func_8005DCB0.c:3-12"
+      ],
+      "trace": "PI reads base+index*114 for 0x88 bytes; first two bytes are width/height and payload follows. This identifies a glyph-record consumer, not the last legal index or total stored extent.",
+      "next_proof": "Enumerate valid caller IDs through func_8005DCB0, distinguish 114-byte storage stride from 136-byte DMA overread, and prove the final record/padding boundary.",
+      "instruction_evidence": [
+        {
+          "start": "0x0030d6c",
+          "end": "0x0030d88",
+          "size": 28,
+          "sha256": "5d1f90d8209917b17a776998bd12280594aad9c7148f69ab31ef62a1859a5c16",
+          "md5": "d4c7174f55852705ecfa3524507d5312",
+          "loaded_image": "main_14400",
+          "vram_start": "0x8005dd2c",
+          "vram_end": "0x8005dd48",
+          "words": [
+            "ROM 00030d6c RAM 8005dd2c 00a22821 addu        $a1, $a1, $v0",
+            "ROM 00030d70 RAM 8005dd30 00052840 sll         $a1, $a1, 1",
+            "ROM 00030d74 RAM 8005dd34 3c020015 lui         $v0, 0x15",
+            "ROM 00030d78 RAM 8005dd38 24427b80 addiu       $v0, $v0, 0x7B80",
+            "ROM 00030d7c RAM 8005dd3c 00a22821 addu        $a1, $a1, $v0",
+            "ROM 00030d80 RAM 8005dd40 0c01aabc jal         func_8006AAF0",
+            "ROM 00030d84 RAM 8005dd44 24060088 addiu       $a2, $zero, 0x88"
+          ]
+        }
+      ]
+    },
+    {
+      "start": "0x175150",
+      "end": "0x177150",
+      "extent": "inferred_next_real_start",
+      "instruction_intervals": [
+        [
+          "0x30df4",
+          "0x30e10"
+        ]
+      ],
+      "sources": [
+        "src/units/main_14400/func_8005DD80.c:17-23"
+      ],
+      "trace": "PI reads base+id*130 for 0x88; two header bytes and data are exposed to caller.",
+      "next_proof": "Prove allowed ID domain, payload encoding and final 130-byte record; 0x88 transfer is not the storage stride.",
+      "instruction_evidence": [
+        {
+          "start": "0x0030df4",
+          "end": "0x0030e10",
+          "size": 28,
+          "sha256": "b16a219d487896d7d054333d365c43ba887642e25a9c1958480d1b8282045c54",
+          "md5": "440dd9a676ee1e1b662368c3aeea1d7a",
+          "loaded_image": "main_14400",
+          "vram_start": "0x8005ddb4",
+          "vram_end": "0x8005ddd0",
+          "words": [
+            "ROM 00030df4 RAM 8005ddb4 3c050017 lui         $a1, 0x17",
+            "ROM 00030df8 RAM 8005ddb8 24a55150 addiu       $a1, $a1, 0x5150",
+            "ROM 00030dfc RAM 8005ddbc 0200202d daddu       $a0, $s0, $zero",
+            "ROM 00030e00 RAM 8005ddc0 00452821 addu        $a1, $v0, $a1",
+            "ROM 00030e04 RAM 8005ddc4 afbf0020 sw          $ra, 0x20($sp)",
+            "ROM 00030e08 RAM 8005ddc8 0c01aabc jal         func_8006AAF0",
+            "ROM 00030e0c RAM 8005ddcc 24060088 addiu       $a2, $zero, 0x88"
+          ]
+        }
+      ]
+    },
+    {
+      "start": "0x177150",
+      "end": "0x179560",
+      "extent": "inferred_next_real_start",
+      "instruction_intervals": [
+        [
+          "0x30e7c",
+          "0x30e98"
+        ]
+      ],
+      "sources": [
+        "src/units/main_14400/func_8005DE08.c:17-23"
+      ],
+      "trace": "PI reads base+index*0x82 for 0x88; two dimension bytes precede pixels.",
+      "next_proof": "Prove index domain, exact texel encoding, and final 130-byte record independently of the next ROM owner.",
+      "instruction_evidence": [
+        {
+          "start": "0x0030e7c",
+          "end": "0x0030e98",
+          "size": 28,
+          "sha256": "f39acf3971f91fe74774dc7b060d58dc6e8856ba1d72e13438c3546f69fd35a9",
+          "md5": "b869f0b8076289e4321a9a076f78c66c",
+          "loaded_image": "main_14400",
+          "vram_start": "0x8005de3c",
+          "vram_end": "0x8005de58",
+          "words": [
+            "ROM 00030e7c RAM 8005de3c 3c050017 lui         $a1, 0x17",
+            "ROM 00030e80 RAM 8005de40 24a57150 addiu       $a1, $a1, 0x7150",
+            "ROM 00030e84 RAM 8005de44 0200202d daddu       $a0, $s0, $zero",
+            "ROM 00030e88 RAM 8005de48 00452821 addu        $a1, $v0, $a1",
+            "ROM 00030e8c RAM 8005de4c afbf0020 sw          $ra, 0x20($sp)",
+            "ROM 00030e90 RAM 8005de50 0c01aabc jal         func_8006AAF0",
+            "ROM 00030e94 RAM 8005de54 24060088 addiu       $a2, $zero, 0x88"
+          ]
+        }
+      ]
+    },
+    {
+      "start": "0x179560",
+      "end": "0x194fc0",
+      "extent": "inferred_next_real_start",
+      "instruction_intervals": [
+        [
+          "0x1b54c",
+          "0x1b558"
+        ]
+      ],
+      "sources": [
+        "src/units/main_14400/func_80048480.c:27-57"
+      ],
+      "trace": "D_8014D430 offsets added to this ROM base, aligned down to eight, PI-read into a 0xF8-byte text buffer, then returned after skip. Non-SJIS ratio is not evidence that this is not text.",
+      "next_proof": "Recover the offset-table index domain and encoded text termination/commands, then prove the last stored string and alignment; the fixed read length is not a text extent.",
+      "instruction_evidence": [
+        {
+          "start": "0x001b54c",
+          "end": "0x001b558",
+          "size": 12,
+          "sha256": "faf666586330ed978b01e679e447c21dcd926d03b539b9aaf1ad5b56fa591c7c",
+          "md5": "60dbfc40a905814abefa77e4ca94e4e0",
+          "loaded_image": "main_14400",
+          "vram_start": "0x8004850c",
+          "vram_end": "0x80048518",
+          "words": [
+            "ROM 0001b54c RAM 8004850c 3c030018 lui         $v1, 0x18",
+            "ROM 0001b550 RAM 80048510 24639560 addiu       $v1, $v1, -0x6AA0",
+            "ROM 0001b554 RAM 80048514 3c018014 lui         $at, 0x8014"
+          ]
+        }
+      ]
+    },
+    {
+      "start": "0x194fc0",
+      "end": "0x1c6cb0",
+      "extent": "inferred_next_real_start",
+      "instruction_intervals": [
+        [
+          "0x17cc0",
+          "0x17d00"
+        ]
+      ],
+      "sources": [
+        "src/units/main_14400/func_80044C60.c:20-31",
+        "src/units/main_14400/func_8006AC30.c:4-5"
+      ],
+      "trace": "ROM base passed to proven segmented-address translator then PI reader; one consumer reads eight-byte records.",
+      "next_proof": "Enumerate every segment-relative consumer and record count; prove complete format coverage and final stored endpoint rather than infer from next base.",
+      "instruction_evidence": [
+        {
+          "start": "0x0017cc0",
+          "end": "0x0017d00",
+          "size": 64,
+          "sha256": "20ae052893f7bd927cfe672576907325636e896770eb48d22e8a32418fc84666",
+          "md5": "d3088aed71278ab674b65f936f22040f",
+          "loaded_image": "main_14400",
+          "vram_start": "0x80044c80",
+          "vram_end": "0x80044cc0",
+          "words": [
+            "ROM 00017cc0 RAM 80044c80 3c140019 lui         $s4, 0x19",
+            "ROM 00017cc4 RAM 80044c84 26944fc0 addiu       $s4, $s4, 0x4FC0",
+            "ROM 00017cc8 RAM 80044c88 30a200ff andi        $v0, $a1, 0xFF",
+            "ROM 00017ccc RAM 80044c8c 0280282d daddu       $a1, $s4, $zero",
+            "ROM 00017cd0 RAM 80044c90 3c060200 lui         $a2, 0x200",
+            "ROM 00017cd4 RAM 80044c94 24c60000 addiu       $a2, $a2, 0x0",
+            "ROM 00017cd8 RAM 80044c98 24070008 addiu       $a3, $zero, 0x8",
+            "ROM 00017cdc RAM 80044c9c afb20028 sw          $s2, 0x28($sp)",
+            "ROM 00017ce0 RAM 80044ca0 2452ffff addiu       $s2, $v0, -0x1",
+            "ROM 00017ce4 RAM 80044ca4 afb3002c sw          $s3, 0x2C($sp)",
+            "ROM 00017ce8 RAM 80044ca8 24130001 addiu       $s3, $zero, 0x1",
+            "ROM 00017cec RAM 80044cac afbf0034 sw          $ra, 0x34($sp)",
+            "ROM 00017cf0 RAM 80044cb0 afb20010 sw          $s2, 0x10($sp)",
+            "ROM 00017cf4 RAM 80044cb4 0c01ab0c jal         func_8006AC30",
+            "ROM 00017cf8 RAM 80044cb8 afb30014 sw          $s3, 0x14($sp)",
+            "ROM 00017cfc RAM 80044cbc 8e030020 lw          $v1, 0x20($s0)"
+          ]
+        }
+      ]
+    },
+    {
+      "start": "0x1c6cb0",
+      "end": "0x23e210",
+      "extent": "inferred_next_real_start",
+      "instruction_intervals": [
+        [
+          "0x137210",
+          "0x137274"
+        ]
+      ],
+      "sources": [
+        "scratch/omp/denominator-review/structure-audit.json#/immediate_bases"
+      ],
+      "trace": "Overlay instructions add a record index to the base at 0x137250, align at 0x137254, pass a1 at 0x137258, call PI reader func_8006AAF0 at 0x13726C.",
+      "next_proof": "Recover directory offsets and overlay script/record grammar, prove valid indices and final stored object; removed RDP constants cannot supply endpoints.",
+      "instruction_evidence": [
+        {
+          "start": "0x0137210",
+          "end": "0x0137274",
+          "size": 100,
+          "sha256": "7dc11f2679c5162cdc57ad51244d397f38716c40da6b2e0681ff2837906edc6d",
+          "md5": "992abc41f41ae2841dce39d7f2d584af",
+          "loaded_image": "overlay_136dc0",
+          "vram_start": "0x801e52f0",
+          "vram_end": "0x801e5354",
+          "words": [
+            "ROM 00137210 RAM 801e52f0 3c07001c lui         $a3, 0x1C",
+            "ROM 00137214 RAM 801e52f4 24e76cb0 addiu       $a3, $a3, 0x6CB0",
+            "ROM 00137218 RAM 801e52f8 afb10014 sw          $s1, 0x14($sp)",
+            "ROM 0013721c RAM 801e52fc 3c11801f lui         $s1, 0x801F",
+            "ROM 00137220 RAM 801e5300 26316550 addiu       $s1, $s1, 0x6550",
+            "ROM 00137224 RAM 801e5304 0220202d daddu       $a0, $s1, $zero",
+            "ROM 00137228 RAM 801e5308 3c03801f lui         $v1, 0x801F",
+            "ROM 0013722c RAM 801e530c 8c636710 lw          $v1, 0x6710($v1)",
+            "ROM 00137230 RAM 801e5310 24060020 addiu       $a2, $zero, 0x20",
+            "ROM 00137234 RAM 801e5314 afbf0020 sw          $ra, 0x20($sp)",
+            "ROM 00137238 RAM 801e5318 afb3001c sw          $s3, 0x1C($sp)",
+            "ROM 0013723c RAM 801e531c afb20018 sw          $s2, 0x18($sp)",
+            "ROM 00137240 RAM 801e5320 afb00010 sw          $s0, 0x10($sp)",
+            "ROM 00137244 RAM 801e5324 94620002 lhu         $v0, 0x2($v1)",
+            "ROM 00137248 RAM 801e5328 2412fff8 addiu       $s2, $zero, -0x8",
+            "ROM 0013724c RAM 801e532c 00021080 sll         $v0, $v0, 2",
+            "ROM 00137250 RAM 801e5330 00473821 addu        $a3, $v0, $a3",
+            "ROM 00137254 RAM 801e5334 00f29824 and         $s3, $a3, $s2",
+            "ROM 00137258 RAM 801e5338 0260282d daddu       $a1, $s3, $zero",
+            "ROM 0013725c RAM 801e533c 94620004 lhu         $v0, 0x4($v1)",
+            "ROM 00137260 RAM 801e5340 00f39823 subu        $s3, $a3, $s3",
+            "ROM 00137264 RAM 801e5344 00028040 sll         $s0, $v0, 1",
+            "ROM 00137268 RAM 801e5348 02028021 addu        $s0, $s0, $v0",
+            "ROM 0013726c RAM 801e534c 0c01aabc jal         func_8006AAF0",
+            "ROM 00137270 RAM 801e5350 001081c0 sll         $s0, $s0, 7"
+          ]
+        }
+      ]
+    },
+    {
+      "start": "0x23e210",
+      "end": "0x240c20",
+      "extent": "inferred_next_real_start",
+      "instruction_intervals": [
+        [
+          "0x1377d4",
+          "0x1377f8"
+        ]
+      ],
+      "sources": [
+        "scratch/omp/denominator-review/structure-audit.json#/immediate_bases"
+      ],
+      "trace": "Materialized in a1 at 0x1377D8; PI reader called at 0x1377F0 with size 0x180.",
+      "next_proof": "Trace the directory and subsequent indexed reads, prove record format and final object endpoint; the following Yay0 start is only an envelope bound.",
+      "instruction_evidence": [
+        {
+          "start": "0x01377d4",
+          "end": "0x01377f8",
+          "size": 36,
+          "sha256": "148d0779d6c778587e392dc64d5be3b729261a90d2940714deab178344b59aee",
+          "md5": "2acbf48c27b4dc061861689c6cd31f33",
+          "loaded_image": "overlay_136dc0",
+          "vram_start": "0x801e58b4",
+          "vram_end": "0x801e58d8",
+          "words": [
+            "ROM 001377d4 RAM 801e58b4 3c050024 lui         $a1, 0x24",
+            "ROM 001377d8 RAM 801e58b8 24a5e210 addiu       $a1, $a1, -0x1DF0",
+            "ROM 001377dc RAM 801e58bc 3c02801f lui         $v0, 0x801F",
+            "ROM 001377e0 RAM 801e58c0 8c426710 lw          $v0, 0x6710($v0)",
+            "ROM 001377e4 RAM 801e58c4 afbf0018 sw          $ra, 0x18($sp)",
+            "ROM 001377e8 RAM 801e58c8 afb00010 sw          $s0, 0x10($sp)",
+            "ROM 001377ec RAM 801e58cc 90500003 lbu         $s0, 0x3($v0)",
+            "ROM 001377f0 RAM 801e58d0 0c01aabc jal         func_8006AAF0",
+            "ROM 001377f4 RAM 801e58d4 24060180 addiu       $a2, $zero, 0x180"
+          ]
+        }
+      ]
+    },
+    {
+      "start": "0xe7be70",
+      "end": "0xe7be90",
+      "extent": "inferred_next_real_start",
+      "instruction_intervals": [
+        [
+          "0x454a8",
+          "0x454cc"
+        ]
+      ],
+      "sources": [
+        "src/units/main_14400/func_80072440.c:7-25",
+        "src/units/main_14400/func_8007248C.c:3-9"
+      ],
+      "trace": "Segment 6 translator adds this base; func_8007248C passes translated handle to PI reader. RGBA16 palette identity remains a hypothesis.",
+      "next_proof": "Bind segment-6 callers to TLUT format/count and prove exactly 32 stored bytes; adjacency to the first Yay0 stream is not an extent proof.",
+      "instruction_evidence": [
+        {
+          "start": "0x00454a8",
+          "end": "0x00454cc",
+          "size": 36,
+          "sha256": "82d799215dd9c93301b995b5169a1f454dad656879e61b440abe7e83c98a976e",
+          "md5": "054e2c9c642d85b2f39019b7182e58e3",
+          "loaded_image": "main_14400",
+          "vram_start": "0x80072468",
+          "vram_end": "0x8007248c",
+          "words": [
+            "ROM 000454a8 RAM 80072468 3c0200e8 lui         $v0, 0xE8",
+            "ROM 000454ac RAM 8007246c 2442be70 addiu       $v0, $v0, -0x4190",
+            "ROM 000454b0 RAM 80072470 0801c921 j           func_80072484",
+            "ROM 000454b4 RAM 80072474 00822021 addu        $a0, $a0, $v0",
+            "ROM 000454b8 RAM 80072478 3c0200e5 lui         $v0, 0xE5",
+            "ROM 000454bc RAM 8007247c 24423db0 addiu       $v0, $v0, 0x3DB0",
+            "ROM 000454c0 RAM 80072480 00822021 addu        $a0, $a0, $v0",
+            "ROM 000454c4 RAM 80072484 03e00008 jr          $ra",
+            "ROM 000454c8 RAM 80072488 0080102d daddu       $v0, $a0, $zero"
+          ]
+        }
+      ]
+    }
+  ],
+  "archive_consumer": {
+    "sources": [
+      "src/units/main_14400/func_8008E264.c:16-26",
+      "src/units/main_14400/func_8008E354.c:5-12"
+    ],
+    "trace": "Archive base 0x1A56E60 reaches PI reader for count and buffered ROM reader for count*8+8 bytes. Parser requires EFAT tag. Directory entry lengths independently bound FORM records; they do not identify every nested chunk payload."
+  }
+}

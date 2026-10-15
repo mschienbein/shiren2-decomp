@@ -1,4 +1,5 @@
 #include "common.h"
+#include "collection_iterator.h"
 
 typedef signed char s8;
 typedef unsigned char u8;
@@ -27,21 +28,13 @@ typedef struct {
     Sub80114A50 sub;
 } Item80114A50;
 
-typedef struct {
-    s32 index;
-    void *list;
-    s32 reverse;
-    void *current; /* +0xC, written by func_800CEBA0 and read by func_800CEC68. */
-} Iter80114A50;
 
+/* Shared current is at +0xC, written by func_800CEBA0 and read by func_800CEC68. */
 extern u16 D_8015775C[];
 extern u8 D_80157788[];
 u8 func_800AE98C(Item80114A50 *self);
 s32 func_800AC584(u16 base);
 void *func_8011422C(Item80114A50 *self);
-Iter80114A50 *func_800CEB20(Iter80114A50 *it, void *list);
-s32 func_800CEBA0(Iter80114A50 *it);
-void *func_800CEC68(Iter80114A50 *it);
 s32 func_800AEC2C(void *item);
 
 u32 func_80114A50(Item80114A50 *self) {
@@ -63,7 +56,7 @@ u32 func_80114A50(Item80114A50 *self) {
         }
         return 0;
     } else {
-        Iter80114A50 it;
+        CollectionIterator it;
 
         func_800CEB20(&it, func_8011422C(self));
         while (func_800CEBA0(&it)) {

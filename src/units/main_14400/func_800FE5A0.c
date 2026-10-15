@@ -1,22 +1,20 @@
 #include "common.h"
+#include "collection_iterator.h"
+#include "item_records.h"
 typedef unsigned char u8;
 typedef struct { u32 field_0:22; u32 special:1; u32 field_23:9; } Flags;
 typedef struct { u8 field_0[0x98]; short field_98,field_9A; void *(*field_9C)(void *); } VTable;
 typedef struct { u8 field_0[0x1E]; u8 field_1E,field_1F; Flags field_20; VTable *field_24; } Object;
-typedef struct { u8 field_0[0x10]; short field_10,field_12; s32 (*field_14)(void *); u8 field_18[0x20]; short field_38,field_3A; s32 (*field_3C)(void *,s32 *); } ItemVTable;
-typedef struct { u8 field_0,field_1,field_2,field_3; s32 field_4; ItemVTable *field_8; } Item;
+typedef struct { ItemMessage base; s32 words[7]; } Message;
 extern s32 func_800F069C(Object *),func_80049CB4(s32,...);
-extern char *func_800A3B20(void *),*func_800AE674(void *);
+extern char *func_800A3B20(void *);
 extern s32 func_800E0F40(Object *);
 extern void func_80049AE8(s32,...),func_800497F0(s32,...),func_800E3678(Object *,Object *);
-/* Iterator constructor: returns its receiver; the 16-byte iterator storage stays opaque. */
-extern void *func_800CEAF0(void *iterator,void *collection,s32 mode);
-extern s32 func_800CEBA0(s32 *);
-extern Item *func_800CEC68(s32 *);
+/* The real iterator constructor returns its complete shared record. */
 static inline s32 is_special(const Flags *flags) { return flags->special; }
 s32 func_800FE5A0(Object *arg,Object *other) {
-    s32 message[8];
-    s32 iterator[4];
+    Message message;
+    CollectionIterator iterator;
     Flags flags;
     s32 rejected=0;
     if(!other || !(other->field_1E&0xC) || !other->field_24->field_9C((char *)other+other->field_24->field_98) || !func_800F069C(arg)) rejected=1;
@@ -36,20 +34,20 @@ s32 func_800FE5A0(Object *arg,Object *other) {
         s32 applied=0;
         {
             void *source=other->field_24->field_9C((char *)other+other->field_24->field_98);
-            message[0]=0x19;
-            message[6]=1;
-            func_800CEAF0(iterator,source,0);
+            message.base.kind=0x19;
+            message.words[5]=1;
+            func_800CEAF0(&iterator,source,0);
         }
         for(;;) {
             Item *item;
             s32 eligible;
-            if(!func_800CEBA0(iterator)) break;
-            item=func_800CEC68(iterator);
+            if(!func_800CEBA0(&iterator)) break;
+            item=func_800CEC68(&iterator);
             eligible=0;
-            if(!item->field_8->field_14((char *)item+item->field_8->field_10)
-                && ((u8)func_800E0F40(arg)==3 || (item->field_2&4))
-                && ((u8)func_800E0F40(arg)!=1 || item->field_0==4)) {
-                if(item->field_8->field_3C((char *)item+item->field_8->field_38,message)) eligible=1;
+            if(!item->field08->test14((char *)item+item->field08->delta10)
+                && ((u8)func_800E0F40(arg)==3 || (item->flags02&4))
+                && ((u8)func_800E0F40(arg)!=1 || item->field00==4)) {
+                if(item->field08->handle3C((char *)item+item->field08->delta38,&message.base)) eligible=1;
             }
             if(eligible) {
                 if(!applied) {

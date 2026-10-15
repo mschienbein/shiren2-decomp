@@ -18,6 +18,7 @@ from types import MappingProxyType
 from typing import Any
 
 from certification import build_graph, file_inventory, image_evidence, json_digest, linked_image_records, read_json, runtime_fingerprint, sha256, tool_profile
+from certification import validated_process_runtime
 from evidence import COMPILED_KINDS, COMPILED_SUFFIXES
 from images import ImageInventory, ImageRecord, require_cpu_range
 from rom import CANONICAL_ROM, EXPECTED_SHA256, PROJECT, attest
@@ -28,8 +29,8 @@ FunctionKey = tuple[str, str]
 _IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
 # A jump-table target at a catalogued function start is emitted as `jlabel func_X`.
 _LABEL = re.compile(r"^\s*(glabel|jlabel(?=\s+[A-Za-z_])|endlabel)\s+(\S+)\s*$", re.MULTILINE)
-# Jump-table case targets inside a function (rodata subsegments make them global).
-_CASE_LABEL = re.compile(r"\s*jlabel\s+\.L[0-9A-F]{8}\s*")
+# Jump-table case targets inside a function, optionally ROM-qualified for overlays.
+_CASE_LABEL = re.compile(r"\s*jlabel\s+\.L[0-9A-F]{8}(?:_[0-9A-F]{1,8})?\s*")
 _ALIAS = re.compile(r"^\s*alabel\s+([A-Za-z_][A-Za-z0-9_]*)\s*$", re.MULTILINE)
 _WORD = re.compile(r"^\s*/\*\s+([0-9A-Fa-f]+)\s+([0-9A-Fa-f]+)\s+([0-9A-Fa-f]{8})\s+\*/\s+(.+)$")
 
@@ -156,7 +157,8 @@ def _check_baseline(baseline: BaselineIdentity) -> None:
         raise ValueError("Original reference ROM changed")
     if _json(tool_profile(PROJECT, baseline.directory / "source")) != baseline.profile_json:
         raise ValueError("Frozen tool/profile identity changed")
-    if _json(runtime_fingerprint()) != baseline.runtime_json:
+    runtime = validated_process_runtime(baseline.directory, json.loads(baseline.runtime_json))
+    if _json(runtime_fingerprint()) != _json(runtime):
         raise ValueError("Frozen Python/package runtime changed")
 
 
@@ -243,6 +245,79 @@ def _function_reference(
     )
 
 
+def enumerate_build_functions(directory: Path, original: bytes,
+                              graph: dict[str, dict[str, str]], inventory: ImageInventory,
+                              matches: list[dict[str, Any]], generated: dict[str, str],
+                              profile: dict[str, Any]) -> Mapping[FunctionKey, FunctionReference]:
+    """Derive this build's original function boundaries; never assert acceptance."""
+    attest(original)
+    matched = {(match.get("image_id", "resident"), match["symbol"]): match for match in matches}
+    sources: list[tuple[str, str, str, str, dict[str, Any] | None]] = []
+    for object_path, item in graph.items():
+        if item["source_kind"] == "asm":
+            if item["image_id"] not in inventory.images:
+                raise ValueError("Frozen assembly lacks a declared original image")
+            source = item["input"]
+            if not source.startswith("generated/asm/") or not source.endswith(".s"):
+                raise ValueError("Assembly graph input is outside frozen generated assembly")
+            text = _regular_path(directory, source).read_text(encoding="utf-8")
+            if re.search(r"^\s*(?:\.text\s*$|\.section\s+\.text\b)", text, re.MULTILINE):
+                unit = PurePosixPath(source).relative_to("generated/asm").with_suffix("").as_posix()
+                sources.append((source, item["image_id"], object_path, unit, None))
+    for key, match in matched.items():
+        owners = [(name, item) for name, item in graph.items() if item["source_kind"] in COMPILED_KINDS and (item["image_id"], item["source"]) == (key[0], match["source"])]
+        if len(owners) != 1:
+            raise ValueError("Accepted function lacks a unique frozen C/C++ graph source")
+        unit = PurePosixPath(match["source"]).relative_to("src").with_suffix("").as_posix()
+        source = f"generated/asm/matchings/{unit}/{match['symbol']}.s"
+        sources.append((source, key[0], owners[0][0], unit, match))
+    functions: dict[FunctionKey, FunctionReference] = {}
+    for source, image_id, object_path, unit, accepted in sorted(sources, key=lambda item: item[0]):
+        name = PurePosixPath(source).relative_to("generated").as_posix()
+        if name not in generated:
+            raise ValueError(f"Frozen assembly is absent from required generated inventory: {source}")
+        source_path = _regular_path(directory, source)
+        if sha256(source_path) != generated[name]:
+            raise ValueError(f"Stale frozen assembly reference: {source}")
+        parsed = _parse_functions(source_path.read_text(encoding="utf-8"))
+        if accepted is not None and [entry[0] for entry in parsed] != [accepted["symbol"]]:
+            raise ValueError("Accepted matching reference contains ambiguous function labels")
+        for symbol, assembly, words, handwritten in parsed:
+            function = _function_reference(image_id, symbol, assembly, words, handwritten, source, generated[name], object_path, unit, accepted, profile, inventory, original)
+            if function.key in functions:
+                raise ValueError(f"Duplicate image/function identity: {function.key}")
+            functions[function.key] = function
+    for image_id in inventory.images:
+        end = -1
+        labels: set[str] = set()
+        for function in sorted((item for item in functions.values() if item.image_id == image_id), key=lambda item: item.rom_start):
+            current = {function.symbol, *function.internal_aliases}
+            if current & labels:
+                raise ValueError(f"Duplicate or ambiguous image-qualified alias: {image_id}/{sorted(current & labels)}")
+            labels.update(current)
+            if function.rom_start < end:
+                raise ValueError(f"Overlapping function intervals in original image: {image_id}")
+            end = function.rom_start + function.size
+    addresses: dict[int, list[FunctionKey]] = {}
+    for key, function in functions.items():
+        addresses.setdefault(function.vram_start, []).append(key)
+    callers: dict[FunctionKey, set[FunctionKey]] = {key: set() for key in functions}
+    for key, function in list(functions.items()):
+        resolved: list[DirectCall] = []
+        for call in function.direct_calls:
+            # A same-VRAM overlay runs only while loaded, so its own image owns a shared slot
+            # address; resident/main callers into the slot keep every image's candidate.
+            candidates = addresses.get(call.target_vram, [])
+            targets = tuple(sorted([target for target in candidates if target[0] == key[0]] or candidates))
+            resolved.append(replace(call, possible_targets=targets))
+            for target in targets:
+                callers[target].add(key)
+        functions[key] = replace(function, direct_calls=tuple(resolved))
+    for key in functions:
+        functions[key] = replace(functions[key], callers=tuple(sorted(callers[key])))
+    return MappingProxyType(dict(sorted(functions.items())))
+
+
 def enumerate_functions(receipt_path: Path | None = None, reference: Path = CANONICAL_ROM) -> FunctionCatalogue:
     """Attest one frozen baseline, then enumerate image-qualified CPU references.
 
@@ -272,69 +347,10 @@ def enumerate_functions(receipt_path: Path | None = None, reference: Path = CANO
         receipt["artifacts"]["shiren2.ld"], inventory_report["config_sha256"],
     )
     _check_baseline(baseline)
-    matched = {(match.get("image_id", "resident"), match["symbol"]): match for match in receipt["c_matches"]}
-    sources: list[tuple[str, str, str, str, dict[str, Any] | None]] = []
-    for object_path, item in graph.items():
-        if item["source_kind"] == "asm":
-            if item["image_id"] not in inventory.images:
-                raise ValueError("Frozen assembly lacks a declared original image")
-            source = item["input"]
-            if not source.startswith("generated/asm/") or not source.endswith(".s"):
-                raise ValueError("Assembly graph input is outside frozen generated assembly")
-            text = _regular_path(directory, source).read_text(encoding="utf-8")
-            if re.search(r"^\s*(?:\.text\s*$|\.section\s+\.text\b)", text, re.MULTILINE):
-                unit = PurePosixPath(source).relative_to("generated/asm").with_suffix("").as_posix()
-                sources.append((source, item["image_id"], object_path, unit, None))
-    for key, match in matched.items():
-        owners = [(name, item) for name, item in graph.items() if item["source_kind"] in COMPILED_KINDS and (item["image_id"], item["source"]) == (key[0], match["source"])]
-        if len(owners) != 1:
-            raise ValueError("Accepted function lacks a unique frozen C/C++ graph source")
-        unit = PurePosixPath(match["source"]).relative_to("src").with_suffix("").as_posix()
-        source = f"generated/asm/matchings/{unit}/{match['symbol']}.s"
-        sources.append((source, key[0], owners[0][0], unit, match))
-    functions: dict[FunctionKey, FunctionReference] = {}
-    for source, image_id, object_path, unit, accepted in sorted(sources, key=lambda item: item[0]):
-        name = PurePosixPath(source).relative_to("generated").as_posix()
-        if name not in receipt["generated"]:
-            raise ValueError(f"Frozen assembly is absent from required generated inventory: {source}")
-        source_path = _regular_path(directory, source)
-        if sha256(source_path) != receipt["generated"][name]:
-            raise ValueError(f"Stale frozen assembly reference: {source}")
-        parsed = _parse_functions(source_path.read_text(encoding="utf-8"))
-        if accepted is not None and [entry[0] for entry in parsed] != [accepted["symbol"]]:
-            raise ValueError("Accepted matching reference contains ambiguous function labels")
-        for symbol, assembly, words, handwritten in parsed:
-            function = _function_reference(image_id, symbol, assembly, words, handwritten, source, receipt["generated"][name], object_path, unit, accepted, receipt["profile"], inventory, original)
-            if function.key in functions:
-                raise ValueError(f"Duplicate image/function identity: {function.key}")
-            functions[function.key] = function
-    for image_id in inventory.images:
-        end = -1
-        labels: set[str] = set()
-        for function in sorted((item for item in functions.values() if item.image_id == image_id), key=lambda item: item.rom_start):
-            current = {function.symbol, *function.internal_aliases}
-            if current & labels:
-                raise ValueError(f"Duplicate or ambiguous image-qualified alias: {image_id}/{sorted(current & labels)}")
-            labels.update(current)
-            if function.rom_start < end:
-                raise ValueError(f"Overlapping function intervals in original image: {image_id}")
-            end = function.rom_start + function.size
-    addresses: dict[int, list[FunctionKey]] = {}
-    for key, function in functions.items():
-        addresses.setdefault(function.vram_start, []).append(key)
-    callers: dict[FunctionKey, set[FunctionKey]] = {key: set() for key in functions}
-    for key, function in list(functions.items()):
-        resolved: list[DirectCall] = []
-        for call in function.direct_calls:
-            targets = tuple(sorted(addresses.get(call.target_vram, [])))
-            resolved.append(replace(call, possible_targets=targets))
-            for target in targets:
-                callers[target].add(key)
-        functions[key] = replace(function, direct_calls=tuple(resolved))
-    for key in functions:
-        functions[key] = replace(functions[key], callers=tuple(sorted(callers[key])))
+    functions = enumerate_build_functions(directory, original, graph, inventory,
+                                          receipt["c_matches"], receipt["generated"], receipt["profile"])
     _check_baseline(baseline)
-    return FunctionCatalogue(baseline, inventory, MappingProxyType(dict(sorted(functions.items()))))
+    return FunctionCatalogue(baseline, inventory, functions)
 
 
 def _packet_destination(destination: Path, *, exclusive: bool) -> Path:

@@ -77,6 +77,32 @@ class WorkspaceTests(unittest.TestCase):
         self.assertEqual(before, input_manifest(self.root))
         self.assertEqual(len(before["files"]), len(workspace.REQUIRED_FILES) + 5)
 
+    def test_only_reviewed_handwritten_document_subtree_is_frozen(self) -> None:
+        relative = "docs/evidence/handwritten/review.json"
+        self.write(relative, '{"review": "bound"}\n')
+        self.write("docs/evidence/unrelated.json", "outside proof allowlist")
+        destination = self.root / "scratch/proof-run/source"
+        manifest = create_snapshot(self.root, destination)
+        self.assertEqual((destination / relative).read_bytes(), (self.root / relative).read_bytes())
+        self.assertNotIn("docs/evidence/unrelated.json", manifest["files"])
+        (destination / relative).write_bytes(b"forged")
+        with self.assertRaises(ValueError):
+            verify_manifest(destination, manifest)
+        with self.assertRaises(ValueError):
+            create_snapshot(self.root, self.root / "docs/evidence/handwritten/nested")
+
+    def test_editable_asset_sources_are_frozen_and_tampering_is_rejected(self) -> None:
+        asset = self.write("assets/tail/yay0/00240c20.bin", "decoded-source")
+        destination = self.root / "scratch/asset-run/source"
+        manifest = create_snapshot(self.root, destination)
+        self.assertEqual((destination / asset.relative_to(self.root)).read_bytes(), b"decoded-source")
+        asset.write_bytes(b"changed-input")
+        with self.assertRaises(ValueError):
+            verify_manifest(self.root, manifest)
+        (destination / asset.relative_to(self.root)).write_bytes(b"changed-snapshot")
+        with self.assertRaises(ValueError):
+            verify_manifest(destination, manifest)
+
     def test_snapshot_is_exclusive_and_copies_verified_bytes(self) -> None:
         source = self.root / "tools/nested/build.py"
         source.chmod(0o755)

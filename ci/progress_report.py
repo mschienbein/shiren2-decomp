@@ -23,7 +23,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOGUES = ROOT / "docs/progress-catalogues"
-CATEGORY_NAMES = {"main_14400": "Main game", "resident": "Resident (boot + libultra)"}
+CATEGORY_NAMES = {"main_14400": "Main game", "resident": "Resident (boot + libultra)",
+                  "overlay_1339f0": "Overlay 1339F0", "overlay_136dc0": "Overlay 136DC0"}
+sys.path.insert(0, str(ROOT / "tools"))
+from toolchain_library import UNITS as LIBRARY_UNITS  # noqa: E402  upstream libgcc: never matched-C credit
 
 
 def measures(functions: list[dict], matched: set[tuple[str, str]], units: int, complete_units: int) -> dict:
@@ -61,9 +64,10 @@ def main() -> int:
     catalogue = json.loads(catalogues[0].read_text())
     functions = catalogue["identity"]["functions"]
     rows = json.loads((ROOT / "config/matches.json").read_text())["functions"]
-    matched = {(row.get("image_id", "resident"), row["symbol"]) for row in rows}
+    library = {(row.get("image_id", "resident"), row["symbol"]) for row in rows if row["source"] in LIBRARY_UNITS}
+    matched = {(row.get("image_id", "resident"), row["symbol"]) for row in rows} - library
     known = {(f["image_id"], f["symbol"]) for f in functions}
-    unknown = sorted(matched - known)
+    unknown = sorted((matched | library) - known)
     if unknown:
         print(f"matches.json names functions outside the catalogue: {unknown[:10]}", file=sys.stderr)
         return 1
@@ -101,8 +105,11 @@ def main() -> int:
     for scope, m in [(c["name"], c["measures"]) for c in categories] + [("**Total**", report["measures"])]:
         lines.append(f"| {scope} | {m['matched_functions']:,} / {m['total_functions']:,} | "
                      f"{int(m['matched_code']):,} / {int(m['total_code']):,} | {m['matched_code_percent']:.4f}% |")
-    lines += ["", "Denominator: provisional mapped CPU catalogue (main + resident images). "
-              "Overlays and the complete-game denominator are not yet counted."]
+    library_bytes = sum(f["size"] for f in functions if (f["image_id"], f["symbol"]) in library)
+    lines += ["", f"Toolchain library (verbatim upstream libgcc source): {len(library)} functions, {library_bytes:,} bytes, "
+              "counted separately and never as matched C.",
+              "Denominator: provisional mapped CPU catalogue (main, resident and both overlays). "
+              "The complete-game denominator is not yet counted."]
     text = "\n".join(lines) + "\n"
     print(text)
     if args.summary:

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "collection_iterator.h"
 
 typedef unsigned char u8;
 typedef short s16;
@@ -35,23 +36,14 @@ typedef struct {
 
 /* Item-list iterator (func_800CEB20 stores the list at +4 and the direction at +8;
  * func_800CEBA0 stores the current entry at +0xC). */
-typedef struct {
-    s32 index;
-    void *list;
-    s32 reverse;
-    Item *current;
-} ListIter;
 
 s32 func_800E4454(Unit *unit);
-ListIter *func_800CEB20(ListIter *it, void *list);
-s32 func_800CEBA0(ListIter *it);
-Item *func_800CEC68(ListIter *it);
 
 /* First item in the unit's list with flag 4 that answers query 2, or null. */
 Item *func_800E8978(Unit *self)
 {
     Unit *unit = self;
-    ListIter it;
+    CollectionIterator it;
     Item *item;
     void *list;
     s32 found;

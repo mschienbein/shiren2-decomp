@@ -1,7 +1,7 @@
 #include "common.h"
 typedef struct { s32 field0, field4; } Pair;
 typedef struct { Pair field0; unsigned char pad8[0x20]; unsigned char field28, field29; } Object;
-typedef struct { s32 words[6]; } Vector;
+typedef struct { void *field_0; u32 field_4; u32 field_8; unsigned short field_C; unsigned short field_E; unsigned char field_10; } Vector;
 extern s32 func_80049CB4(s32, ...);
 extern void *func_800AC5B4(s32, s32);
 extern void *func_8010DE30(void *, s32);

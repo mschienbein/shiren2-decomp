@@ -47,14 +47,14 @@ typedef struct OSThread {
 } OSThread;
 
 extern OSThread *D_8003733C; /* __osActiveQueue */
-extern void D_8002A970(void); /* __osCleanupThread: return address of the thread entry */
+extern void func_8002A970(void); /* __osCleanupThread: return address of the thread entry */
 
 extern u32 func_8002AF70(void);     /* __osDisableInt */
 extern void func_8002AFE0(u32 mask); /* __osRestoreInt */
 
 void func_80027ED0(OSThread *t, OSId id, void (*entry)(void *), void *arg, void *sp, OSPri p)
 {
-    register u32 saveMask;
+    u32 saveMask;
     u32 mask;
 
     t->id = id;
@@ -68,7 +68,7 @@ void func_80027ED0(OSThread *t, OSId id, void (*entry)(void *), void *arg, void 
      * addresses stay readable through each register's `addr.low` pointer view. */
     t->context.a0.bits = (s64)(s32)arg;
     t->context.sp.bits = (s64)(s32)sp - 16;
-    t->context.ra.bits = (s64)(s32)D_8002A970;
+    t->context.ra.bits = (s64)(s32)func_8002A970;
 
     mask = 0x003FFF01;
     t->context.sr = (mask & 0xFF01) | 2;

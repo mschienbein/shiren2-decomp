@@ -1,9 +1,9 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
 
-typedef struct { u8 field_00; u8 fields_01[14]; signed char field_0F; } Item;
 typedef struct { u8 fields_00[0x74]; Item *field_74; } State;
 typedef union { char text[0x200]; u16 codes[0x100]; } Text;
 
@@ -18,8 +18,11 @@ extern char *func_80048480(u16 id);
 extern char *func_800AE7BC(Item *item);
 extern s32 func_800327C0(char *dst, const char *fmt, ...);
 
-static inline s32 item_category(Item *item) { return (u32)(item->field_00 - 3) < 2; }
+static inline s32 item_category(Item *item) { return (u32)(item->field00 - 3) < 2; }
 static inline Item *get_item(State *state) { return state->field_74; }
+/* This reader uses lb +0xF; the shared producer's count byte is unsigned.
+ * Keep the reader's signed accessor contract, as in func_800ECF38. */
+static inline signed char seal_count(Item *item) { return item->payload.seals.count0F; }
 
 /* Widget text slot (+0x5C): writes the text of row `index` into out. */
 void func_80096E28(State *state, s32 index, char *out)
@@ -35,7 +38,7 @@ void func_80096E28(State *state, s32 index, char *out)
     {
         Item *item = current;
 
-        if (!type && special && item->field_0F) {
+        if (!type && special && seal_count(item)) {
             switch (index) {
             case 1:
                 func_8010C60C(item, first.text, 0);
@@ -45,7 +48,7 @@ void func_80096E28(State *state, s32 index, char *out)
                 s32 count = (u8)func_8010BBF4(item, D_80148450);
 
                 if (count != (u8)func_8010BB60(item, D_80148450)) {
-                    func_800A2910(item->field_00, D_80148450[0], first.codes);
+                    func_800A2910(item->field00, D_80148450[0], first.codes);
                     func_800327C0(out, D_80151FE4, func_80048480(first.codes[1]));
                 }
                 break;
@@ -62,7 +65,7 @@ void func_80096E28(State *state, s32 index, char *out)
                     char *name;
                     unsigned char *code = codes + offset;
 
-                    func_800A2910(item->field_00, *code, first.codes);
+                    func_800A2910(item->field00, *code, first.codes);
                     name = func_80048480(first.codes[0]);
                     func_800327C0(out, D_80151FEC, name, func_80048480(first.codes[1]));
                 }

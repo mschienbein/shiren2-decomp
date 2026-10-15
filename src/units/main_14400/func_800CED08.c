@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef signed char s8;
@@ -29,11 +30,11 @@ typedef struct {
     Owner800CED08 *owner;
 } Obj800CED08;
 
-extern void func_800EC0F4(Owner800CED08 *obj, void *item);
+extern void func_800EC0F4(Owner800CED08 *obj, Item *item);
 extern void func_800CE718(Obj800CED08 *s, void *obj);
 
 /* Vtable slot 6 of D_80154438. */
-void func_800CED08(Obj800CED08 *self, void *item) {
+void func_800CED08(Obj800CED08 *self, Item *item) {
     Owner800CED08 *owner;
 
     if ((self->owner->flags1E >> 2) & 1) {

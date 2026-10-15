@@ -1,8 +1,5 @@
-#include "common.h"
-typedef struct { s32 x, y; } Pair;
-typedef struct { Pair first, second; } Rectangle;
-extern s32 func_800A251C(Pair *a, Pair *b);
-s32 func_800A2FFC(void *a, void *b) {
-    Rectangle *left = a, *right = b;
-    return func_800A251C(&left->first, &right->first) && func_800A251C(&left->second, &right->second);
+#include "map_rect.h"
+extern s32 func_800A251C(MapPos *a, MapPos *b);
+s32 func_800A2FFC(MapRect *left, MapRect *right) {
+    return func_800A251C(&left->min, &right->min) && func_800A251C(&left->max, &right->max);
 }

@@ -1,15 +1,13 @@
 #include "common.h"
+#include "map_position_iterator.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef short s16;
 typedef signed char s8;
 
-typedef struct { s32 x; s32 y; } Point800C0B40;
-typedef struct { Point800C0B40 min; Point800C0B40 max; } Rect800C0B40;
-typedef struct { Point800C0B40 cur; Point800C0B40 begin; Point800C0B40 end; } Iter800C0B40;
 typedef struct { u8 pad0[0x3DC]; s32 field_3DC; } Obj800C0B40;
-extern Rect800C0B40 D_801429C0;
+extern MapRect D_801429C0;
 extern u8 D_80147620[];
 extern u8 D_80156AC1;
 extern u8 D_80156AC3;
@@ -17,12 +15,10 @@ extern u16 D_80156AC4;
 extern u16 D_80156AC6;
 extern u8 D_8014344C;
 extern u8 D_80143392;
-void func_800B7948(Obj800C0B40 *obj, s32 arg1, Rect800C0B40 *rect);
 s32 func_800C5844(void *rng, u8 lo, u8 hi);
-Point800C0B40 *func_800A3610(Point800C0B40 *out, Iter800C0B40 *it);
-u32 func_800B1C6C(Point800C0B40 *pos);
-void func_800B1B58(Point800C0B40 *pos, u16 flags);
-void func_800B1BE0(Point800C0B40 *pos, s32 flags);
+u32 func_800B1C6C(MapPos *pos);
+void func_800B1B58(MapPos *pos, u16 flags);
+void func_800B1BE0(MapPos *pos, s32 flags);
 void func_800B17A4(void);
 
 static inline s32 u8_less(u8 a, u8 b) {
@@ -31,21 +27,21 @@ static inline s32 u8_less(u8 a, u8 b) {
 
 /* Whole-object accessors for D_801429C0 (wave-4 rule 4): direct member reads
    let CSE share one base register, the accessors keep one %hi/%lo per field. */
-static inline s32 rect_x0(Rect800C0B40 *r) { return r->min.x; }
-static inline s32 rect_y0(Rect800C0B40 *r) { return r->min.y; }
-static inline s32 rect_x1(Rect800C0B40 *r) { return r->max.x; }
-static inline s32 rect_y1(Rect800C0B40 *r) { return r->max.y; }
+static inline s32 rect_x0(MapRect *r) { return r->min.x; }
+static inline s32 rect_y0(MapRect *r) { return r->min.y; }
+static inline s32 rect_x1(MapRect *r) { return r->max.x; }
+static inline s32 rect_y1(MapRect *r) { return r->max.y; }
 
-static inline s32 iter_valid(Iter800C0B40 *it) {
+static inline s32 iter_valid(MapPositionIterator *it) {
     return it->cur.x <= it->end.x;
 }
 
 void func_800C0B40(Obj800C0B40 *obj) {
-    Rect800C0B40 rect;
-    Rect800C0B40 *r;
-    Iter800C0B40 it;
-    Point800C0B40 pos;
-    Iter800C0B40 fill;
+    MapRect rect;
+    MapRect *r;
+    MapPositionIterator it;
+    MapPos pos;
+    MapPositionIterator fill;
     u8 count;
     u8 room;
     u8 attempt;
@@ -79,8 +75,8 @@ void func_800C0B40(Obj800C0B40 *obj) {
                 continue;
             }
             blocked = 0;
-            it.begin = rect.min;
-            it.cur = it.begin;
+            it.start = rect.min;
+            it.cur = it.start;
             it.end = rect.max;
             while (iter_valid(&it)) {
                 func_800A3610(&pos, &it);
@@ -96,8 +92,8 @@ void func_800C0B40(Obj800C0B40 *obj) {
             rect.min.x++;
             rect.max.y--;
             rect.max.x--;
-            fill.begin = rect.min;
-            fill.cur = fill.begin;
+            fill.start = rect.min;
+            fill.cur = fill.start;
             fill.end = rect.max;
             while (iter_valid(&fill)) {
                 func_800A3610(&pos, &fill);

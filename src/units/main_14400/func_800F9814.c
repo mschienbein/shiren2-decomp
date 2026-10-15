@@ -1,4 +1,4 @@
-#include "common.h"
+#include "map_unit_iterator.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef short s16;
@@ -16,9 +16,8 @@ struct Object {
     Coord goal; u8 pad6C[6]; u8 flags72; u8 pad73[0x19];
     List *items; u8 pad90[0xA]; u16 flags9A;
 };
-typedef struct { s32 index; Object *source; Coord position; s32 bounds[4]; } Iterator;
 typedef union {
-    Iterator scan;
+    MapUnitIterator scan;
     struct { Coord target, closest; } path;
 } Work;
 typedef struct { u8 kind; } Tile;
@@ -29,9 +28,6 @@ extern u8 func_800A6420(Object *, Object *);
 extern void func_800F06E4(Object *);
 extern Dir *func_800A22B8(Dir *, Coord *, Coord *);
 extern void func_800A665C(Object *, u8 *);
-extern Iterator *func_800A915C(Iterator *, Object *);
-extern s32 func_800A9284(Iterator *, s32);
-extern Object *func_800A942C(Iterator *);
 extern s32 func_800A4520(void *, Object *);
 extern u32 func_800B1C6C(Coord *);
 extern s32 func_800B4FF0(void *, s32);
@@ -95,7 +91,7 @@ s32 func_800F9814(void *self)
         }
         ((Object *)self)->target = 0;
         {
-            Iterator *iterator;
+            MapUnitIterator *iterator;
             func_800A915C(&work.scan, self);
             iterator = &work.scan;
             while (func_800A9284(iterator, 0x7C)) {

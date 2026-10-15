@@ -1,20 +1,16 @@
 #include "common.h"
-typedef struct { s32 unk0, unk4; } Pair;
-typedef struct { Pair first, last; } Rect;
-typedef struct { s32 unk0[3]; s32 unkC, unk10; } Iterator;
-extern Rect D_801429C0;
-extern s32 func_800A24DC(Pair *, Rect *);
-extern u32 func_800B1C6C(Pair *);
-extern void func_800B1AE0(Pair *, unsigned short);
-extern void func_800C25F4(Iterator *, Rect *, s32, s32);
-extern Pair *func_800C2758(Pair *, Iterator *);
-static inline void init_iterator(Iterator *iterator) { iterator->unk10 = 0; iterator->unkC = 0; }
-static inline s32 iterator_valid(Iterator *iterator) { return iterator->unk10 < iterator->unkC; }
-static inline unsigned short is_active(Pair *position) { return (func_800B1C6C(position) & 0xE100) != 0; }
+#include "map_line_iterator.h"
+extern MapRect D_801429C0;
+extern s32 func_800A24DC(MapPos *, MapRect *);
+extern u32 func_800B1C6C(MapPos *);
+extern void func_800B1AE0(MapPos *, unsigned short);
+static inline void init_iterator(MapLineIterator *iterator) { iterator->index = 0; iterator->length = 0; }
+static inline s32 iterator_valid(MapLineIterator *iterator) { return iterator->index < iterator->length; }
+static inline unsigned short is_active(MapPos *position) { return (func_800B1C6C(position) & 0xE100) != 0; }
 /* The owner is supplied by the room-update contract but is unused by this edge operation. */
-void func_800BC69C(void *owner, Rect *rect, s32 arg2) {
-    Iterator iterator;
-    Pair position;
+void func_800BC69C(void *owner, MapRect *rect, s32 arg2) {
+    MapLineIterator iterator;
+    MapPos position;
     s32 flags = 0x4000;
     s32 direction;
     if (arg2) flags = 0x4020;

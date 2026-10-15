@@ -11,7 +11,7 @@ typedef struct { s32 field_0; u8 field_4[8]; Kind field_C; u8 field_D[3]; Positi
  * (decided message-handler contract); the result is not needed here. */
 typedef struct { u8 field_0[0x38]; short field_38,field_3A; s32 (*field_3C)(void *receiver,void *event); } ItemVTable;
 typedef struct { u8 field_0,field_1,field_2,field_3; s32 field_4; ItemVTable *field_8; } Item;
-typedef struct { u8 field_0[0xC]; short field_C; u8 field_E[0xA]; } Damage;
+typedef struct { void *field_0; u32 field_4; u32 field_8; short field_C; u16 field_E; u8 field_10; } Damage;
 typedef struct { void *field_0; s32 field_4; s8 field_8; } Request;
 typedef struct { s8 x; s8 y; } Offset;
 extern const Offset D_801428F0[9];

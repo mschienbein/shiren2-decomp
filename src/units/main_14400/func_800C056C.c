@@ -1,9 +1,8 @@
 #include "common.h"
+#include "map_rect.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
-typedef struct { s32 x, y; } Pair;
-typedef struct { Pair min, max; } Rect;
-typedef struct { Rect rect; u8 tag[4]; } Room;
+typedef struct { MapRect rect; u8 tag[4]; } Room;
 typedef struct {
     u8 pad_000[0x3DC]; s32 count;
     u8 pad_3E0[0x24]; Room rooms[17];
@@ -11,9 +10,8 @@ typedef struct {
 } Layout;
 extern u8 D_80147620[];
 extern s32 func_800C5844(void *rng, u8 base, u8 top);
-extern Rect *func_800A324C(Rect *out, Rect *a, Rect *b);
-extern void func_800A3180(Rect *rect);
-extern s32 func_800C00B4(u8 *self, void *rect);
+extern void func_800A3180(MapRect *bounds);
+extern s32 func_800C00B4(void *object, const MapRect *bounds);
 
 /* ODD_C: field/predicate accessors preserve the original loop and copy scheduling. */
 static inline s32 room_count(Layout *self) {
@@ -25,19 +23,17 @@ static inline s32 edge_kind_valid(u16 kind) {
 }
 
 
-static inline s32 pair_x(Pair *pair) {
+static inline s32 pair_x(MapPos *pair) {
     return pair->x;
 }
 
-static inline Rect *room_bounds(Layout *self, s32 index) {
-    /* local-arithmetic-qualification: direct rooms[index] folds 0x404 into
-       the index, and pointer arithmetic always places the object base first;
-       the original adds the room offset to the object base, then adds the
-       rooms[] offset as a separate step (its address chain is not
-       sched-launched). The result denotes one complete room in rooms[17]. */
+static inline MapRect *room_bounds(Layout *self, s32 index) {
+    /* Preserve the index-stride, object-base, then +0x404 address chain.
+       The result must designate an existing Room in self->rooms; the
+       integer address mapping remains a target-specific precondition. */
     s32 address = index * (s32)sizeof(Room) + (s32)self;
     address += 0x404;
-    return (Rect *)address;
+    return &((Room *)address)->rect;
 }
 
 
@@ -74,7 +70,7 @@ void func_800C056C(Layout *self) {
     }
     extra = 3;
     for (tries = 0; ; tries++) {
-        Rect bounds, test;
+        MapRect bounds, test;
         s32 a, b;
         if (tries >= 10) break;
         a = (u8)func_800C5844(D_80147620, 0, self->count - 2);
@@ -83,14 +79,14 @@ void func_800C056C(Layout *self) {
         func_800A324C(&bounds, room_bounds(self, a), room_bounds(self, b));
         func_800A3180(&bounds);
         {
-            Pair *min = &bounds.min;
-            Pair *max = &bounds.max;
+            MapPos *min = &bounds.min;
+            MapPos *max = &bounds.max;
             test.min.x = bounds.min.x;
             test.min.y = min->y;
             test.max.x = pair_x(max);
             test.max.y = max->y;
         }
-        if (func_800C00B4((u8 *)self, &test)) continue;
+        if (func_800C00B4(self, &test)) continue;
         self->edges[b][a] = 2;
         if (--extra <= 0) break;
     }

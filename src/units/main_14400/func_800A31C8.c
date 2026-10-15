@@ -1,4 +1,2 @@
-#include "common.h"
-typedef struct { s32 x0, y0, x1, y1; } Rect;
-typedef struct { s32 x, y; } Point;
-s32 func_800A31C8(Rect *a, Point *b) { return b->y >= a->y0 && b->y <= a->y1 && b->x >= a->x0 && b->x <= a->x1; }
+#include "map_rect.h"
+s32 func_800A31C8(MapRect *a, MapPos *b) { return b->y >= a->min.y && b->y <= a->max.y && b->x >= a->min.x && b->x <= a->max.x; }

@@ -1,4 +1,4 @@
-#include "common.h"
+#include "map_unit_iterator.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -12,8 +12,7 @@ typedef struct {
 } UnitVTable;
 
 typedef struct {
-    s32 x;
-    s32 y;
+    MapPos position;
     u8 dir;             /* 0x08 */
     u8 pad09[0x13];
     u16 flags;          /* 0x1C */
@@ -53,20 +52,12 @@ typedef struct {
     ItemVTable *vtable; /* 0x08 */
 } Item;
 
-typedef struct { s32 w[4]; } Area;
-typedef struct { s32 w[8]; } Iter;
-
 extern s32 D_80140160[];
 extern Unit *D_801476B8;
 s32 func_800A99D0(void);
 void func_80094DA0(void *arg0);
 void func_80114268(void *obj, s32 amount);
 void func_800D3650(void *item);
-/* Returns its rectangle by value through the hidden result pointer. */
-Area func_800B3080(void *pos);
-Iter *func_800A9204(Iter *it, Area *area, void *pos);
-s32 func_800A9284(Iter *it, s32 mask);
-Unit *func_800A942C(Iter *it);
 u16 func_800E08B0(void *unit);
 s32 func_800A08D8(s32 mode, s32 key, s32 sel);
 
@@ -85,8 +76,8 @@ static inline s32 is_untouchable(Unit *unit)
 Item *func_80122DD0(void *self, Unit *user, Item *item)
 {
     s32 refused = 0;
-    Iter iter;
-    Area area;
+    MapUnitIterator iter;
+    MapRect area;
     Event event;
 
     if (item->kind != 1 || func_800A99D0()) {

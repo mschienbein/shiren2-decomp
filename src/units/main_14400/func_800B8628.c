@@ -1,11 +1,12 @@
 #include "common.h"
+#include "map_rect.h"
+#include "map_rect_presets.h"
 typedef unsigned char u8;
 typedef signed char s8;
-typedef struct { s32 x, y; } Point;
-typedef struct { Point first, second; } Rectangle;
 typedef struct { u8 state, walls, x, y; } Cell;
 /* Dimensions precede the 11-by-8 cell array; the parallel availability array
- * starts at +0x174 and ends immediately before the axis-edge pointers. */
+ * starts at +0x174 and ends immediately before the axis-edge pointers.
+ * This is a foreign object layout view, not a proof of allocation or lifetime. */
 typedef struct {
     u8 pad0[0x10];
     u8 rows, columns, wanted;
@@ -13,26 +14,28 @@ typedef struct {
     u8 pad173;
     s32 available[11][8];
     s8 *rowEdges, *columnEdges;
-    Rectangle rooms[16];
+    MapRect rooms[16]; /* Fixed storage at +0x2DC, ending at +0x3DC. */
     s32 count;
     u8 mode, top, left, bottom, right;
     u8 pad3E5[3];
     s32 hasLast, lastColumn, lastRow;
 } Object;
-extern Rectangle D_801474A0, D_80147510[];
+/* Foreign bounds view; backing allocation/lifetime remains qualified. The
+ * preset producer placement-constructs the declared six-entry record array. */
+extern MapRect D_801474A0;
+extern MapRectPresets D_80147510;
 extern u8 D_80147620[];
 extern u8 func_800C57CC(void *, s32);
 extern u8 func_800C57A0(void *);
 extern s32 func_800C587C(void *, u8);
-extern s32 func_800A32D8(Rectangle *, Rectangle *);
 /* ODD_C: copying and the first bounds comparison share the temporary's scope. */
-static inline s32 compare_bounds(Rectangle *out, Rectangle *source) {
-    out->first = source->first;
-    out->second = source->second;
+static inline s32 compare_bounds(MapRect *out, const MapRect *source) {
+    out->min = source->min;
+    out->max = source->max;
     return func_800A32D8(out, &D_801474A0);
 }
 void func_800B8628(Object *p, u8 mode) {
-    Rectangle first, second;
+    MapRect first, second;
     s32 row, column;
     s32 first_enabled, second_enabled;
     p->mode = mode;
@@ -63,18 +66,18 @@ void func_800B8628(Object *p, u8 mode) {
         if (sides & 8) p->right--;
     }
     {
-        Rectangle *source = &D_80147510[func_800C57CC(D_80147620, 5) & 0xFF];
-        first.first.x = source->first.x;
-        first.first.y = source->first.y;
-        first.second.x = source->second.x;
-        first.second.y = source->second.y;
+        MapRectPreset *source = &D_80147510.entries[func_800C57CC(D_80147620, 5) & 0xFF];
+        first.min.x = source->min_x;
+        first.min.y = source->min_y;
+        first.max.x = source->max_x;
+        first.max.y = source->max_y;
     }
     {
-        Rectangle *source = &D_80147510[2 + (func_800C57A0(D_80147620) & 3)];
-        second.first.x = source->first.x;
-        second.first.y = source->first.y;
-        second.second.x = source->second.x;
-        second.second.y = source->second.y;
+        MapRectPreset *source = &D_80147510.entries[2 + (func_800C57A0(D_80147620) & 3)];
+        second.min.x = source->min_x;
+        second.min.y = source->min_y;
+        second.max.x = source->max_x;
+        second.max.y = source->max_y;
     }
     first_enabled = 0;
     second_enabled = 0;
@@ -89,18 +92,18 @@ void func_800B8628(Object *p, u8 mode) {
         column = p->left;
         for (;;) {
             s32 limit = p->right;
-            Rectangle bounds, copy;
+            MapRect bounds, copy;
             if (column > limit) break;
             p->cells[row][column].state = 0x80;
             {
                 s32 x = p->columnEdges[column - 1], y = p->rowEdges[row - 1];
-                bounds.first.x = x;
-                bounds.first.y = y;
+                bounds.min.x = x;
+                bounds.min.y = y;
             }
             {
                 s32 x = p->columnEdges[column], y = p->rowEdges[row];
-                bounds.second.x = x;
-                bounds.second.y = y;
+                bounds.max.x = x;
+                bounds.max.y = y;
             }
             if (compare_bounds(&copy, &bounds)) p->available[row][column] = 0;
             if (first_enabled && func_800A32D8(&copy, &first)) p->available[row][column] = 0;

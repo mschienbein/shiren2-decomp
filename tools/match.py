@@ -7,6 +7,7 @@ the original address and compare its complete natural allocation with the ROM.
     uv run --frozen python tools/match.py func_800FCE80 cand.cpp      # C++: gxx281pm-gnu291-O2-unsigned
     uv run --frozen python tools/match.py func_800624F0 cand.c --all-profiles
     uv run --frozen python tools/match.py func_800624F0 --asm        # original disassembly
+    uv run --frozen python tools/match.py func_801E51C4_1370E4 cand.c  # overlay_136dc0, ROM-qualified name
 
 The candidate is compiled exactly like a canonical TU (same driver, flags,
 assembler and environment as `certification.object_commands`), with
@@ -18,6 +19,11 @@ The suffix selects the language: `.c` compiles with a C profile, `.cpp` with a C
 candidate is `gxx281pm-gnu291-O2-unsigned`). A C++ candidate must define and reference only
 extern "C" names (no g++ mangled symbols, vtables or typeinfo).
 
+The two same-VRAM overlays (`overlay_1339f0`, `overlay_136dc0`, both
+`gcc281pm-gnu291-O2-unsigned` by default) name every symbol `func_<VRAM>_<ROM>` /
+`D_<VRAM>_<ROM>`, so a target, its externs and the accepted build's symbol values stay
+unambiguous; `--image` disambiguates a plain name that occurs in several images.
+
 Gates checked here (the full-ROM build and `verify.py` remain the acceptance):
 - the preprocessed translation unit contains no inline assembly, and no
   participating project file uses `##` or escaping includes; a C++ TU also uses no
@@ -27,7 +33,13 @@ Gates checked here (the full-ROM build and `verify.py` remain the acceptance):
   functions, at their original offsets with their original sizes;
 - relocations are limited to R_MIPS_26/HI16/LO16 in text (R_MIPS_32 in data);
 - the linker-resolved `.text` equals the ROM over the object's whole text size,
-  which must fit before the next catalogued function (the natural slot);
+  which must fit before the next catalogued function (the natural slot). `.text`
+  is linked under the owning splat segment's SUBALIGN, exactly as the build links
+  it (main_14400: SUBALIGN(1), so a 16-aligned KMC object stays at its vram); a
+  unit whose vram that SUBALIGN would move is refused. An assembler that rounds
+  `.text` up to its alignment (KMC as 2.6: 16 bytes of zeros) must keep that
+  padding inside the slot: a whole original TU whose span ends aligned owns it,
+  a per-function unit whose padding would overrun the next function is refused;
 - other allocated sections (rodata/data/bss/COMMON) are reported with the
   original address inferred from HI16/LO16 pairs and compared when initialized.
   Initialized data is adoptable (`match-with-data`) when it lies inside a YAML
@@ -60,6 +72,7 @@ import struct
 import subprocess
 import os
 import sys
+import tempfile
 import time
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
@@ -71,8 +84,12 @@ from certification import CXX_FORBIDDEN_TOKEN, GXX_MANGLED, compiler_environment
 from evidence import COMPILED_SUFFIXES, compiled_kind
 from images import load_inventory
 from rom import CANONICAL_ROM, PROJECT
+import toolchain_library
+import generated_symbols
 
-DEFAULT_PROFILES = {"resident": "gcc272-kmc26-O2-signed", "main_14400": "gcc272-modern237-O2-unsigned"}
+# Overlays: OVL1 test compiles separate the main recipe from GCC 2.7.2, KMC, -O1 and the -asg variant.
+DEFAULT_PROFILES = {"resident": "gcc272-kmc26-O2-signed", "main_14400": "gcc272-modern237-O2-unsigned",
+                    "overlay_1339f0": "gcc281pm-gnu291-O2-unsigned", "overlay_136dc0": "gcc281pm-gnu291-O2-unsigned"}
 # `.cpp` candidates: C++ is calibrated for the main image only.
 CXX_DEFAULT_PROFILES = {"main_14400": "gxx281pm-gnu291-O2-unsigned"}
 R_MIPS_32, R_MIPS_26, R_MIPS_HI16, R_MIPS_LO16 = 2, 4, 5, 6
@@ -216,24 +233,33 @@ def _yaml_segment(rom: int) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     return owner, config.get("options", {})
 
 
-def segment_subalign(rom: int) -> int | None:
-    owner, _options = _yaml_segment(rom)
-    return owner.get("subalign") if owner else None
-
-
 def splat_subalign(segment: dict[str, Any], options: dict[str, Any]) -> int:
     """The SUBALIGN splat emits for a top-level segment's output sections (text, data and
     `.<segment>_bss`): its own `subalign`, else the global option (default 16)."""
     return segment.get("subalign", options.get("subalign", 16))
 
 
-def bss_link_rules(rom: int) -> tuple[str, int, bool]:
-    """(segment name, BSS SUBALIGN, bss_contains_common) of the splat segment holding text ROM `rom`.
-    Splat emits `.<segment>_bss (NOLOAD) : SUBALIGN(n)` with n = `splat_subalign`."""
+def segment_link_rules(rom: int) -> tuple[str, int, bool]:
+    """(segment name, SUBALIGN, bss_contains_common) of the splat segment holding text ROM `rom`.
+    Splat emits `.<segment> <vram> : SUBALIGN(n)` and `.<segment>_bss (NOLOAD) : SUBALIGN(n)`
+    with n = `splat_subalign`; it overrides every input section's own alignment."""
     owner, options = _yaml_segment(rom)
     if owner is None:
         raise ValueError(f"No splat code segment contains ROM 0x{rom:X}")
     return owner["name"], splat_subalign(owner, options), bool(owner.get("bss_contains_common", options.get("ld_bss_contains_common", False)))
+
+
+def padding_overrun(text: bytes, function_end: int, slot: int) -> int:
+    """Bytes of assembler section padding that run past the unit's natural slot.
+
+    An assembler that rounds `.text` up to its section alignment (KMC as 2.6: 16 bytes)
+    appends zeros after the last function. Linked under SUBALIGN(1) that tail still
+    occupies the image, so it must lie inside the slot; only a whole original TU (its
+    span ends on the alignment) owns such padding. Zero when the functions themselves
+    overrun the slot or the trailing bytes are not zero padding (ordinary overflow)."""
+    if function_end > slot or len(text) <= slot or any(text[function_end:]):
+        return 0
+    return len(text) - slot
 
 
 SUBSEGMENT = re.compile(r"^(?P<indent>\s*)- (?:\[0x(?P<list_start>[0-9A-Fa-f]+), (?P<list_kind>[.\w]+), (?P<list_name>[^\]]+)\]"
@@ -556,30 +582,39 @@ def original_asm(symbol: str, build: Path) -> str:
 
 # ----------------------------------------------------------- source policy
 
-def policy_violations(preprocessed: str, participating: list[Path], *, cxx: bool = False) -> list[str]:
-    """Inline assembly anywhere in the expanded TU (and, for C++, exception/RTTI constructs),
-    plus the canonical per-file source policy."""
+def policy_violations(preprocessed: str, participating: list[Path], *, cxx: bool = False,
+                      source_root: Path | None = None, source: Path | None = None,
+                      profile_id: str | None = None) -> list[str]:
+    """Ordinary policy, with only the exact upstream runtime dependency closure exempt."""
     problems = []
+    upstream = False
+    if source_root is not None and source is not None:
+        try:
+            upstream = toolchain_library.validate_expansion(source_root, source, profile_id, participating)
+        except ValueError as error:
+            problems.append(str(error))
     code = "\n".join(line for line in LITERAL.sub(" ", preprocessed).splitlines() if not line.startswith("#"))
-    for token in sorted(set(ASM_TOKEN.findall(code))):
-        problems.append(f"preprocessed translation unit contains '{token}'")
+    if not upstream:
+        for token in sorted(set(ASM_TOKEN.findall(code))):
+            problems.append(f"preprocessed translation unit contains '{token}'")
     if cxx:
         for token in sorted(set(CXX_FORBIDDEN_TOKEN.findall(code))):
             problems.append(f"preprocessed C++ translation unit contains exception/RTTI construct '{token}'")
     for path in participating:
-        problems.extend(source_file_violations(path, str(path)))
+        problems.extend(source_file_violations(path, str(path), source_root=source_root if upstream else None))
     return problems
 
 
-def cxx_object_problems(elf: Elf, text: Section) -> list[str]:
-    """C++ object policy: extern "C" names only, no exception/vague-linkage sections, and no
-    `.text` bytes or data symbols outside the function symbols (no raw blobs standing in for code)."""
+def cxx_object_problems(elf: Elf, text: Section, generated: dict[str, str] | None = None) -> list[str]:
+    """C++ policy, permitting only declared compiler-generated function names.
+    The complete function-set, placement and byte proofs are separate gates."""
     problems = []
     for section in elf.sections:
         if section.name in {".eh_frame", ".gcc_except_table"} or section.name.startswith(".gnu.linkonce."):
             problems.append(f"C++ section {section.name} (exception tables need -fno-exceptions; an out-of-line "
                             "inline function or vtable copy needs a non-inline key method or an inline definition before use)")
-    mangled = sorted({s.name for s in elf.symbols if s.bind in {1, 2} and s.name and GXX_MANGLED.search(s.name)})
+    mangled = sorted({s.name for s in elf.symbols if s.bind in {1, 2} and s.name and GXX_MANGLED.search(s.name)
+                      and s.name not in (generated or {})})
     if mangled:
         problems.append(f"C++-linkage symbols {mangled}: define and reference only extern \"C\" names")
     code = elf.contents(text)
@@ -626,6 +661,9 @@ class Result:
     relocations: dict[str, int] = field(default_factory=dict)
     data_sections: list[dict[str, Any]] = field(default_factory=list)
     bss_carve: dict[str, Any] | None = None
+    generated_functions: list[dict[str, Any]] = field(default_factory=list)
+    runtime_bindings: dict[str, Any] = field(default_factory=dict)
+    discarded_tables: list[dict[str, Any]] = field(default_factory=list)
     problems: list[str] = field(default_factory=list)
     out_dir: str = ""
     elapsed_seconds: float = 0.0
@@ -798,6 +836,16 @@ def check(targets: list[Target], source: Path, profile_id: str, out_dir: Path, *
     gcc, assembler = profile_toolchain(profile, profile_id)
     asflags = assigned["assembler_flags"]
     flags = [item for path in includes for item in ("-I", str(path.resolve()))] + assigned["compiler_flags"]
+    source_name = toolchain_library.source_name(source_root, source)
+    flags += toolchain_library.extra_flags(source_name)
+    if source_name in toolchain_library.UNITS:
+        if includes or diagnostic:
+            raise ValueError("Pinned upstream libgcc does not admit include/toolchain overrides")
+        toolchain_library.match_family({"source": source_name, "symbol": first.symbol, "image_id": first.image_id,
+                                       "rom_start": first.rom_start, "vram_start": first.vram_start, "size": first.size})
+        if len(targets) != 1:
+            raise ValueError("Each upstream libgcc archive member must remain a separate TU")
+        result.source["category"] = toolchain_library.CATEGORY
     (out_dir / "tmp").mkdir(exist_ok=True)
     environment = compiler_environment(out_dir, profile)
     if diagnostic:
@@ -819,12 +867,16 @@ def check(targets: list[Target], source: Path, profile_id: str, out_dir: Path, *
         return completed
 
     try:
+        identities = generated_symbols.load(source_root, rom)
+        target_rows = [asdict(target) for target in targets]
+        unit = generated_symbols.unit_for(identities, target_rows)
+        result.runtime_bindings = {name: identities["runtime_bindings"][name] for name in unit["runtime_names"]}
         preprocessed = run([*gcc, *flags, "-E", str(source)], "preprocess").stdout
         (out_dir / "candidate.i").write_text(preprocessed)
-        participating = sorted({Path(p).resolve() for p in LINEMARKER.findall(preprocessed)
-                                if not p.startswith("<") and Path(p).is_file()})
+        participating = toolchain_library.participating_files(preprocessed, out_dir)
         result.participating_files = [{"path": str(p), "sha256": _sha256(p)} for p in participating]
-        result.problems += policy_violations(preprocessed, participating, cxx=kind == "cpp")
+        result.problems += policy_violations(preprocessed, participating, cxx=kind == "cpp",
+                                             source_root=source_root, source=source, profile_id=profile_id)
         run([*gcc, *flags, "-S", str(source), "-o", "candidate.s"], "compile")
         run([assembler, *asflags, "-o", "candidate.o", "candidate.s"], "assemble")
 
@@ -834,7 +886,7 @@ def check(targets: list[Target], source: Path, profile_id: str, out_dir: Path, *
             raise ValueError("Object has no executable .text")
         result.text_bytes = text.size
         if kind == "cpp":
-            result.problems += cxx_object_problems(elf, text)
+            result.problems += cxx_object_problems(elf, text, unit["generated"])
             if result.problems:
                 result.status = "policy"  # a later unresolved mangled reference stays a policy result
         # KMC as 2.6 emits macro-generated `.rodata` (li.d constants) without SHF_ALLOC; it still links.
@@ -843,13 +895,13 @@ def check(targets: list[Target], source: Path, profile_id: str, out_dir: Path, *
         for section in allocated:
             if section.flags & SHF_EXECINSTR and section.index != text.index:
                 result.problems.append(f"extra executable section {section.name}")
-        functions = {s.name: s for s in elf.symbols if s.type == STT_FUNC or (s.shndx == text.index and s.type == 0 and s.bind == 1)}
-        if set(functions) != set(result.symbols):
-            result.problems.append(f"object defines functions {sorted(functions)}, expected exactly {result.symbols}")
-        for target in targets:
-            symbol = functions.get(target.symbol)
-            if symbol and (symbol.shndx != text.index or symbol.value != target.rom_start - unit_rom or symbol.size != target.size):
-                result.problems.append(f"{target.symbol}: object offset/size {symbol.value:#x}/{symbol.size} != original {target.rom_start - unit_rom:#x}/{target.size}")
+        functions = generated_symbols.emitted_functions(elf, text)
+        result.problems += generated_symbols.object_problems(elf, text, target_rows, unit, cxx=source.suffix == ".cpp")
+        try:
+            result.discarded_tables = generated_symbols.table_discards(source_root, elf, unit, rom)
+        except ValueError as error:
+            result.problems.append(str(error))
+        discarded = {record["section"] for record in result.discarded_tables}
         for section in [text, *allocated]:
             allowed = TEXT_RELOCATIONS if section.index == text.index else DATA_RELOCATIONS
             for _offset, kind, _symbol in elf.relocations(section):
@@ -869,12 +921,15 @@ def check(targets: list[Target], source: Path, profile_id: str, out_dir: Path, *
                     known.setdefault(alias, int(target, 16))
                 elif target in known:
                     known.setdefault(alias, known[target])
-        lines = ["SECTIONS {", f"  .text 0x{unit_vram:X} : {{ candidate.o(.text) }}"]
+        known.update(generated_symbols.runtime_addresses(identities, unit, known))
+        # Exactly the build's segment rule: the output section's SUBALIGN overrides the object's own
+        # `.text` alignment (KMC as 2.6 declares 16), so a unit stays at its vram under SUBALIGN(1).
+        segment_name, subalign, contains_common = segment_link_rules(unit_rom)
+        lines = ["SECTIONS {", f"  .text 0x{unit_vram:X} : SUBALIGN({subalign}) {{ candidate.o(.text) }}"]
         placed: dict[str, int] = {}
-        segment_name, bss_subalign, contains_common = bss_link_rules(unit_rom)
         bss = elf.section(".bss")
         bss = bss if bss is not None and bss.size else None
-        for k, section in enumerate(s for s in allocated if s.index != text.index and s is not bss):
+        for k, section in enumerate(s for s in allocated if s.index != text.index and s is not bss and s.name not in discarded):
             estimates = sorted(set(bases.get(section.index, [])))
             address = estimates[0] if len(estimates) == 1 else 0x90000000 + k * 0x100000
             placed[section.name] = address
@@ -898,7 +953,7 @@ def check(targets: list[Target], source: Path, profile_id: str, out_dir: Path, *
                 bss_start = min(known[s.name] for s in commons)
             # Exactly the build's C-unit BSS rule: `<obj>(.bss COMMON .scommon)` under the segment SUBALIGN.
             address = bss_start if bss_start is not None else 0x9F000000
-            lines.append(f"  .bss 0x{address:X} (NOLOAD) : SUBALIGN({bss_subalign}) {{ candidate.o(.bss COMMON .scommon) }}")
+            lines.append(f"  .bss 0x{address:X} (NOLOAD) : SUBALIGN({subalign}) {{ candidate.o(.bss COMMON .scommon) }}")
         lines += ["  /DISCARD/ : { *(*) }", "}"]
         unresolved = []
         for name in sorted({s.name for s in elf.symbols if s.shndx == SHN_UNDEF and s.name}):
@@ -910,9 +965,14 @@ def check(targets: list[Target], source: Path, profile_id: str, out_dir: Path, *
             raise ValueError(f"Symbols not defined by the accepted build: {unresolved}")
         (out_dir / "link.ld").write_text("\n".join(lines) + "\n")
         run([profile["tools"]["ld"]["path"], "-m", profile["ld_emulation"], "-T", "link.ld", "-e", "0",
-             "-o", "candidate.elf", "candidate.o"], "link")
+             "-Map", "candidate.map", "-o", "candidate.elf", "candidate.o"], "link")
         linked = Elf((out_dir / "candidate.elf").read_bytes())
+        generated_symbols.prove_linker_discard((out_dir / "candidate.map").read_text(), "candidate.o", result.discarded_tables)
         code = linked.contents(linked.section(".text"))
+        result.generated_functions = generated_symbols.generated_evidence(elf, text, target_rows, unit, code, rom)
+        for record in result.generated_functions:
+            if not record["matches_original"]:
+                result.problems.append(f"generated {record['generated']} -> {record['symbol']}: bytes/ROM position mismatch")
 
         image = load_inventory(PROJECT / "config/images.json").images[first.image_id]
         for record in result.data_sections:
@@ -935,11 +995,18 @@ def check(targets: list[Target], source: Path, profile_id: str, out_dir: Path, *
                                          "matches_original": all(placed_commons.get(s.name) == known[s.name] for s in commons)})
         if any(r["section"] in UNINITIALIZED for r in result.data_sections):
             result.bss_carve = _plan_bss_carve(result, linked, image, build, source, known, commons, bss is not None, bss_start,
-                                               segment_name, bss_subalign, contains_common, source_root)
+                                               segment_name, subalign, contains_common, source_root)
 
-        subalign = segment_subalign(unit_rom)
-        if subalign is None and unit_vram % max(text.addralign, 1):
-            result.problems.append(f".text alignment {text.addralign} would move vram 0x{unit_vram:X}")
+        if unit_vram % subalign:
+            result.problems.append(f"segment {segment_name} SUBALIGN({subalign}) would move .text from vram 0x{unit_vram:X}")
+        function_end = max((s.value + s.size for s in functions.values() if s.shndx == text.index), default=text.size)
+        overrun = padding_overrun(elf.contents(text), function_end, slot)
+        if overrun:
+            result.problems.append(
+                f".text is padded to {text.size} bytes (section alignment {text.addralign}): its {text.size - function_end} zero "
+                f"bytes after the last function run {overrun} byte(s) past the natural slot end 0x{unit_vram + slot:X} (the next "
+                f"catalogued function). A per-function unit cannot own that padding; match the whole original TU as a joint "
+                f"unit whose span ends {text.addralign}-aligned, so the padding lies inside its slot")
         compared = original[:len(code)]
         result.differing_words = sum(1 for i in range(0, min(len(code), len(compared)), 4) if code[i:i + 4] != compared[i:i + 4])
         result.first_difference = next((i for i in range(0, min(len(code), len(compared)), 4) if code[i:i + 4] != compared[i:i + 4]), None)
@@ -987,6 +1054,8 @@ def summary(result: Result) -> str:
     for record in result.data_sections:
         body.append(f"  data {record['section']} {record['size']} bytes at {hex(record['vram']) if record['vram'] is not None else 'unknown'}"
                     f" (matches original: {record.get('matches_original')})")
+    for record in result.discarded_tables:
+        body.append(f"  discarded {record['section']} {record['size']} bytes: {record['rule']} (zero source credit)")
     carve = result.bss_carve
     if carve:
         if carve["vram"] is not None:
@@ -1000,6 +1069,13 @@ def summary(result: Result) -> str:
     return "\n".join([head, *body])
 
 
+def allocate_evidence_dir(parent: Path, *, prefix: str = "") -> Path:
+    """Atomically reserve a fresh, timestamp-sortable directory for one invocation."""
+    parent.mkdir(parents=True, exist_ok=True)
+    stamp = time.strftime("%Y%m%dT%H%M%S")
+    return Path(tempfile.mkdtemp(prefix=f"{prefix}{stamp}-", dir=parent))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("functions", help="symbol, or comma-separated catalogue-adjacent symbols for a joint unit")
@@ -1008,7 +1084,7 @@ def main() -> None:
     parser.add_argument("--profile", help="profile id from config/compiler_profiles.json (default per image and language)")
     parser.add_argument("--all-profiles", action="store_true", help="try every declared profile of the candidate's language")
     parser.add_argument("-I", dest="includes", type=Path, action="append", default=[], help="extra include directory (searched first)")
-    parser.add_argument("--out", type=Path, help="evidence directory (default scratch/omp/match/<symbol>/<time>)")
+    parser.add_argument("--out", type=Path, help="evidence directory (default scratch/omp/match/<symbol>/<time>-<unique>)")
     parser.add_argument("--source-root", type=Path, default=PROJECT, help="project tree providing source/include and profiles")
     parser.add_argument("--asm", action="store_true", help="print the original generated assembly and exit")
     parser.add_argument("--m2c", action="store_true", help="print an unverified m2c starting point and exit")
@@ -1055,7 +1131,7 @@ def main() -> None:
             profiles = sorted(key for key, item in declared.items() if item.get("language", "c") == language)
         else:
             profiles = [args.profile or default_profile(targets[0].image_id, args.source)]
-        base = args.out or PROJECT / "scratch/omp/match" / targets[0].symbol / time.strftime("%Y%m%dT%H%M%S")
+        base = args.out or allocate_evidence_dir(PROJECT / "scratch/omp/match" / targets[0].symbol)
         rom = CANONICAL_ROM.read_bytes()
         statuses = []
         for profile_id in profiles:

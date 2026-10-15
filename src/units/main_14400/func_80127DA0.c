@@ -1,11 +1,10 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef struct { s32 x, y; } Position;
-typedef struct { u8 pad0[8]; short adjust_8; short padA; void (*destroy_C)(void *, s32); } ItemVTable;
 typedef struct { u8 pad0[0x68]; short adjust_68; short pad6A; u32 (*get_6C)(void *); u8 pad70[0x20]; short adjust_90; short pad92; s32 (*call_94)(void *, s32, s32, u8, s32); } ActorVTable;
 typedef struct { u8 pad0[0x1E]; u8 flags_1E; u8 pad1F[5]; ActorVTable *field_24; u8 pad28[0x54]; u16 flags_7C; } Actor;
-typedef struct { u8 kind, id, flags, mode; u8 pad4[4]; ItemVTable *field_8; u8 flags_C; } Item;
 u32 func_800B1C6C(Position *position);
 s32 func_800B56F0(void *position);
 s32 func_800B5650(void *position);
@@ -18,7 +17,6 @@ void func_80049C90(s32 mode, s32 message);
 void func_800E0CF4(Actor *self, u16 percent);
 void func_800E20F0(Actor *self);
 void *func_800B4D80(Position *position);
-char *func_800AE674(void *self);
 void func_80112E7C(Item *self);
 void *func_800B31E8(void *position, s32 team);
 void func_800AD868(Position *position);
@@ -26,9 +24,9 @@ void func_8010E2CC(Item *self);
 static inline s32 guarded(Actor *actor) { return (actor->flags_1E >> 4) & 1; }
 static inline s32 shrinks(u16 flags) { return (flags >> 11) & 1; }
 static inline s32 transforms(u16 flags) { return (flags >> 12) & 1; }
-static inline u8 kindOf(Item *item) { return item->kind; }
-static inline s32 sealed(Item *item) { return (item->flags_C >> 1) & 1; }
-static inline s32 changedId(Item *item) { return item->id ^ 0xA4; }
+static inline u8 kindOf(Item *item) { return item->field00; }
+static inline s32 sealed(Item *item) { return (item->payload.trap.flags0C >> 1) & 1; }
+static inline s32 changedId(Item *item) { return item->field01 ^ 0xA4; }
 /* func_801280F0 passes its receiver in a0; this effect only reads the position. */
 void func_80127DA0(void *self, Position *position) {
     Actor *actor;
@@ -73,7 +71,7 @@ void func_80127DA0(void *self, Position *position) {
     item = func_800B4D80(position);
     if (item) {
         kind = kindOf(item);
-        if (item->mode != 1 && kind != 15 && kind != 19) {
+        if (item->field03 != 1 && kind != 15 && kind != 19) {
             name = func_800AE674(item);
             func_800497F0(0xBE, message, name);
             if (kind == 2) {
@@ -82,8 +80,8 @@ void func_80127DA0(void *self, Position *position) {
                 func_80112E7C(item);
                 return;
             } else if (kind == 16) {
-                if (item->flags & 0x10) {
-                    item->flags &= 0xEF;
+                if (item->flags02 & 0x10) {
+                    item->flags02 &= 0xEF;
                     func_80049CB4(0xD7, position);
                 }
                 func_80049C90(1, message);
@@ -96,8 +94,8 @@ void func_80127DA0(void *self, Position *position) {
                 func_80049CB4(0x107, position);
                 func_800AD868(position);
                 if (item) {
-                    ItemVTable *table = item->field_8;
-                    table->destroy_C((u8 *)item + table->adjust_8, 3);
+                    ItemMethods *table = item->field08;
+                    table->method0C((u8 *)item + table->delta08, 3);
                 }
                 return;
             } else if (kind == 8) {

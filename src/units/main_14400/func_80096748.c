@@ -24,7 +24,7 @@ extern u8 D_801404E0[];
 extern u8 D_80138D90[];
 Holder *func_800EBA54(Player *);
 s32 func_800EC630(Player *, Item *);
-void func_80097B90(void *obj, void *owner, void *holder, s32 mode, void *desc, s32 flag);
+void func_80097B90(void *obj, void *owner, void *holder, s32 mode, const void *desc, s32 flag);
 void *func_80096748(void) {
     Player *player = D_801476B8;
     u8 kind = 0;

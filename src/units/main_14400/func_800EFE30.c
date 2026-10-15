@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef short s16;
@@ -13,7 +14,12 @@ typedef struct {
     VTable *vtable;
 } Obj;
 typedef struct {
-    u8 data[0x18];
+    void *field_0;
+    u32 field_4;
+    u32 field_8;
+    unsigned short field_C;
+    unsigned short field_E;
+    u8 field_10;
 } Buffer;
 typedef struct {
     s32 pos;
@@ -23,7 +29,7 @@ extern Obj *D_801476B8;
 void func_80136910(Buffer *, void *, u32, u32, u32);
 s32 func_800A8FC8(Iter *, s32);
 void *func_800A910C(Iter *);
-void *func_800F0314(void *);
+Item *func_800F0314(void *);
 s32 func_800CD090(void *, void *);
 /* Returns zero or func_80121848's forwarded status (0x800F0424/0x800F0428); this
  * statement call intentionally discards it. */
@@ -37,7 +43,7 @@ void func_800EFE30(void)
     Buffer buf;
     Iter it;
     void *item;
-    void *key;
+    Item *key;
 
     func_80136910(&buf, 0, 0, 0, 0);
     it.pos = 0;

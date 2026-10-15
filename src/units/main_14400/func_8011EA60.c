@@ -1,13 +1,9 @@
 #include "common.h"
+#include "map_line_iterator.h"
 
 typedef unsigned char u8;
 typedef short s16;
 typedef unsigned short u16;
-
-typedef struct {
-    s32 x;
-    s32 y;
-} Pos;
 
 typedef struct {
     u8 value;
@@ -40,35 +36,23 @@ typedef struct {
     u8 flags_C;
 } Item;
 
-/* Line iterator over positions (func_800C25D0 / func_800C2758). */
-typedef struct {
-    Pos cur;
-    Dir dir;
-    u8 pad_9[3];
-    s32 count;
-    s32 index;
-    s32 field_14;
-} Iter;
-
-extern void *func_800B4D80(Pos *pos);
+extern void *func_800B4D80(MapPos *pos);
 extern s32 func_800EC630(Unit *owner, Item *item);
-extern void func_8011205C(Context *context, Pos *pos, Dir direction);
-extern void func_800C25D0(Iter *iter, Pos *pos, Dir *dir, s32 range);
-extern void *func_800C2758(void *out, void *iterator);
-extern u32 func_800B1C6C(Pos *pos);
-extern void *func_800B4928(Pos *pos);
-extern void func_800A2758(Pos *pos, Dir direction);
-extern s32 func_800A251C(Pos *first, Pos *second);
-extern void func_800AD868(Pos *pos);
+extern void func_8011205C(Context *context, MapPos *pos, Dir direction);
+extern u32 func_800B1C6C(MapPos *pos);
+extern void *func_800B4928(MapPos *pos);
+extern void func_800A2758(MapPos *pos, Dir direction);
+extern s32 func_800A251C(MapPos *first, MapPos *second);
+extern void func_800AD868(MapPos *pos);
 extern s32 func_80049CB4(s32 id, ...);
 extern s32 func_800B56F0(void *object);
 extern s32 func_800B5690(void *object);
 extern s32 func_800ADC90(void *obj, void *pos, void *origin);
-extern s32 func_80112084(Context *context, s32 kind, Pos *pos, Dir direction);
-typedef struct { u8 kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+extern s32 func_80112084(Context *context, s32 kind, MapPos *pos, Dir direction);
+typedef struct { u8 kind, variant, field_02, flags, row, field_05; u16 field_06; u8 mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 
-static __inline__ void copy_position(Pos *out, Pos *position) {
+static __inline__ void copy_position(MapPos *out, MapPos *position) {
     out->x = position->x;
     out->y = position->y;
 }
@@ -82,10 +66,10 @@ static __inline__ Dir opposite(const Dir *direction) {
 }
 
 /* Throw/push action: carry the item at position along the reversed direction. */
-s32 func_8011EA60(Context *context, s32 kind, Pos *position, Dir direction) {
-    Pos cur;
-    Iter iter;
-    Pos step;
+s32 func_8011EA60(Context *context, s32 kind, MapPos *position, Dir direction) {
+    MapPos cur;
+    MapLineIterator iter;
+    MapPos step;
     Dir back;
 
     if (kind == 5) {
@@ -116,16 +100,16 @@ s32 func_8011EA60(Context *context, s32 kind, Pos *position, Dir direction) {
             return 0;
         }
         back = opposite(&direction);
-        func_800C25D0(&iter, position, &back, 0xFF);
+        func_800C25D0(&iter, position, &back.value, 0xFF);
         for (;;) {
             s32 found;
 
-            if (iter.index >= iter.count) {
+            if (iter.index >= iter.length) {
                 break;
             }
             func_800C2758(&step, &iter);
             found = 0;
-            copy_position(&step, &iter.cur);
+            copy_position(&step, &iter.current);
             cur = step;
             if ((func_800B1C6C(&cur) & 0x4000) || (item_kind == 15 && (func_800B1C6C(&cur) & 0x2180))
                 || func_800B4928(&cur) == context->owner) {
@@ -137,7 +121,7 @@ s32 func_8011EA60(Context *context, s32 kind, Pos *position, Dir direction) {
             }
         }
         {
-            Pos *target = &cur;
+            MapPos *target = &cur;
             s32 occupied;
 
             if ((func_800A251C(position, target) ^ 1) == 0) {
@@ -157,7 +141,7 @@ s32 func_8011EA60(Context *context, s32 kind, Pos *position, Dir direction) {
         }
         return 0;
     } else {
-        Pos *point = &cur;
+        MapPos *point = &cur;
 
         point->x = position->x;
         point->y = position->y;

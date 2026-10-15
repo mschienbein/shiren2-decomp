@@ -9,17 +9,17 @@
  * emitted. */
 extern "C" char D_80151350[];
 
-struct MenuCursor {
+struct MenuCursor_80092590 {
     s32 index;
     void *records;
     s32 unknown_08;
     void *vtable_0C;
-    ~MenuCursor() { vtable_0C = D_80151350; }
+    ~MenuCursor_80092590() { vtable_0C = D_80151350; }
 };
 
-extern "C" MenuCursor D_80140130;
+extern "C" MenuCursor_80092590 D_80140130;
 
 extern "C" void func_80092590(void)
 {
-    D_80140130.~MenuCursor();
+    D_80140130.~MenuCursor_80092590();
 }

@@ -1,10 +1,10 @@
 #include "common.h"
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+#include "map_rect.h"
+#include "map_position_iterator.h"
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 typedef unsigned char u8;
 typedef unsigned short u16;
-typedef struct { s32 x; s32 y; } Pos;
-typedef struct { Pos cur; Pos start; Pos end; } PosIter;
 typedef struct { short delta; short index; void (*fn)(void *, s32); } VtEntry;
 typedef struct { u8 kind; u8 unk1; u8 flags2; char pad3[5]; VtEntry *vt; } Item;
 typedef struct { char pad[0x1C]; u16 flags1C; u8 state1E; } Unit;
@@ -13,8 +13,7 @@ typedef struct Owner Owner;
 typedef struct { void *room; s32 opaque[3]; } RoomState;
 
 extern u32 D_8013960C;
-typedef struct { Pos start; Pos end; } Rect;
-extern Rect D_801429C0;
+extern MapRect D_801429C0;
 extern Unit *D_801476B8;
 extern s32 D_801486E0;
 extern u16 D_8014767C;
@@ -27,21 +26,20 @@ void func_80126458(Owner *);
 void func_80045A44(void);
 void func_800B512C(s32);
 s32 func_80049CB4(s32, ...);
-void *func_800A3610(void *out, void *it);
-Item *func_800B4D80(Pos *);
+Item *func_800B4D80(MapPos *);
 s32 func_8012633C(Owner *, Item *);
 void func_80112E7C(Item *);
 void func_8010E2CC(Item *);
-void func_800AD868(Pos *);
-void *func_800A33DC(void *out, void *rect);
-s32 func_800AD714(Item *, Pos *);
+void func_800AD868(MapPos *);
+MapPos *func_800A33DC(MapPos *out, MapRect *rect);
+s32 func_800AD714(Item *, MapPos *);
 u32 func_800B1C6C(void *pos);
-void func_800AD7E0(Item *, Pos *, s32);
-Unit *func_800B4928(Pos *);
+void func_800AD7E0(Item *, MapPos *, s32);
+Unit *func_800B4928(MapPos *);
 s32 func_8012640C(Owner *, Unit *);
 s32 func_800A6E90(Unit *);
 void func_800A59A4(Unit *);
-s32 func_800A6184(Unit *, Pos *);
+s32 func_800A6184(Unit *, MapPos *);
 void func_801263B8(Owner *, Unit *);
 Unit *func_800C5F60(void);
 void func_800E35A8(Unit *, void *, u8, s32, s32);
@@ -51,25 +49,24 @@ void func_800B261C(void);
 s32 func_800B5BDC(Unit *);
 s32 func_800D49C0(void *);
 s32 func_80045924(void);
-static inline s32 Last(void){ return -1; }
-static inline void PosIter_set_start(PosIter *it, Pos *p, s32 x, s32 y) {
+static inline void PosIter_set_start(MapPositionIterator *it, MapPos *p, s32 x, s32 y) {
     p->x = x;
     p->y = y;
     it->start = *p;
     it->cur = it->start;
 }
-static inline void PosIter_set_end(PosIter *it, Pos *p, s32 x, s32 y) {
+static inline void PosIter_set_end(MapPositionIterator *it, MapPos *p, s32 x, s32 y) {
     p->x = x;
     p->y = y;
     it->end = *p;
 }
-static inline s32 PosIter_more(PosIter *it){ return it->cur.x <= it->end.x; }
+static inline s32 PosIter_more(MapPositionIterator *it){ return it->cur.x <= it->end.x; }
 /* Trap slot +0x44 receives self, actor, source/effect positions, direction, target
  * unit and item. This override ignores arg2 and arg4..arg6, but retains the contract. */
-s32 func_80126480(Owner *self, void *arg1, Pos *arg2, Pos *arg3, void *arg4, void *arg5, void *arg6){
-    PosIter it;
-    Pos pos;
-    Pos dest;
+s32 func_80126480(Owner *self, void *arg1, MapPos *arg2, MapPos *arg3, void *arg4, void *arg5, void *arg6){
+    MapPositionIterator it;
+    MapPos pos;
+    MapPos dest;
     Item *item;
     Unit *unit;
     s32 i, ok, usable;
@@ -85,8 +82,8 @@ s32 func_80126480(Owner *self, void *arg1, Pos *arg2, Pos *arg3, void *arg4, voi
     func_80049CB4(0x10EC, arg3);
     func_80049CB4(0xDD);
     D_8013960C <<= 1;
-    PosIter_set_start(&it, &pos, D_801429C0.start.x, D_801429C0.start.y);
-    PosIter_set_end(&it, &pos, D_801429C0.end.x, D_801429C0.end.y);
+    PosIter_set_start(&it, &pos, D_801429C0.min.x, D_801429C0.min.y);
+    PosIter_set_end(&it, &pos, D_801429C0.max.x, D_801429C0.max.y);
     while (PosIter_more(&it)) {
         func_800A3610(&pos, &it);
         item = func_800B4D80(&pos);
@@ -98,8 +95,9 @@ s32 func_80126480(Owner *self, void *arg1, Pos *arg2, Pos *arg3, void *arg4, voi
                 else if (kind == 8) func_8010E2CC(item);
                 if (!(item->flags2 & 0x20) && kind != 0x10 && kind != 0xF && kind != 0x13) {
                     func_800AD868(&pos);
-                    for (i = 100; --i != Last();) {
-                        Pos r;
+                    for (i = 100;;) {
+                        MapPos r;
+                        if (--i == -1) break;
                         func_800A33DC(&r, &D_801429C0);
                         dest = r;
                         ok = 0;

@@ -1,0 +1,90 @@
+{
+  "status": "consumer identification strengthened; no new full-range format validator or converter claimed",
+  "sources": [
+    "src/units/main_14400/func_80064A70.c:91-109,125-127",
+    "src/units/main_14400/func_80064D5C.c:33-108,173-215,704-720",
+    "src/units/main_14400/func_80067628.c:28-35",
+    "src/units/main_14400/func_80067804.c:9-20,52-67",
+    "src/units/main_14400/func_80069A68.c:32-45",
+    "src/units/main_14400/func_8005EFF0.c:6-54",
+    "src/units/main_14400/func_80052944.c:28-57",
+    "src/units/main_14400/func_80052914.c:6-8",
+    "src/units/main_14400/func_80051D94.c:16-31",
+    "src/units/main_14400/func_8012C4B0.c:5-16,49-85",
+    "src/units/main_14400/func_8012AF30.c:117-170",
+    "src/units/main_14400/func_8012BDD0.c:7-35,55-95",
+    "src/units/main_14400/func_8012A910.c:2-26",
+    "src/units/main_14400/func_80044308.c:20-27",
+    "src/units/main_14400/func_800CA118.c:7-13",
+    "src/units/main_14400/func_800CAD44.c:72-90",
+    "build/omp-b6r-b/generated/asm/data/main_rodata_126fe8.rodata.s:237-242",
+    "build/omp-b6r-b/generated/asm/main_14400_tail_440c8.s:30-119",
+    "build/omp-b6r-b/generated/asm/main_14400_tail_52390.s:100-127,253-258,458-462,1152-1168",
+    "src/units/main_14400/func_80071CCC.c:4-8,89-100,125-168"
+  ],
+  "families": {
+    "T2_scene_records": {
+      "candidate_format": "scene section-directory/payload OR separate segment-6 model metadata, distinguished by record slot",
+      "tables": [{"base": "0x10eb14", "records": 28, "stride": 52}, {"base": "0x10f0c4", "records": 16, "stride": 52}],
+      "pair_offsets": [24, 32, 40],
+      "consumer": "func_80064A70 reads count and 12-byte {tagged start, settings, end} directory at raw base+4; tag 5 translates against that base. Separate record +0x28 bytes append after Yay0-decoded segment 6 and relocate via func_80064378.",
+      "next_proof": "For each +0x18 window validate count, all 12-byte entries, tagged settings/start/end containment and structured section payload. For each +0x28 window validate its distinct segment-6 root/relocation chains and remaining bytes. Bounds are explicit; missing full format validation is not an inferred-end issue."
+    },
+    "T3_set_records": {
+      "candidate_format": "segmented model-group directory",
+      "tables": [{"base": "0x10f53c", "records": 17, "stride": 36}],
+      "pair_offsets": [20, 28],
+      "consumer": "func_80067628 loads raw/Yay0 pairs for indices 0..16; func_80067804 relocates the group table in segment 5 and nonzero entries against decoded segment 6. Observed headers 0500000C 0000021C 00000000 imply 540 pointers at +0xC; each raw window is 0x880.",
+      "next_proof": "Validate 540 pointer entries and allowed null/tag values in each exact window against paired decoded segment-6 bounds; account separately for final four bytes after the table ends at +0x87C. Reuse Yay0 metadata, do not rescan/redecode solely for confirmation."
+    },
+    "T4_pair_list": {
+      "candidate_format": "HVQ2 picture paired with signed-byte RLE one-bit mask",
+      "tables": [{"base": "0x10f840", "records": 25, "stride": 16}],
+      "pair_offsets": [0, 8],
+      "consumer": "func_80069A68 decodes image and companion independently. Companion decode begins at header+be32(+4), observed +0x10; func_8005EFF0: negative control copies -c literals, positive repeats following byte c+1 times, zero terminates. Capacity 0x2580 is a 320x240 one-bit plane, expanded into 38400 nibble bytes. HVQ2 magic alone does not prove time-based video playback.",
+      "next_proof": "Bounded-parse all 25 companion streams; require 9600 output bytes, record consumed terminator, determine header +0xC convention and identify residual bytes to each table end. Do not classify them from neighboring HVQ2 magic."
+    },
+    "T6_pair_list": {
+      "candidate_format": "game/libmus-style multi-track music-sequence container; not MIDI or a model",
+      "tables": [{"base": "0x11e5e4", "records": 84, "stride": 8}, {"base": "0x11e884", "records": 6, "stride": 8}],
+      "pair_offsets": [0],
+      "consumer": "func_80052944 and func_80051D94 select explicit pairs and call func_80052914 for DMA. Playback via func_80129EE0/func_80129F10 reaches func_8012C4B0: count +4, seven relative pointers +0xC..+0x24, relocation flag +0x28, then three per-track pointer arrays. func_8012AF30 interprets high-bit opcodes and low-bit note/velocity/duration events. All 86 prior audited windows start with 0x215; the consumer does not check it, so it is not asserted to be an official version number.",
+      "next_proof": "Validate each window's header, track-count arrays, seven offsets and command target/termination bounds, including residual bytes. The exact consumer/marker association is retained as partial format evidence, not silently promoted to blanket closure. 90 table entries contain four aliases; record all matching owner entries."
+    },
+    "I_audio_e4f660": {
+      "candidate_format": "sound-effect sequence bank",
+      "consumer": "func_80051A60 explicit transfer; config field +0x20 reaches func_80129C2C then func_8012A910. Header is 0x18 bytes: count +0, flags +0xC, bank +0x10, relative pointer +0x14; count eight-byte {sequence offset, priority} entries.",
+      "next_proof": "Bounded-parse count, relative pointers, eight-byte entries and sequence command extents over precisely 0xE4F660..0xE53B20."
+    },
+    "I_audio_e53b20": {
+      "candidate_format": "sound-effect sequence bank",
+      "consumer": "func_80051A60 transfers exactly 0x290 bytes and calls func_8012A910. Allocation 0x2A0 is not stored extent. Same 0x18-byte header/eight-byte entry grammar as the other effect bank.",
+      "next_proof": "Bounded-parse all count/offset/sequence fields and residual bytes within 0xE53B20..0xE53DB0; do not reuse the 0x215 music-sequence identity."
+    },
+    "T5_demo_starts": {
+      "candidate_format": "length/checksummed serialized demo recording within a fixed-capacity slot",
+      "consumer": "func_80044308 selects stream kind 2: logical length +0 and checksum +4. Capacity table D_801541E4[2], ROM 0x12722C, is 0x2800. func_800CA118 checks bytes +8..length with seed 0x4368758A; playback reaches func_800CAD44 RecStat parser. Logical lengths are 0xACF,0xB5B,0xB69,0xC4E,0xB93,0xC29, not full slot capacities.",
+      "next_proof": "Validate header length/checksum and serialized recording grammar for each slot, then identify the unused tail. Extent provenance is start+consumer capacity, not an explicit end word or logical payload length."
+    },
+    "N_e53db0_block": {
+      "candidate_format": "sprite descriptor directory and referenced frame/palette structures; whole envelope end inferred",
+      "consumer": "Original func_80071088 loops over 405 consecutive 16-byte descriptors: exact directory 0xE53DB0..0xE55700 (0x1950 bytes). Descriptor flags&31 gives palette count; +4 palette table; byte +8 frame count; +0xC frame table. Frames are 12 bytes: segmented address, u16 stored length, width, height, extra word. Palette payloads read 0x20 bytes. Tags 5/6 translate independently to 0xE53DB0/0xE7BE70.",
+      "next_proof": "Validate all 405 descriptors and frame/palette table spans using actual segment tags; link stored compressed lengths to preserved Yay0 evidence; account for remaining bytes and prove final segment-5 end. A maximum observed reference is not automatically an archive endpoint."
+    },
+    "N_audio_wave1": {
+      "candidate_format": "N64 WaveTables, sample envelope end inferred",
+      "consumer": "func_8012BDD0 walks bounded PtrTablesV2: count +0x20; relative arrays +0x24,+0x28,+0x2C; each wave has sample offset +0, stored length +4, type +8, relocation flag +9, loop +0xC, book +0x10. 0xFF top-byte offsets are exceptional, not ordinary base-relative samples.",
+      "next_proof": "Walk the paired explicit pointer bank, validate offset/count bounds, derive all sample [base+offset,+length) spans and aliases, then account for header/inter-sample holes/final alignment independently of next bank start."
+    },
+    "N_audio_wave2": {
+      "candidate_format": "N64 WaveTables, sample envelope end inferred",
+      "consumer": "Same func_8012BDD0 relocation grammar; second pointer bank configures WaveTables base 0xAF67E0. Sample type must be checked rather than assume all ADPCM.",
+      "next_proof": "Bounded-walk second pointer bank and sample spans, exceptional addresses, aliases and gaps; prove final stored tail rather than round maximum referenced sample to first T6 start."
+    }
+  },
+  "small_graphics_consumers": [
+    {"start": "0x157460", "end": "0x1575c0", "identity_lead": "static GBI/viewport resource; func_8005F210 binds segment 1 and calls offsets 0x10,0xB8,0x120", "missing": "full viewport/command partition and display-list termination proof"},
+    {"start": "0x1575c0", "end": "0x157840", "identity_lead": "WINDOW static GBI resource; func_8007F350 binds segment 5 and calls offsets 0x10,0x90,0x188,0x230", "missing": "full resource structural record"},
+    {"start": "0x157840", "end": "0x157b80", "identity_lead": "WINDOW texture; renderer binds segment 6", "missing": "texture commands proving dimensions/texel format and complete internal partition"}
+  ]
+}

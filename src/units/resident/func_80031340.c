@@ -1,5 +1,6 @@
 #include "common.h"
 #include "controller_queue_view.h"
+#include "vi_mode.h"
 
 /* libultra sched.c (SDK scheduler) */
 
@@ -83,10 +84,6 @@ typedef struct {
     s32 doAudio;
 } OSSched;
 
-typedef struct {
-    char opaque[0x50];
-} OSViMode;
-
 #define VIDEO_MSG 666
 #define RSP_DONE_MSG 667
 #define RDP_DONE_MSG 668
@@ -108,7 +105,6 @@ typedef struct {
 #define M_GFXTASK 1
 #define M_AUDTASK 2
 
-extern OSViMode D_800374E0[];
 extern s32 D_800372F4;
 extern s32 D_800372F8;
 extern s32 D_800372FC;
@@ -121,7 +117,6 @@ void func_80031E90(s32 event, OSMesgQueue *mq, OSMesg msg);
 u32 func_80031F90(u32 mask);
 void func_80032B50(OSThread *t);
 void func_80033DB0(s32 pri);
-void func_800341B0(OSViMode *mode);
 void func_80033CC0(u8 active);
 void func_80034150(OSMesgQueue *mq, OSMesg msg, u32 retraceCount);
 void *func_80033D30(void);
@@ -474,6 +469,11 @@ s32 func_80031B3C(OSSched *sc, OSScTask **sp, OSScTask **dp, s32 availRCP)
                         }
                     }
                     break;
+                /* ODD_C: RDP-only graphics task (OS_SC_NEEDS_RDP, no RSP)
+                 * is left pending here. This label keeps jump-table dispatch:
+                 * removing it changes 89 overlapping TU words, grows text
+                 * from 2576 to 2608 bytes and drops the 32-byte .rodata section
+                 * under gcc272-kmc26-O2-signed. */
                 case 1:
                     break;
             }

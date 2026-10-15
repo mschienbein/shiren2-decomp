@@ -1,17 +1,16 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef struct Entity { u8 pad0[0x1E]; u8 flags; } Entity;
-typedef struct Actor Actor;
 s32 func_800E1CC4(Entity *, s32);
 void func_800498E4(s32 id, ...);
 s32 func_80049CB4(s32 id, ...);
 char *func_800A3B20(Entity *obj);
-char *func_800AE674(void *obj);
 void func_80049A04(u16 id, ...);
 void func_800D3650(void *arg);
 static inline s32 special(Entity *obj) { return (obj->flags >> 2) & 1; }
-s32 func_800E9270(Entity *obj, Actor *actor, s32 message, s32 extra) {
+s32 func_800E9270(Entity *obj, Item *actor, s32 message, s32 extra) {
     u16 msg = message;
     char *name;
     if (func_800E1CC4(obj, 2)) { func_800498E4(0x71); return 0; }

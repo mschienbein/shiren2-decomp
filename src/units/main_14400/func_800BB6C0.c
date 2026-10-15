@@ -1,4 +1,5 @@
 #include "common.h"
+#include "map_rect.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -6,37 +7,33 @@ typedef short s16;
 typedef signed char s8;
 typedef float f32;
 
-typedef struct { s32 x; s32 y; } Pos800BB6C0;
 typedef struct ShirenDirection { s8 value; } ShirenDirection;
 typedef struct {
-    s32 x0;
-    s32 y0;
-    s32 x1;
-    s32 y1;
+    MapRect geometry;
     u8 open_bottom;
     u8 open_left;
     u8 open_top;
     u8 open_right;
 } Room800BB6C0;
 extern u8 D_80147620[];
-s32 func_800A3138(Room800BB6C0 *room);
-s32 func_800A315C(Room800BB6C0 *room);
-s32 func_800BB474(void *self, void *position, ShirenDirection direction, s32 limit);
+s32 func_800A3138(MapRect *room);
+s32 func_800A315C(MapRect *room);
+s32 func_800BB474(void *self, const MapPos *position, ShirenDirection direction, s32 limit);
 s32 func_800C5844(void *rng, u8 base, u8 top);
-void func_800BB508(void *ctx, Pos800BB6C0 *a, Pos800BB6C0 *b, Pos800BB6C0 *c);
+void func_800BB508(void *ctx, MapPos *a, MapPos *b, MapPos *c);
 
 s32 func_800BB6C0(void *ctx, Room800BB6C0 *room) {
-    Pos800BB6C0 a;
-    Pos800BB6C0 b;
-    Pos800BB6C0 c;
-    Pos800BB6C0 probe;
+    MapPos a;
+    MapPos b;
+    MapPos c;
+    MapPos probe;
     ShirenDirection dirs[8]; /* one stack slot per probe direction argument */
-    s32 y0 = room->y0;
-    s32 x0 = room->x0;
-    s32 y1 = room->y1;
-    s32 x1 = room->x1;
-    s32 count_a = func_800A3138(room);
-    s32 count_b = func_800A315C(room);
+    s32 y0 = room->geometry.min.y;
+    s32 x0 = room->geometry.min.x;
+    s32 y1 = room->geometry.max.y;
+    s32 x1 = room->geometry.max.x;
+    s32 count_a = func_800A3138(&room->geometry);
+    s32 count_b = func_800A315C(&room->geometry);
     s32 open_bottom = room->open_bottom;
     s32 open_left = room->open_left;
     s32 open_top = room->open_top;

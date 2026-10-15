@@ -1,21 +1,6 @@
 #include "common.h"
+#include "item_records.h"
 
-typedef struct {
-    s32 fields_00[4];
-    short adjust_10;
-    short field_12;
-    s32 (*method_14)(void *);
-} ItemTable;
-
-typedef struct {
-    unsigned char fields_00[2];
-    unsigned char flags_02;
-    unsigned char field_03;
-    s32 field_04;
-    ItemTable *table_08;
-    unsigned char fields_0C[0x15];
-    unsigned char field_21;
-} Item;
 
 typedef struct {
     s32 fields_00[24];
@@ -45,12 +30,11 @@ extern s32 func_8010BF6C(Item *, Actor *, s32);
 extern void func_800ACD34(Item *);
 extern s32 func_80049CB4(s32, ...);
 extern void func_800498E4(s32, ...);
-extern char *func_800AE674(Item *);
 extern s32 func_8010EBA4(Item *);
 extern s32 func_800AE498(Item *);
 
 static inline s32 active_mask(Item *item) {
-    return item->flags_02 & 4;
+    return item->flags02 & 4;
 }
 
 void func_801104D0(Item *item, Request *request) {
@@ -65,17 +49,17 @@ void func_801104D0(Item *item, Request *request) {
             if ((func_8010BF6C(item, actor, forced) ^ 1) != 0) {
                 return;
             }
-            item->flags_02 |= 4;
+            item->flags02 |= 4;
             if ((actor->flags_1E >> 2) & 1) {
                 func_800ACD34(item);
             }
             if (special_enabled) {
-                ItemTable *table;
+                ItemMethods *table;
                 func_80049CB4(0x1129, 3);
                 func_80049CB4(0x31, actor, item);
                 func_800498E4(0x2B, func_800AE674(item));
-                table = item->table_08;
-                if (table->method_14((unsigned char *)item + table->adjust_10)) {
+                table = item->field08;
+                if (table->test14((unsigned char *)item + table->delta10)) {
                     func_80049CB4(0x12B);
                     func_800498E4(0x2E, func_800AE674(item));
                 }
@@ -89,8 +73,8 @@ void func_801104D0(Item *item, Request *request) {
             if (forced && (func_800AE498(item) ^ 1) != 0) {
                 return;
             }
-            item->field_21 = 0;
-            item->flags_02 &= 0xFB;
+            item->payload.seals.field21 = 0;
+            item->flags02 &= 0xFB;
             if (special) {
                 func_80049CB4(0x1129, 3);
                 func_80049CB4(0x32, actor, item);

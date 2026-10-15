@@ -1,22 +1,18 @@
 #include "common.h"
+#include "item_records.h"
 
-typedef unsigned char u8;
+/* Whether `item` is unusable: null, the exhaustion sentinel, outside every pool, or a
+ * record whose occupancy bit is clear. */
+s32 func_800AFBFC(Item *item) {
+    ItemPool *pool;
 
-extern void *D_80143090;
-extern void *func_800AFB80(void *key);
-extern s32 func_800AFD08(void *entry, void *key);
-extern s32 func_800AF920(void *entry, u8 arg1);
-
-s32 func_800AFBFC(void *key) {
-    void *entry;
-
-    if (key != 0) {
-        if (key == D_80143090) {
+    if (item != 0) {
+        if (item == D_80143090) {
             return 1;
         }
-        entry = func_800AFB80(key);
-        if (entry != 0) {
-            return func_800AF920(entry, func_800AFD08(entry, key)) ^ 1;
+        pool = func_800AFB80(item);
+        if (pool != 0) {
+            return func_800AF920(pool, func_800AFD08(pool, item)) ^ 1;
         }
     }
     return 1;

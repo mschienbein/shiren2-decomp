@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef struct { s32 x, y; } Position;
@@ -13,16 +14,14 @@ struct Object {
     u8 reserved_77[0x11]; u8 chance_88; u8 reserved_89[3]; void *inventory_8C;
     u8 reserved_90[0xA]; u16 flags_9A; u8 reserved_9C, level_9D, chance_9E, priority_9F;
 };
-typedef struct { s32 value; Method *table; } Embedded;
-typedef struct { u8 kind, id, flags; u8 reserved_03[9]; Embedded state_0C; } Item;
 typedef struct { Object *source; s32 kind, field_08; short amount; u16 flags; } Damage;
 typedef union { Damage *damage; s32 number; } EventValue;
 typedef union { Direction *direction; s32 number; } EventExtra;
 typedef struct { u32 kind; Object *target; u8 reserved_08[8]; EventValue value; EventExtra extra; } Event;
-typedef struct { unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode; signed char coordinates[2], status; } SelectionRecord;
+typedef struct { unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode; signed char coordinates[2], status; } SelectionRecord;
 extern SelectionRecord D_80142F18;
 extern u32 D_8013960C;
-extern u8 D_80143094[], D_80147620[];
+extern u8 D_80147620[];
 extern Object *D_801476B8;
 extern void func_800498E4(s32, ...);
 extern s32 func_80049CB4(s32, ...), func_800A08D8(s32, s32, s32);
@@ -35,7 +34,7 @@ extern void *func_800A65E4(u8 *, Object *, Object *);
 extern void func_800A665C(Object *, u8 *);
 extern Object *func_800A6CF0(Object *);
 extern Item *func_800AACE0(s32);
-extern s32 func_800ADC90(Item *, void *, void *), func_800AFDBC(void *), func_800B502C(Object *);
+extern s32 func_800ADC90(Item *, void *, void *), func_800B502C(Object *);
 extern u32 func_800B1C6C(Position *);
 extern u8 func_800C57A0(void *);
 extern s32 func_800C587C(void *, u8), func_800CD090(void *, void *), func_800CF47C(void *), func_800D78B4(Object *);
@@ -44,6 +43,7 @@ extern s32 func_800E1CC4(Object *, s32), func_800E1CD4(Object *, s32), func_800E
 extern s32 func_800E3D20(Object *, Damage *), func_800E4B60(Object *, Event *), func_800E66EC(Object *);
 extern void func_800E42AC(Object *, Damage *);
 extern s32 func_800E776C(Object *, u8), func_800E8350(Object *), func_800E8694(Object *);
+/* The held id-0xAC pot item, or 0. */
 extern Item *func_800F0314(Object *);
 extern s32 func_800F0404(Object *), func_800F0440(Object *), func_800F0C4C(Object *);
 extern void func_800F06E4(Object *), func_800F073C(Object *), func_800F0A08(Object *), func_800F0CB0(Object *, Object *);
@@ -81,15 +81,16 @@ static inline void hand_over(Object *self) {
     s32 message;
     if (!item) message = 0xAD;
     else {
-        if (!func_800AFDBC(D_80143094)) message = 0xAC;
+        if (!func_800AFDBC(&D_80143094)) message = 0xAC;
         else if (func_800CD090(inventory(D_801476B8), item) != -1) {
             if (func_80121940(item, self, D_801476B8, 0)) {
                 self->flags_9A &= ~0x80;
                 return;
             } else {
-                Embedded *state = &item->state_0C;
-                Method *method = &state->table[0x10/8];
-                if (((s32 (*)(void *))method->fn)((u8 *)state + method->delta)) return;
+                /* The pot's content list: limit slot +0x10 (func_800CEA78). */
+                ItemPot *pot = &item->payload.pot;
+                const ItemListMethods *methods = pot->list.methods;
+                if (methods->limit14((u8 *)&pot->list + methods->delta10)) return;
                 message = 0xAB;
             }
         } else message = 0xAA;
@@ -275,7 +276,7 @@ s32 func_800F27A4(Object *self, Event *event) {
         if (!self->inventory_8C || !func_800CF47C(self->inventory_8C)) empty = 1;
         if (empty && (self->flags_72 & 8)) {
             Item *item = func_800AACE0(0);
-            if (item) { item->flags |= 0x40; func_800ADC90(item, self, self); }
+            if (item) { item->flags02 |= 0x40; func_800ADC90(item, self, self); }
         }
         self->flags_72 &= ~8;
         return 1;

@@ -1,11 +1,9 @@
-#include "common.h"
+#include "map_rect.h"
 typedef unsigned char u8;
 typedef unsigned short u16;
-typedef struct { s32 x, y; } Pair;
-typedef struct { Pair minimum, maximum; } Rect;
 typedef struct { short adjust; u16 reserved; s32 (*call)(void *); } Entry;
 typedef struct { u32 pad0 : 8; u32 bit23 : 1; u32 pad1 : 23; } Flags;
-typedef struct Object { Pair position; u8 pad8[4]; Rect field0C; u8 pad1C[2]; u8 field1E, field1F; Flags field20; Entry *field24; u8 pad28[0x30]; struct Object *field58; u8 pad5C[0x2D]; u8 field89; u8 pad8A[0x10]; u16 field9A; u8 pad9C[0x48]; u16 fieldE4; } Object;
+typedef struct Object { MapPos position; u8 pad8[4]; MapRect field0C; u8 pad1C[2]; u8 field1E, field1F; Flags field20; Entry *field24; u8 pad28[0x30]; struct Object *field58; u8 pad5C[0x2D]; u8 field89; u8 pad8A[0x10]; u16 field9A; u8 pad9C[0x48]; u16 fieldE4; } Object;
 extern u8 D_8014344C;
 typedef struct { void *room; s32 opaque[3]; } RoomState;
 extern RoomState D_80143434;
@@ -15,34 +13,31 @@ extern s32 func_800E1CC4(Object *, s32);
 extern s32 func_800A6FD0(Object *);
 extern s32 func_800F069C(Object *);
 extern s32 func_800B60D0(void);
-extern s32 func_800A650C(Object *, Pair *);
-extern Pair *func_800A2644(Pair *out, Pair *from, Pair *to, s32 range);
-extern void *func_800A2FD0(void *output, void *input, u8 index);
-extern void func_800A3448(s32 *arg0, s32 *arg1);
+extern s32 func_800A650C(Object *, MapPos *);
+extern MapPos *func_800A2644(MapPos *out, MapPos *from, MapPos *to, s32 range);
 extern s32 func_800A4520(Object *, Object *);
 extern s32 func_800E0F40(Object *);
-extern Pair *func_800B33BC(Pair *out, Rect *desc, u8 kind, s32 arg3);
+extern MapPos *func_800B33BC(MapPos *out, MapRect *desc, u8 kind, s32 arg3);
 extern void func_800A59A4(Object *);
-extern Pair func_800A694C(Object *obj, Rect *bounds, u8 mask, s32 arg4);
-extern void func_800A58FC(Object *actor, Pair *position);
+extern void func_800A58FC(Object *actor, MapPos *position);
 extern s32 func_800E20CC(Object *);
-static inline void copy(Pair *dest, const Pair *source) {
+static inline void copy(MapPos *dest, const MapPos *source) {
     dest->x = source->x;
     dest->y = source->y;
 }
-static inline s32 nonzero(Pair *position) { return position->y | position->x; }
-static inline void center(Pair *dest, Rect *rect) {
-    s32 x = rect->minimum.x + rect->maximum.x;
-    s32 y = rect->minimum.y + rect->maximum.y;
+static inline s32 nonzero(MapPos *position) { return position->y | position->x; }
+static inline void center(MapPos *dest, MapRect *rect) {
+    s32 x = rect->min.x + rect->max.x;
+    s32 y = rect->min.y + rect->max.y;
     dest->x = x / 2;
     dest->y = y / 2;
 }
 static inline void copy_flags(Flags *dest, const Flags *source) {
     *dest = *source;
 }
-Pair *func_80104040(Pair *result, Object *obj, Object *source) {
-    Pair origin, best, temp;
-    Rect bounds;
+MapPos *func_80104040(MapPos *result, Object *obj, Object *source) {
+    MapPos origin, best, temp;
+    MapRect bounds;
     Flags flags;
     Object *target;
     s32 valid = 0, nearby;
@@ -63,7 +58,7 @@ Pair *func_80104040(Pair *result, Object *obj, Object *source) {
         nearby = !D_80143434.opaque[1];
     }
     if (nearby) {
-        Rect *rect = D_80143434.room;
+        MapRect *rect = D_80143434.room;
         center(&temp, rect);
         if (func_800A650C(obj, &temp) <= obj->field89) {
             copy(result, &temp);
@@ -71,11 +66,11 @@ Pair *func_80104040(Pair *result, Object *obj, Object *source) {
         }
         {
             s32 x, y;
-            if (rect->minimum.y > origin.y) y = rect->minimum.y - origin.y;
-            else if (rect->maximum.y < origin.y) y = origin.y - rect->maximum.y;
+            if (rect->min.y > origin.y) y = rect->min.y - origin.y;
+            else if (rect->max.y < origin.y) y = origin.y - rect->max.y;
             else y = 0;
-            if (rect->minimum.x > origin.x) x = rect->minimum.x - origin.x;
-            else if (rect->maximum.x < origin.x) x = origin.x - rect->maximum.x;
+            if (rect->min.x > origin.x) x = rect->min.x - origin.x;
+            else if (rect->max.x < origin.x) x = origin.x - rect->max.x;
             else x = 0;
             if (y < x) y = x;
             if (y <= obj->field89) {
@@ -85,7 +80,7 @@ Pair *func_80104040(Pair *result, Object *obj, Object *source) {
         }
     }
     func_800A2FD0(&bounds, &origin, obj->field89);
-    func_800A3448((s32 *)&bounds, (s32 *)&obj->field0C);
+    func_800A3448(&bounds, &obj->field0C);
     if (func_800A4520(obj, source)) {
         s32 allow = 0;
         if ((u8)func_800E0F40(obj) >= 2) allow = 1;

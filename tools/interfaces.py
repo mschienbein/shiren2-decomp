@@ -66,13 +66,18 @@ themselves, references are pointers, and an enum's compatible type follows the s
 as C. C++-linkage functions, methods and constructors are not part of the C interface (the C++
 object may not export or import mangled names; see `tools/match.py`). External objects with
 unmangled linkage, including ordinary global C++ objects and block-scope externs, join the
-unchanged object-category gate without array decay. Clang's mangled identities distinguish these
-from static, const, local-static and anonymous-namespace objects; externally mangled object names
-fail closed. A missing or changed pinned clang, a clang error, a template, an asm label or alias,
-an inline namespace, a using-declaration/directive, a member pointer anywhere in a type (behind a
-typedef, pointer, reference or array too), a typeof/decltype spelling without a typedef's type tree,
-a statement kind the scope model does not know, sugared function types or any type the classifier
-cannot resolve makes the TU a parse-failure finding. Qualified names bind their
+object-category gate without array decay. Data-member and member-function pointers are distinct
+categories, never interchangeable with an ordinary pointer, integer, aggregate or each other.
+For g++ 2.8.1/o32 they occupy 4 and 8 bytes respectively, both aligned to 4: a data-member pointer
+passes in one word; a member-function pointer passes in two consecutive words and returns through
+a hidden result pointer. Owner/member views, like ordinary pointee views, are not compared.
+Outer pointers/references still classify as pointers and outer arrays retain array storage.
+Clang's mangled identities distinguish external objects from static, const, local-static and
+anonymous-namespace objects; externally mangled object names fail closed. A missing or changed
+pinned clang, a clang error, a template, an asm label or alias, an inline namespace, a
+using-declaration/directive, a typeof/decltype spelling without a typedef's type tree, a statement
+kind the scope model does not know, sugared function types or any type the classifier cannot
+resolve makes the TU a parse-failure finding. Qualified names bind their
 first prefix in the nearest scope; inherited, aliased or later-member (ill-formed, no diagnostic)
 class lookups refuse rather than fall back to an outer shadow. Enum values require layout-independent
 initializer dependencies (including static members): no sizeof/alignof/offsetof or type trait and
@@ -104,10 +109,16 @@ from pycparser import c_ast, c_generator, c_parser
 from certification import compiler_environment, profile_kind, profile_toolchain, read_json, sha256, tool_profile
 from evidence import COMPILED_SUFFIXES, compiled_kind
 from rom import PROJECT
+import toolchain_library
 
 KINDS = ("parse-failure", "declaration-vs-definition", "declaration-disagreement", "unprototyped", "call-arity", "object-category")
 OBJECT_CONFLICTS = (("pointer", "integer", "pointer-vs-integer"), ("array", "pointer", "array-vs-pointer"),
                     ("float", "integer", "float-vs-integer"), ("double", "integer", "float-vs-integer"))
+OBJECT_CONFLICTS += tuple(
+    (member, other, f"{member}-vs-{other}")
+    for member in ("member-data-pointer", "member-function-pointer")
+    for other in ("pointer", "integer", "float", "double", "aggregate", "array")
+) + (("member-data-pointer", "member-function-pointer", "member-data-pointer-vs-member-function-pointer"),)
 ATTRIBUTE = re.compile(r"\b__attribute(?:__)?\s*\(")
 ALIGNOF = re.compile(r"\b__alignof(?:__)?\b")
 INLINE = re.compile(r"\b__inline(?:__)?\b")
@@ -131,7 +142,7 @@ ARITHMETIC = {"+": operator.add, "-": operator.sub, "*": operator.mul, "&": oper
 class Kind:
     """One return or parameter type: `name` is shown and, for integers, is the exact compared type."""
     name: str
-    category: str  # pointer | aggregate | void | float | double | integer
+    category: str  # pointer | member-data-pointer | member-function-pointer | aggregate | void | float | double | integer
     width: int | None
     underlying: str | None = None  # an enum's compatible integer type, as GCC 2.8.1 chooses it
 
@@ -163,6 +174,10 @@ VOID = Kind("void", "void", 0)
 INT = Kind("int", "integer", 4)
 # g++ 2.8.1 on this target: sizeof(bool) == sizeof(wchar_t) == 4 (measured with cc1plus).
 CXX_INTEGERS = {"bool": Kind("bool", "integer", 4), "wchar_t": Kind("wchar_t", "integer", 4)}
+# g++ 2.8.1/o32, NOT clang's member-pointer ABI: data offsets are biased by one;
+# functions are {s16 delta, s16 index, union {pfn; s16 delta2;}}. See OMP_WORKFLOW.
+CXX_MEMBER_DATA = Kind("member-data-pointer", "member-data-pointer", 4)
+CXX_MEMBER_FUNCTION = Kind("member-function-pointer", "member-function-pointer", 8)
 
 
 @dataclass(frozen=True)
@@ -701,6 +716,7 @@ CXX_RECORD_KEYWORDS = {"struct", "class", "union"}
 CXX_ARRAY = Kind("array", "array", None)
 CXX_ANONYMOUS_NAMESPACE = "(anonymous namespace)"
 CXX_ANONYMOUS_TAG = re.compile(r"\((?:anonymous|unnamed) (struct|class|union|enum) at [^()]*\)")
+CXX_POINTER_OPERATOR = re.compile(r"(?:(?:::)?(?:[A-Za-z_]\w*::)+)?\*|&&|&")
 # The outer pointer, reference or array declarator decides the category of these type nodes.
 CXX_DECLARATOR_TYPES = {"PointerType", "LValueReferenceType", "RValueReferenceType", "ConstantArrayType",
                         "IncompleteArrayType"}
@@ -1224,7 +1240,7 @@ class _CxxCollector:
         if kind == "BuiltinType":
             return self.builtin(spelled)
         if kind in CXX_DECLARATOR_TYPES:
-            self.member_pointer_free(node, spelled)  # the outer declarator decides the category, not the subset
+            self.check_member_pointers(node)  # the outer declarator decides the category, not the subset
             return CXX_ARRAY if kind.endswith("ArrayType") else POINTER  # references pass/store an address
         if kind in ("RecordType", "EnumType"):
             identity = node.get("decl", {}).get("id", "")
@@ -1233,17 +1249,21 @@ class _CxxCollector:
                 raise ValueError(f"{self.tu}: unresolved C++ type identity {spelled!r}")
             return Kind(spelled, "aggregate", None) if tag.kind == "record" else self.enum_type(identity, spelled)
         if kind == "MemberPointerType":
-            raise ValueError(f"{self.tu}: member pointer type {spelled!r} is unsupported")
+            if (len(children) != 2 or children[0].get("kind") != "RecordType"
+                    or bool(node.get("isData")) == bool(node.get("isFunction"))):
+                raise ValueError(f"{self.tu}: unclassifiable C++ member pointer type {spelled!r}")
+            self.type_kind(children[0])  # the owning class must have an indexed declaration identity
+            self.check_member_pointers(node)
+            return CXX_MEMBER_FUNCTION if node.get("isFunction") else CXX_MEMBER_DATA
         raise ValueError(f"{self.tu}: unclassifiable C++ type {spelled!r} ({kind})")
 
-    def member_pointer_free(self, node: dict[str, Any], outer: str) -> None:
-        """Refuse a member pointer anywhere below a type node: pointee, element, function parameter or
-        return, and through typedef and typeof nodes, which carry their own type trees."""
+    def check_member_pointers(self, node: dict[str, Any]) -> None:
+        """Validate member-pointer type trees even below an ordinary pointer, reference or array."""
         for child in self.type_children(node):
             if child.get("kind") == "MemberPointerType":
-                raise ValueError(f"{self.tu}: member pointer type {child.get('type', {}).get('qualType')!r} "
-                                 f"inside {outer!r} is unsupported")
-            self.member_pointer_free(child, outer)
+                self.type_kind(child)
+            else:
+                self.check_member_pointers(child)
 
     def builtin(self, text: str) -> Kind:
         words = [word for word in text.split() if word not in CXX_QUALIFIERS]
@@ -1269,12 +1289,65 @@ class _CxxCollector:
                 raise ValueError(f"{self.tu}: array typedef in a return position")
         return resolved
 
+    def member_structure(self, text: str) -> Kind:
+        """Read a clang abstract declarator from the name outwards, not by counting '*' or '()'.
+
+        In `int (S::*)()` the member points to a function; in `int (*S::*)()` it
+        points to a data member holding a function pointer. Pointee signatures
+        and array bounds are opaque, just as for ordinary pointers/arrays.
+        """
+        spelling = CXX_ANONYMOUS_TAG.sub("anonymous_record", text).replace(CXX_ANONYMOUS_NAMESPACE, "anonymous_namespace")
+        start = re.search(CXX_POINTER_OPERATOR.pattern + r"|\(|\[", spelling)
+        if start is None:
+            raise ValueError(f"{self.tu}: unclassifiable C++ member pointer type {text!r}")
+
+        def group(value: str) -> tuple[str, str]:
+            opening, closing = value[0], ")" if value[0] == "(" else "]"
+            depth = 0
+            for index, char in enumerate(value):
+                depth += (char == opening) - (char == closing)
+                if depth == 0:
+                    return value[1:index].strip(), value[index + 1:].strip()
+            raise ValueError(f"{self.tu}: unbalanced C++ member pointer type {text!r}")
+
+        def declarator(value: str) -> list[str]:
+            prefixes, layers = [], []
+            while operator := CXX_POINTER_OPERATOR.match(value):
+                prefixes.append("member" if "::*" in operator[0] else "pointer")
+                value = value[operator.end():].lstrip()
+                value = re.sub(r"^(?:(?:const|volatile|__restrict|restrict)\b\s*)+", "", value)
+            if value.startswith("("):
+                inside, after = group(value)
+                if CXX_POINTER_OPERATOR.match(inside) or inside.startswith("("):
+                    layers = declarator(inside)
+                    value = after
+            while value.startswith(("(", "[")):
+                layer = "function" if value[0] == "(" else "array"
+                _, value = group(value)
+                layers.append(layer)
+                if layer == "function":
+                    value = re.sub(r"^(?:(?:const|volatile|__restrict|restrict)\b\s*)+", "", value)
+                    for suffix in CXX_TYPE_SUFFIXES:
+                        value = value.removesuffix(suffix.strip()).strip()
+            if value:
+                raise ValueError(f"{self.tu}: unsupported C++ member pointer declarator {text!r}")
+            return layers + prefixes[::-1]
+
+        layers = declarator(spelling[start.start():])
+        if layers and layers[0] == "member":
+            return CXX_MEMBER_FUNCTION if layers[1:2] == ["function"] else CXX_MEMBER_DATA
+        if layers and layers[0] in ("pointer", "array"):
+            return POINTER if layers[0] == "pointer" else CXX_ARRAY
+        raise ValueError(f"{self.tu}: unsupported C++ member pointer declarator {text!r}")
+
     def structure(self, text: str, parameter: bool, object_type: bool) -> Kind | None:
         """Pointer, reference and array declarators of a spelling; None for a named type."""
-        if "::*" in text:
-            raise ValueError(f"{self.tu}: member pointer type {text!r} is unsupported")
+        # Opaque spellings still refuse before looking for any declarator.
         if CXX_OPAQUE_SPELLING.search(CXX_ANONYMOUS_TAG.sub("", text)):  # its operand's type is not spelled
             raise ValueError(f"{self.tu}: typeof/decltype type {text!r} has no type tree to check")
+        if "::*" in text:
+            resolved = self.member_structure(text)
+            return self.typedef_kind(resolved, parameter, object_type)
         # Parenthesized abstract declarators distinguish pointer-to-array from array-of-pointers.
         declarator = re.search(r"\(([*&]+)\s*(?:(?:const|volatile|__restrict|restrict)\s*)*((?:\[[^\]]*\])*)\)", text)
         array = bool(declarator[2]) if declarator else "[" in text
@@ -1527,6 +1600,10 @@ def preprocess_and_parse(unit: TranslationUnit, profile: dict[str, Any], work: P
     else:
         driver, _ = profile_toolchain(profile, unit.profile)
         flags = [item for path in unit.includes for item in ("-I", path)] + profile["profiles"][unit.profile]["compiler_flags"]
+        source_root = (work / WORK_LINK).resolve()
+        source = (work / unit.argument).resolve()
+        source_name = toolchain_library.source_name(source_root, source)
+        flags += toolchain_library.extra_flags(source_name)
         completed = subprocess.run([*driver, *flags, "-E", unit.argument], cwd=work, env=environment, capture_output=True)
         if completed.returncode != 0:
             stderr = completed.stderr.decode("latin-1").strip()
@@ -1535,7 +1612,22 @@ def preprocess_and_parse(unit: TranslationUnit, profile: dict[str, Any], work: P
             result = parse_cxx_tu(completed.stdout.decode("latin-1"), unit.tu, unit.profile, cxx[0],
                                   environment=environment, unavailable=cxx[1])
         else:
-            result = parse_tu(completed.stdout.decode("latin-1"), unit.tu, unit.profile)
+            text = completed.stdout.decode("latin-1")
+            try:
+                upstream = toolchain_library.validate_expansion(
+                    source_root, source, unit.profile, toolchain_library.participating_files(text, work))
+                if upstream:
+                    if unit.includes:
+                        raise ValueError("Pinned upstream libgcc does not admit include overrides")
+                    text = toolchain_library.interface_text(text)
+                result = parse_tu(text, unit.tu, unit.profile)
+                if upstream:
+                    # Original compiler-header externs and redundant local declarations
+                    # are not game ABI assertions. Preserve every definition and call.
+                    result.sites = [site for site in result.sites if site.role != "declaration"]
+                    result.objects = [site for site in result.objects if site.role != "declaration"]
+            except ValueError as error:
+                result = TUResult(unit.tu, unit.profile, error=f"parse: {error}")
     result.candidate = unit.candidate
     return result
 

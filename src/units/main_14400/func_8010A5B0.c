@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 typedef struct { short delta, index; s32 (*call)(void *, s32, s32, u8, s32); } TestEntry;
@@ -7,14 +8,13 @@ typedef struct { char pad0[0x90]; TestEntry test_90; } ActorVtable;
 typedef struct { char pad0[0x60]; RemoveEntry remove_60; } CollectionVtable;
 typedef struct { void *owner; CollectionVtable *vtbl_4; char pad8[0x14]; } Collection;
 typedef struct { char pad0[0x24]; ActorVtable *vtbl_24; char pad28[0x60]; void *field_88; char pad8C[0x38]; Collection collection_C4; } Object;
-typedef struct { u8 kind_0; } Item;
 extern s32 func_800E2074(void *obj);
 extern s32 func_800E1CC4(void *obj, s32 kind);
 extern s32 func_800E4454(void *obj);
 extern s32 func_8010C38C(void *item);
 extern void *func_800CF058(void *target, u8 kind);
 /* The selector fills two element pointers; the prior s32* contract carries addresses. */
-extern u8 func_800E8B10(void *obj, void **out);
+extern u8 func_800E8B10(void *obj, Item **out);
 extern s32 func_800ADC90(void *obj, void *pos, void *origin);
 extern s32 func_80049CB4(s32 id, ...);
 extern s32 func_800CD2BC(void *collection, void *element);
@@ -30,7 +30,7 @@ s32 func_8010A5B0(Object *obj, void *context /* unused supplied context */, Item
     s32 blocked = 0;
     s32 replace;
     Item *old;
-    void *choices[2];
+    Item *choices[2];
     s32 kind;
     if (!func_800E2074(obj) || func_800E1CC4(obj, 0) || !obj->field_88 || test(obj) || func_800E4454(obj)) {
         blocked = 1;
@@ -38,7 +38,7 @@ s32 func_8010A5B0(Object *obj, void *context /* unused supplied context */, Item
     if (blocked) return 0;
     old = 0;
     replace = 1;
-    kind = item->kind_0;
+    kind = item->field00;
     switch (kind) {
     case 3:
     case 4:

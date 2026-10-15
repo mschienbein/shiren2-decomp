@@ -13,10 +13,12 @@ from typing import Any
 
 import yaml
 
-from certification import REQUIRED_ARTIFACTS, REQUIRED_RECEIPT_FIELDS, build_graph, c_attributions, check_elf, check_elf_rom, checked_path, compiler_environment, expected_commands, file_inventory, intermediate_keys, object_commands, read_json, sha256, splat_options, tool_profile, runtime_fingerprint, image_evidence, image_matches, reproduce_c_objects_and_link, linked_image_records, retained_trial
+from certification import REQUIRED_ARTIFACTS, REQUIRED_RECEIPT_FIELDS, build_graph, c_attributions, check_elf, check_elf_rom, checked_path, compiler_environment, expected_commands, file_inventory, intermediate_keys, object_commands, read_json, rom_map_report, sha256, splat_options, tool_profile, runtime_fingerprint, image_evidence, image_matches, reproduce_c_objects_and_link, linked_image_records, retained_trial, source_provenance_report
+from certification import validated_process_runtime
 from evidence import COMPILED_KINDS, require_inventory, validate_attributions, validate_matches
 from rom import CANONICAL_ROM, EXPECTED_SHA256, PROJECT, attest
 from workspace import verify_manifest
+from toolchain_library import CATEGORY
 
 
 def verify_receipt(path: Path, document: dict[str, Any] | None = None, *, require_current: bool = True, tool_root: Path = PROJECT, reference: Path = CANONICAL_ROM) -> dict[str, Any]:
@@ -44,7 +46,8 @@ def verify_receipt(path: Path, document: dict[str, Any] | None = None, *, requir
     profile = tool_profile(tool_root, directory / "source")
     if receipt["profile"] != profile:
         raise ValueError("Changed compiler/tool profile")
-    if receipt["runtime"] != runtime_fingerprint():
+    runtime = validated_process_runtime(directory, receipt["runtime"])
+    if runtime != runtime_fingerprint():
         raise ValueError("Changed Python/package runtime")
     if receipt["compiler_environment"] != compiler_environment(directory, profile):
         raise ValueError("Compiler environment disagrees with profile")
@@ -53,7 +56,7 @@ def verify_receipt(path: Path, document: dict[str, Any] | None = None, *, requir
         raise ValueError("Receipt graph disagrees with linker/source declarations")
     matches = read_json(directory / "source/config/matches.json")["functions"]
     inventory, inventory_report = image_evidence(directory / "source", reference.read_bytes())
-    inventory_report["linked_images"] = linked_image_records(directory, inventory, reference.read_bytes(), graph=graph)
+    inventory_report["linked_images"] = linked_image_records(directory, inventory, reference.read_bytes())
     if receipt["image_inventory"] != inventory_report:
         raise ValueError("Original image inventory disagrees with frozen source/ROM evidence")
     counts = image_matches(matches, inventory)
@@ -73,10 +76,14 @@ def verify_receipt(path: Path, document: dict[str, Any] | None = None, *, requir
     c_sources = {item["source"] for item in graph.values() if item["source_kind"] in COMPILED_KINDS}
     require_inventory(receipt["dependencies"], c_sources, "C dependencies")
     from build import dependency_inputs
+    objects_by_source = {}
+    for name, item in graph.items():
+        if item["source_kind"] in COMPILED_KINDS:
+            objects_by_source.setdefault(item["source"], name)
     for source in c_sources:
         dependency = directory / "compiled" / Path(source).with_suffix(".d")
         recorded = dependency_inputs(directory, dependency, manifest, source)
-        name = next(name for name, item in graph.items() if item["source_kind"] in COMPILED_KINDS and item["source"] == source)
+        name = objects_by_source[source]
         with retained_trial(directory, "dependencies") as temporary:
             regenerated = Path(temporary) / "source.d"
             operation = object_commands(name, graph[name], profile)[0]
@@ -101,13 +108,19 @@ def verify_receipt(path: Path, document: dict[str, Any] | None = None, *, requir
     reproduction = reproduce_c_objects_and_link(directory, graph, profile, reference)
     if receipt["reproduction"] != reproduction:
         raise ValueError("C object/full-link reproduction disagrees with receipt")
+    # Source coverage is reported only after independently reproducing the
+    # corresponding pack inventory and complete ROM, never from claimed hashes.
+    if receipt["rom_map"] != rom_map_report(directory, reference.read_bytes(), matches, commands=receipt["commands"],
+                                           reproduction=reproduction, graph=graph, profile=profile):
+        raise ValueError("Complete-game ROM map accounting disagrees with frozen map/build evidence")
     attribution = c_attributions(directory, matches, graph, profile, reference.read_bytes(), reproduction=reproduction)
     validate_attributions(matches, receipt["c_attributions"], graph)
     if receipt["c_attributions"] != attribution:
         raise ValueError("C attribution disagrees with actual objects/map/bytes")
     check_elf(directory)
     check_elf_rom(directory, profile)
-    if tool_profile(tool_root, directory / "source") != profile or receipt["runtime"] != runtime_fingerprint():
+    validated_process_runtime(directory, receipt["runtime"])
+    if tool_profile(tool_root, directory / "source") != profile or runtime != runtime_fingerprint():
         raise ValueError("External tools/runtime changed during verification")
     verify_manifest(directory / "source", manifest)
     if require_current:
@@ -159,8 +172,19 @@ def main() -> None:
     parser.add_argument("--promote", action="store_true", help="Integrator: atomically publish a current-source receipt")
     parser.add_argument("--tool-root", type=Path, default=PROJECT)
     parser.add_argument("--rom", type=Path, default=CANONICAL_ROM)
+    parser.add_argument("--source-provenance", type=Path,
+                        help="Read-only frozen-source preflight in a private run; no build or receipt acceptance")
+    parser.add_argument("--recipe", type=Path, help="JSON split/pack argv for --source-provenance")
     args = parser.parse_args()
     try:
+        if args.source_provenance is not None:
+            if args.receipt or args.snapshot_only or args.promote or args.recipe is None:
+                raise ValueError("Source preflight needs --recipe and cannot verify/promote a receipt")
+            print(json.dumps(source_provenance_report(args.source_provenance, args.rom.read_bytes(),
+                                                     read_json(args.recipe)), indent=2))
+            return
+        if args.recipe is not None:
+            raise ValueError("--recipe requires --source-provenance")
         if args.snapshot_only and args.promote:
             raise ValueError("Snapshot-only verification cannot promote")
         path = args.receipt.resolve() if args.receipt else latest_receipt()
@@ -173,7 +197,17 @@ def main() -> None:
     scope = "frozen snapshot" if args.snapshot_only else "current source"
     cpp = (f"; {counts['matched_cpp_functions']} C++ function(s), {counts['matched_cpp_bytes']} C++ bytes"
            if "matched_cpp_functions" in counts else "")
-    print(f"PASS: exact ROM, image ownership, fresh C objects and full linker reproduction ({scope}); {counts['matched_c_functions']} C function(s), {counts['matched_c_bytes']} C bytes{cpp}")
+    library = (f"; {counts['matched_toolchain_library_functions']} {CATEGORY} function(s), {counts['matched_toolchain_library_bytes']} bytes (zero C/C++ credit)"
+               if "matched_toolchain_library_functions" in counts else "")
+    generated = (f"; generated subset: {counts['matched_generated_cpp_functions']} function(s), {counts['matched_generated_cpp_bytes']} C++ bytes"
+                 if "matched_generated_cpp_functions" in counts else "")
+    print(f"PASS: exact ROM, image ownership, fresh compiled objects and full linker reproduction ({scope}); {counts['matched_c_functions']} C function(s), {counts['matched_c_bytes']} C bytes{cpp}{library}{generated}")
+    complete = receipt["rom_map"]
+    print(f"Complete-game map {complete['map_id'][:12]} remains open: "
+          f"{complete['research_classified_bytes']:,} research-classified bytes; "
+          f"{complete['research_open_bytes']:,} research-open/located bytes; "
+          f"{complete['build_source_bytes']:,} receipt-backed editable build-source bytes. "
+          f"These are separate metrics over {complete['rom_size']:,} ROM bytes.")
 
 
 if __name__ == "__main__":

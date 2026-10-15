@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 from rom import CANONICAL_ROM, EXPECTED_SHA256, PROJECT, attest, normalize
 from build import build, compare_rom, execute_snapshot, write_json
 from verify import checked_path, verify_receipt
-from certification import REQUIRED_ARTIFACTS, REQUIRED_RECEIPT_FIELDS, binary_storage_record, build_graph, compiler_environment, elf_code, file_inventory, image_evidence, intermediate_keys, linked_image_records, object_commands, read_json, retained_trial, sha256, source_policy_violations, splat_bindings, splat_options, storage_elf_layout, storage_load_mapping, tool_profile
+from certification import REQUIRED_ARTIFACTS, REQUIRED_RECEIPT_FIELDS, build_graph, compiler_environment, elf_code, file_inventory, image_evidence, intermediate_keys, linked_image_records, object_commands, read_json, retained_trial, sha256, source_policy_violations, splat_bindings, splat_options, tool_profile
 from workspace import _validated_manifest, create_snapshot, input_manifest
 from evidence import require_inventory
 from spimdisasm.elf32 import Elf32File
@@ -151,7 +151,7 @@ def copy_private_evidence_core(receipt_path: Path, directory: Path) -> None:
                 copy_file(source, target, "build.log")
             # Never select by receipt inventory: unknown entries and nested cache/tmp
             # names must remain visible to the unchanged policies after copying.
-            for name in ("source", "generated", "compiled", "obj"):
+            for name in ("source", "generated", "compiled", "obj", "trusted-orchestration"):
                 copy_tree(source, target, name)
         finally:
             os.close(target)
@@ -270,27 +270,29 @@ class ToolchainRegistryTests(unittest.TestCase):
         self.assertEqual(cxx["assembler"], "as_gnu291_fp32")
         self.assertEqual(cxx["assembler_flags"], main["assembler_flags"])
 
-    def test_asg_profile_binds_the_complete_service_manager_range(self) -> None:
+    def test_kmc_range_profile_replaces_only_the_assembler(self) -> None:
+        profiles = read_json(PROJECT / "config/compiler_profiles.json")["profiles"]
+        gnu = profiles["gcc272-gnu291-mips2-unsigned"]
+        kmc = profiles["gcc272-kmc26-mips2-unsigned"]
+        self.assertEqual(kmc["compiler"], gnu["compiler"])
+        self.assertEqual(kmc["compiler_flags"], gnu["compiler_flags"])
+        self.assertEqual(kmc["assembler"], "as_kmc26")
+        self.assertEqual(kmc["assembler_flags"], ["-mips2", "-EB", "-G", "0", "-I", "source/include"])
+        self.assertNotIn("language", kmc)
+
+    def test_addu_range_units_bind_only_range_profiles(self) -> None:
         declaration = read_json(PROJECT / "config/compiler_profiles.json")
         pointer = read_json(PROJECT / "docs/progress.json")["denominator"]
         catalogue = read_json(PROJECT / pointer["path"])["identity"]["functions"]
-        symbols = {item["symbol"] for item in catalogue
-                   if item["image_id"] == "main_14400" and 0x80130A00 <= item["vram_start"] < 0x80132050}
-        self.assertEqual(len(symbols), 48)
+        inside = {item["symbol"] for item in catalogue
+                  if item["image_id"] == "main_14400" and 0x80132050 <= item["vram_start"] < 0x80135FB0}
+        self.assertEqual(len(inside), 14)
+        range_profiles = {"gcc272-kmc26-mips2-unsigned", "gcc272-gnu291-mips2-unsigned"}
         matches = read_json(PROJECT / "config/matches.json")["functions"]
-        expected = {item["source"] for item in matches if item["symbol"] in symbols}
-        self.assertTrue(expected)
-        actual = {source for source, profile_id in declaration["tu_profiles"].items()
-                  if profile_id == "gcc281pm-gnu291-O2-unsigned-asg"}
-        self.assertEqual(actual, expected)
-        for item in matches:
-            if item["source"] in actual:
-                self.assertIn(item["symbol"], symbols)
-        self.assertTrue(all((PROJECT / source).is_file() for source in actual))
-        self.assertEqual(declaration["tu_profiles"]["src/units/main_14400/func_80130930.c"],
-                         "gcc281pm-gnu291-O2-unsigned")
-        self.assertEqual(declaration["tu_profiles"]["src/units/main_14400/func_80132050.c"],
-                         "gcc272-gnu291-mips2-unsigned")
+        sources = {item["source"] for item in matches if item["symbol"] in inside}
+        bound = {source for source, profile_id in declaration["tu_profiles"].items() if profile_id in range_profiles}
+        self.assertEqual(bound, sources)
+        self.assertTrue(all(item["symbol"] in inside for item in matches if item["source"] in bound))
 
     @unittest.skipUnless(
         (PROJECT / ".cache/gcc-pm281/gcc").is_file()
@@ -739,233 +741,216 @@ class CxxGraphTests(unittest.TestCase):
             self.assertEqual(sources, inventory.source_bindings)
 
 
-class Stage1StorageTests(unittest.TestCase):
-    """Synthetic ELF/map tests prove validator behavior, never real linkage or ROM certification."""
-    parent = "overlay_b_136dc0_storage"
-    object_name = "obj/generated/assets/overlay_136dc0_initialized_opaque.o"
-    input_name = "generated/assets/overlay_136dc0_initialized_opaque.bin"
+class OverlayLinkageTests(unittest.TestCase):
+    """Synthetic YAML/ELF/linker-script tests prove validator behavior, never real linkage or ROM certification."""
+    overlays = (
+        ("overlay_1339f0", 0x1339F0, 0x136DC0, 0x801E8270, 0x801E8700, (0x136380, 0x136A40)),
+        ("overlay_136dc0", 0x136DC0, 0x148460, 0x801F6540, 0x801F7200, (0x147030, 0x147C50)),
+    )
+
+    def images(self) -> dict[str, SimpleNamespace]:
+        return {name: SimpleNamespace(image_id=name, split_status="active", rom_start=start, rom_end=end,
+                    vram_start=0x801E4EA0, vram_end=0x801E4EA0 + end - start, vram_rom_delta=0x801E4EA0 - start,
+                    load_slot="overlay_801e4ea0", splat_segments=(name,), bss_ranges=(SimpleNamespace(vram_start=bss_start, vram_end=bss_end),))
+                for name, start, end, bss_start, bss_end, _ in self.overlays}
+
+    def segments(self) -> list:
+        result: list = []
+        for name, start, end, bss_start, bss_end, (data, rodata) in self.overlays:
+            result.append({"name": name, "type": "code", "start": start, "vram": 0x801E4EA0,
+                "exclusive_ram_id": "overlay_801e4ea0", "symbol_name_format": "$VRAM_$ROM", "subalign": 1,
+                "bss_size": bss_end - bss_start, "subsegments": [[start, "asm", f"{name}/text"], [data, "data", f"{name}/data"],
+                [rodata, "rodata", f"{name}/rodata"], {"type": "bss", "vram": bss_start, "name": f"{name}/bss"}]})
+        return result + [{"name": "remaining", "type": "bin", "start": 0x148460, "vram": 0x148460, "exclusive_ram_id": "rom_tail_storage"}, [0x2000000]]
+
+    def write_config(self, root: Path, segments: list | None = None) -> SimpleNamespace:
+        (root/"config").mkdir(parents=True, exist_ok=True)
+        (root/"config/shiren2.jp.yaml").write_text(yaml.safe_dump({"segments": self.segments() if segments is None else segments}))
+        return SimpleNamespace(images=self.images(), source_bindings={}, components=(), evidence={})
 
     @staticmethod
-    def elf_bytes(body: bytes, *, linked: bool, address: int = 0x801E4EA0, lma: int = 0x136DC0, extra_bss: bool = False) -> bytes:
-        name = ".overlay_b_136dc0_storage" if linked else ".data"
-        section_names = ["", name, ".shstrtab", ".strtab", ".symtab"] + ([".extra_bss"] if extra_bss else [])
+    def elf_bytes(sections: list[tuple[str, int, int, int, bytes | int]]) -> bytes:
+        """ELF32 big-endian MIPS with (name, type, flags, address, bytes-or-NOBITS-size) sections."""
+        names = [""] + [section[0] for section in sections] + [".shstrtab"]
         shstrings = b""; offsets = {}
-        for item in section_names:
-            offsets[item] = len(shstrings); shstrings += item.encode() + b"\0"
-        labels = ("overlay_b_136dc0_storage_ROM_START", "overlay_b_136dc0_storage_ROM_END") if linked else ()
-        strings = b"\0"; positions = {}
-        for label in labels:
-            positions[label] = len(strings); strings += label.encode() + b"\0"
-        symbols = bytes(16)
-        for label, value in zip(labels, (0x136DC0, 0x148460)):
-            symbols += struct.pack(">IIIBBH", positions[label], value, 0, 0x10, 0, 0xFFF1)
-        data = bytearray(0x100); data.extend(body)
-        shstr_offset = len(data); data.extend(shstrings)
-        str_offset = len(data); data.extend(strings)
-        data.extend(bytes((-len(data)) % 4)); sym_offset = len(data); data.extend(symbols)
-        shoff = len(data)
-        headers = [bytes(40), struct.pack(">IIIIIIIIII", offsets[name], 1, 3, address if linked else 0, 0x100, len(body), 0, 0, 1, 0),
-            struct.pack(">IIIIIIIIII", offsets[".shstrtab"], 3, 0, 0, shstr_offset, len(shstrings), 0, 0, 1, 0),
-            struct.pack(">IIIIIIIIII", offsets[".strtab"], 3, 0, 0, str_offset, len(strings), 0, 0, 1, 0),
-            struct.pack(">IIIIIIIIII", offsets[".symtab"], 2, 0, 0, sym_offset, len(symbols), 3, 1, 4, 16)]
-        if extra_bss:
-            headers.append(struct.pack(">IIIIIIIIII", offsets[".extra_bss"], 8, 3, address + len(body), 0, 6, 0, 0, 1, 0))
+        for name in names:
+            offsets[name] = len(shstrings); shstrings += name.encode() + b"\0"
+        data = bytearray(0x100); headers = [bytes(40)]
+        for name, kind, flags, address, body in sections:
+            offset = len(data)
+            if isinstance(body, int):
+                size = body
+            else:
+                data.extend(body); size = len(body)
+            headers.append(struct.pack(">IIIIIIIIII", offsets[name], kind, flags, address, offset, size, 0, 0, 4, 0))
+        string_offset = len(data); data.extend(shstrings)
+        headers.append(struct.pack(">IIIIIIIIII", offsets[".shstrtab"], 3, 0, 0, string_offset, len(shstrings), 0, 0, 1, 0))
+        data.extend(bytes((-len(data)) % 4)); header_offset = len(data)
         for header in headers:
             data.extend(header)
-        ident = b"\x7fELF\x01\x02\x01" + bytes(9)
-        data[:52] = ident + struct.pack(">HHIIIIIHHHHHH", 2 if linked else 1, 8, 1, 0, 52 if linked else 0, shoff, 0, 52, 32 if linked else 0, 1 if linked else 0, 40, len(headers), 2)
-        if linked:
-            data[52:84] = struct.pack(">IIIIIIII", 1, 0x100, address, lma, len(body), len(body), 6, 16)
+        data[:52] = b"\x7fELF\x01\x02\x01" + bytes(9) + struct.pack(">HHIIIIIHHHHHH", 2, 8, 1, 0x80025C00, 0, header_offset, 0, 52, 32, 0, 40, len(headers), len(headers) - 1)
         return bytes(data)
 
-    def fixture(self, root: Path) -> tuple[SimpleNamespace, dict, bytes, dict]:
-        body = (bytes(range(256)) * 279)[:0x116A0]
-        reference = bytes(0x136DC0) + body
-        image = SimpleNamespace(image_id="overlay_136dc0", split_status="active", rom_start=0x136DC0, rom_end=0x148460,
-            vram_start=0x801E4EA0, vram_end=0x801F6540, vram_rom_delta=0x800AE0E0, splat_segments=(self.parent,), bss_ranges=())
-        graph = {self.object_name: {"source": self.input_name, "input": self.input_name, "source_kind": "binary", "image_id": image.image_id}}
-        for name, data in ((self.input_name, body), (self.object_name, self.elf_bytes(body, linked=False)), ("shiren2.elf", self.elf_bytes(body, linked=True))):
-            path = root/name; path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(data)
-        (root/"shiren2.map").write_text(f".{self.parent}\n  0x801e4ea0 0x116a0 load address 0x136dc0\n .data 0x801e4ea0 0x116a0 {self.object_name}\n")
-        return image, graph, reference, storage_elf_layout(root/"shiren2.elf")
+    def linked_fixture(self, root: Path, *, bss_sizes: dict[str, int] | None = None, addresses: dict[str, int] | None = None, omit: str | None = None) -> tuple[SimpleNamespace, bytes]:
+        reference = bytearray(bytes(range(256)) * (0x148460 // 256 + 1))[:0x148460]
+        sections = []
+        for name, start, end, bss_start, bss_end, _ in self.overlays:
+            sections.append((f".{name}", 1, 7, (addresses or {}).get(name, 0x801E4EA0), bytes(reference[start:end])))
+            if omit != name:
+                sections.append((f".{name}_bss", 8, 3, bss_start, (bss_sizes or {}).get(name, bss_end - bss_start)))
+        (root/"shiren2.elf").write_bytes(self.elf_bytes(sections))
+        return self.write_config(root/"source"), bytes(reference)
 
-    def write_config(self, root: Path) -> SimpleNamespace:
-        image = SimpleNamespace(image_id="overlay_136dc0", split_status="active", rom_start=0x136DC0, rom_end=0x148460,
-            vram_start=0x801E4EA0, vram_end=0x801F6540, vram_rom_delta=0x800AE0E0, splat_segments=(self.parent,), bss_ranges=())
-        config = {"segments": [
-            {"name": "overlay_1339f0_opaque", "type": "bin", "start": 0x1339F0, "vram": 0x1339F0},
-            {"name": self.parent, "type": "code", "start": 0x136DC0, "vram": 0x801E4EA0, "bss_size": 0, "subsegments": [[0x136DC0, "bin", "overlay_136dc0_initialized_opaque"]]},
-            {"name": "remaining", "type": "bin", "start": 0x148460, "vram": 0x148460}, [0x2000000]]}
-        (root/"config").mkdir(parents=True, exist_ok=True)
-        (root/"config/shiren2.jp.yaml").write_text(yaml.safe_dump(config))
-        return SimpleNamespace(images={image.image_id: image}, source_bindings={}, components=(), evidence={})
-
-    def test_complete_binary_storage_record_has_zero_C(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); image, graph, original, layout = self.fixture(root)
-            result = binary_storage_record(root, image, f".{self.parent}", graph, layout, original)
-            self.assertEqual(result["C_credit"], 0)
-            self.assertEqual((result["load_mapping"]["lma_start"], result["load_mapping"]["lma_end"]), (0x136DC0, 0x148460))
-            self.assertEqual(result["natural_object_sections"][1]["size"], 0x116A0)
-
-    def test_wrong_or_ambiguous_actual_load_mapping_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); image, graph, original, layout = self.fixture(root)
-            for mutation in ("wrong", "duplicate", "missing"):
-                bad = copy.deepcopy(layout)
-                if mutation == "wrong": bad["loads"][0]["lma_start"] += 4
-                elif mutation == "duplicate": bad["loads"].append(copy.deepcopy(bad["loads"][0]))
-                else: bad["loads"] = []
-                with self.subTest(mutation=mutation), self.assertRaises(ValueError):
-                    binary_storage_record(root, image, f".{self.parent}", graph, bad, original)
-
-    def test_wrong_section_bounds_or_bytes_are_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); image, graph, original, layout = self.fixture(root)
-            for field, value in (("size", 0x116A1), ("vram_start", 0x801E4EA4), ("sha256", "0" * 64), ("type", 8)):
-                bad = copy.deepcopy(layout); bad["sections"][1][field] = value
-                with self.subTest(field=field), self.assertRaises(ValueError):
-                    binary_storage_record(root, image, f".{self.parent}", graph, bad, original)
-
-    def test_wrong_boundary_symbols_or_map_are_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); image, graph, original, layout = self.fixture(root)
-            bad = copy.deepcopy(layout); bad["symbols"][f"{self.parent}_ROM_END"][0]["value"] += 1
-            with self.assertRaises(ValueError): binary_storage_record(root, image, f".{self.parent}", graph, bad, original)
-            (root/"shiren2.map").write_text((root/"shiren2.map").read_text().replace("0x136dc0", "0x136dc4"))
-            with self.assertRaises(ValueError): binary_storage_record(root, image, f".{self.parent}", graph, layout, original)
-
-    def test_changed_binary_input_or_natural_object_BSS_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); image, graph, original, layout = self.fixture(root)
-            body = (root/self.input_name).read_bytes()
-            (root/self.input_name).write_bytes(body[:-1] + bytes([body[-1] ^ 1]))
-            with self.assertRaises(ValueError): binary_storage_record(root, image, f".{self.parent}", graph, layout, original)
-            (root/self.input_name).write_bytes(body)
-            (root/self.object_name).write_bytes(self.elf_bytes(body, linked=False, extra_bss=True))
-            with self.assertRaises(ValueError): binary_storage_record(root, image, f".{self.parent}", graph, layout, original)
-
-    def test_extra_RAM_or_ROM_allocation_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); image, graph, original, layout = self.fixture(root)
-            for kind in ("RAM", "ROM"):
-                bad = copy.deepcopy(layout); extra = copy.deepcopy(bad["sections"][1]); extra.update(name=".orphan", size=4)
-                if kind == "ROM":
-                    extra["vram_start"] = 0x80010000; extra["file_offset"] += 8
-                    load = copy.deepcopy(bad["loads"][0]); load.update(index=1, vram_start=extra["vram_start"], file_offset=extra["file_offset"], lma_start=0x136DC0, file_size=4, memory_size=4)
-                    bad["loads"].append(load)
-                bad["sections"].append(extra)
-                with self.subTest(kind=kind), self.assertRaises(ValueError):
-                    binary_storage_record(root, image, f".{self.parent}", graph, bad, original)
-
-    def test_wrong_object_owner_or_nonbinary_kind_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); image, graph, original, layout = self.fixture(root)
-            for field, value in (("image_id", "overlay_1339f0"), ("source_kind", "c")):
-                bad = copy.deepcopy(graph); bad[self.object_name][field] = value
-                with self.subTest(field=field), self.assertRaises(ValueError):
-                    binary_storage_record(root, image, f".{self.parent}", bad, layout, original)
-
-    def test_supported_splat_storage_binding_preserves_unknown_BSS_and_zero_C(self) -> None:
+    def test_two_overlay_parents_and_the_tail_bin_bind_their_sections(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary); inventory = self.write_config(root)
             sections, sources = splat_bindings(root, inventory)
-            self.assertEqual(sections[self.parent], "overlay_136dc0")
-            self.assertEqual(sections["overlay_1339f0_opaque"], "rom_storage:overlay_1339f0_opaque")
+            self.assertEqual(sections, {"overlay_1339f0": "overlay_1339f0", "overlay_1339f0_bss": "overlay_1339f0",
+                "overlay_136dc0": "overlay_136dc0", "overlay_136dc0_bss": "overlay_136dc0", "remaining": "rom_storage:remaining"})
             self.assertEqual(sources, {})
 
-    def test_actual_generated_graph_has_one_B_binary_owner(self) -> None:
+    def test_overlay_parent_may_lower_its_section_end_alignment(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); inventory = self.write_config(root/"source")
-            for name in ("overlay_1339f0_opaque", "overlay_136dc0_initialized_opaque", "remaining"):
-                path = root/f"generated/assets/{name}.bin"; path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(b"synthetic bin")
-            blocks = []
-            for section, name in (("overlay_1339f0_opaque", "overlay_1339f0_opaque"), (self.parent, "overlay_136dc0_initialized_opaque"), ("remaining", "remaining")):
-                blocks.append(f"    .{section} :\n    {{\n        obj/generated/assets/{name}.o(.data);\n    }}\n")
-            (root/"shiren2.ld").write_text("SECTIONS\n{\n" + "".join(blocks) + "}\n")
-            with patch("certification.load_inventory", return_value=inventory):
-                graph = build_graph(root)
-                self.assertEqual(graph[self.object_name]["image_id"], "overlay_136dc0")
-                self.assertEqual({item["source_kind"] for item in graph.values()}, {"binary"})
-                # A declaration cannot reuse B's same object under a second owner.
-                (root/"shiren2.ld").write_text((root/"shiren2.ld").read_text().replace("obj/generated/assets/overlay_1339f0_opaque.o", self.object_name))
-                with self.assertRaisesRegex(ValueError, "no unique original image/storage owner"):
-                    build_graph(root)
+            root = Path(temporary); inventory = self.write_config(root)
+            for align in (1, 4, 16):
+                segments = self.segments(); segments[0]["align"] = align
+                self.write_config(root, segments)
+                with self.subTest(align=align):
+                    self.assertIn("overlay_1339f0", splat_bindings(root, inventory)[0])
 
-    def test_intermediate_inventory_handles_dict_bins_and_preserves_C_references(self) -> None:
-        for with_existing_C in (False, True):
-            with self.subTest(with_existing_C=with_existing_C), tempfile.TemporaryDirectory() as temporary:
-                root = Path(temporary); self.write_config(root)
-                graph = {self.object_name: {"source": self.input_name, "input": self.input_name, "source_kind": "binary", "image_id": "overlay_136dc0"}}
-                matches = []
-                if with_existing_C:
-                    unit = "units/resident/contpfs"; source = f"src/{unit}.c"
-                    graph[f"obj/source/{source[:-2]}.o"] = {"source": source, "input": f"source/{source}", "source_kind": "c", "image_id": "resident"}
-                    matches = [{"source": source, "symbol": "func_existing"}]
-                    path = root/"config/shiren2.jp.yaml"; config = yaml.safe_load(path.read_text())
-                    config["segments"].insert(0, {"name": "existing_main", "type": "code", "subsegments": [[0x1060, "c", unit], [0x14400, "bss", unit]]})
-                    path.write_text(yaml.safe_dump(config))
-                generated, compiled = intermediate_keys(graph, matches, root)
-                self.assertIn("assets/overlay_136dc0_initialized_opaque.bin", generated)
-                if with_existing_C:
-                    self.assertEqual(compiled, {f"src/{unit}.s", f"src/{unit}.d"})
-                    self.assertIn(f"asm/data/{unit}.bss.s", generated)
-                    self.assertIn(f"asm/matchings/{unit}/func_existing.s", generated)
+    def test_unsupported_overlay_parent_shapes_are_rejected(self) -> None:
+        mutations = [
+            ("name", "overlay_a"), ("symbol_name_format", "$VRAM"), ("symbol_name_format", None),
+            ("exclusive_ram_id", "overlay_136dc0"), ("exclusive_ram_id", None), ("subalign", 4), ("subalign", None),
+            ("bss_size", 0x480), ("bss_size", None), ("vram", 0x801E4EA4), ("start", 4), ("bss_contains_common", True),
+            ("align", 3), ("align", 32), ("align", "4"), ("align", True),
+        ]
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary); inventory = self.write_config(root)
+            for index in (0, 1):
+                for field, value in mutations:
+                    segments = self.segments(); segment = segments[index]
+                    if value is None:
+                        segment.pop(field)
+                    elif field == "start":
+                        segment["start"] += value; segment["subsegments"][0][0] += value
+                    else:
+                        segment[field] = value
+                    self.write_config(root, segments)
+                    with self.subTest(index=index, field=field, value=value), self.assertRaises(ValueError):
+                        splat_bindings(root, inventory)
+
+    def test_tail_bin_needs_its_own_exclusive_id_and_exact_interval(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary); inventory = self.write_config(root)
+            for mutation in ("no_id", "shared_id", "ram", "end", "old_opaque_a"):
+                segments = self.segments(); tail = segments[2]
+                if mutation == "no_id":
+                    tail.pop("exclusive_ram_id")
+                elif mutation == "shared_id":
+                    tail["exclusive_ram_id"] = "overlay_801e4ea0"
+                elif mutation == "ram":
+                    tail["vram"] = 0x801E4EA0
+                elif mutation == "end":
+                    segments[3] = [0x1FFFFF0]
                 else:
-                    self.assertEqual(compiled, set())
-                    self.assertEqual(generated, {"undefined_funcs_auto.txt", "undefined_syms_auto.txt", "assets/overlay_136dc0_initialized_opaque.bin"})
-
-    def test_unsupported_padding_BSS_or_C_split_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); inventory = self.write_config(root); path = root/"config/shiren2.jp.yaml"
-            config = yaml.safe_load(path.read_text())
-            for field, value in (("subalign", 4), ("bss_size", 6), ("subsegments", [[0x136DC0, "c", "invented_B"]])):
-                bad = copy.deepcopy(config); bad["segments"][1][field] = value; path.write_text(yaml.safe_dump(bad))
-                with self.subTest(field=field), self.assertRaises(ValueError): splat_bindings(root, inventory)
-
-    def test_opaque_storage_VMA_cannot_claim_A_runtime_or_change_ROM_end(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); inventory = self.write_config(root); path = root/"config/shiren2.jp.yaml"
-            config = yaml.safe_load(path.read_text())
-            for mutation in ("RAM", "end"):
-                bad = copy.deepcopy(config)
-                if mutation == "RAM": bad["segments"][0]["vram"] = 0x801E4EA0
-                else: bad["segments"][1]["start"] += 1
-                path.write_text(yaml.safe_dump(bad))
-                with self.subTest(mutation=mutation), self.assertRaises(ValueError): splat_bindings(root, inventory)
+                    segments.insert(0, {"name": "overlay_1339f0_opaque", "type": "bin", "start": 0x1339F0, "vram": 0x1339F0})
+                self.write_config(root, segments)
+                with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                    splat_bindings(root, inventory)
 
     def test_duplicate_output_section_owner_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); inventory = self.write_config(root); path = root/"config/shiren2.jp.yaml"
-            config = yaml.safe_load(path.read_text()); config["segments"].insert(0, [0, "bin", self.parent])
-            path.write_text(yaml.safe_dump(config))
-            with self.assertRaises(ValueError): splat_bindings(root, inventory)
+            root = Path(temporary); inventory = self.write_config(root)
+            segments = self.segments(); segments.insert(0, [0, "bin", "overlay_136dc0"])
+            self.write_config(root, segments)
+            with self.assertRaisesRegex(ValueError, "Duplicate splat"):
+                splat_bindings(root, inventory)
 
-    def test_linked_image_record_keeps_complete_window_and_empty_BSS(self) -> None:
+    def test_linked_records_bind_both_overlays_and_their_reviewed_bss(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); image, graph, original, layout = self.fixture(root)
-            inventory = self.write_config(root/"source")
-            result = linked_image_records(root, inventory, original, graph=graph)
-            self.assertEqual(result["overlay_136dc0"]["bss"], [])
-            self.assertEqual(result["overlay_136dc0"]["initialized"][0]["rom_end"], 0x148460)
+            root = Path(temporary); inventory, reference = self.linked_fixture(root)
+            result = linked_image_records(root, inventory, reference)
+            for name, start, end, bss_start, bss_end, _ in self.overlays:
+                with self.subTest(image=name):
+                    self.assertEqual([(item["rom_start"], item["rom_end"], item["vram_start"]) for item in result[name]["initialized"]], [(start, end, 0x801E4EA0)])
+                    self.assertEqual(result[name]["bss"], [{"section": f".{name}_bss", "vram_start": bss_start, "vram_end": bss_end}])
+
+    def test_linked_bss_bytes_and_placement_must_match_loader_authority(self) -> None:
+        cases = [
+            ({"bss_sizes": {"overlay_136dc0": 0xCB0}}, "Actual linked BSS disagrees"),
+            ({"omit": "overlay_1339f0"}, "Actual linked BSS disagrees"),
+            ({"addresses": {"overlay_136dc0": 0x801E4EB0}}, "Actual initialized ELF section disagrees"),
+        ]
+        for options, message in cases:
+            with self.subTest(options=options), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary); inventory, reference = self.linked_fixture(root, **options)
+                with self.assertRaisesRegex(ValueError, message):
+                    linked_image_records(root, inventory, reference)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary); inventory, reference = self.linked_fixture(root)
+            changed = bytearray(reference); changed[0x140000] ^= 1
+            with self.assertRaisesRegex(ValueError, "Actual initialized image bytes disagree"):
+                linked_image_records(root, inventory, bytes(changed))
+
+    def write_graph_fixture(self, root: Path) -> SimpleNamespace:
+        inventory = self.write_config(root/"source")
+        (root/"source/config/rom_map.json").write_text(json.dumps({"ranges": [
+            [0x148460, 0x148470, "asset_yay0", "archive"],
+            [0x148470, 0x2000000, "rom_padding_zero", "boot"]]}))
+        blocks = []
+        for name, *_ in self.overlays:
+            inputs = [f"obj/generated/asm/{name}/text.o(.text)", f"obj/generated/asm/data/{name}/data.data.o(.data)", f"obj/generated/asm/data/{name}/rodata.rodata.o(.rodata)"]
+            blocks.append(f"    .{name} 0x801E4EA0 : AT({name}_ROM_START) SUBALIGN(1)\n    {{\n" + "".join(f"        {item};\n" for item in inputs) + "    }\n")
+            blocks.append(f"    .{name}_bss (NOLOAD) : SUBALIGN(1)\n    {{\n        obj/generated/asm/data/{name}/bss.bss.o(.bss);\n    }}\n")
+            for source in (f"generated/asm/{name}/text.s", f"generated/asm/data/{name}/data.data.s", f"generated/asm/data/{name}/rodata.rodata.s", f"generated/asm/data/{name}/bss.bss.s"):
+                path = root/source; path.parent.mkdir(parents=True, exist_ok=True); path.write_text("/* synthetic asm */\n")
+        path = root/"generated/assets/remaining.bin"; path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(b"synthetic bin")
+        blocks.append("    .remaining 0x148460 : AT(remaining_ROM_START)\n    {\n        obj/generated/assets/remaining.o(.data);\n    }\n")
+        (root/"shiren2.ld").write_text("SECTIONS\n{\n" + "".join(blocks) + "}\n")
+        return inventory
+
+    def test_generated_graph_assigns_overlay_objects_to_their_own_images(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary); inventory = self.write_graph_fixture(root)
+            with patch("certification.load_inventory", return_value=inventory):
+                graph = build_graph(root)
+                for name, *_ in self.overlays:
+                    with self.subTest(image=name):
+                        self.assertEqual(graph[f"obj/generated/asm/{name}/text.o"], {"source": f"generated/asm/{name}/text.s", "input": f"generated/asm/{name}/text.s", "source_kind": "asm", "image_id": name})
+                        self.assertEqual(graph[f"obj/generated/asm/data/{name}/bss.bss.o"]["image_id"], name)
+                self.assertEqual(graph["obj/generated/assets/remaining.o"]["image_id"], "rom_storage:remaining")
+                # A same-VRAM object cannot be claimed by both overlay sections.
+                (root/"shiren2.ld").write_text((root/"shiren2.ld").read_text().replace("obj/generated/asm/overlay_1339f0/text.o", "obj/generated/asm/overlay_136dc0/text.o"))
+                with self.assertRaisesRegex(ValueError, "no unique original image/storage owner"):
+                    build_graph(root)
+
+    def test_intermediate_inventory_lists_overlay_asm_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary); inventory = self.write_graph_fixture(root)
+            with patch("certification.load_inventory", return_value=inventory):
+                graph = build_graph(root)
+            generated, compiled = intermediate_keys(graph, [], root/"source")
+            self.assertEqual(compiled, set())
+            self.assertIn("asm/overlay_136dc0/text.s", generated)
+            self.assertIn("asm/data/overlay_1339f0/bss.bss.s", generated)
+            self.assertIn("assets/remaining.bin", generated)
+            self.assertIn("assets/tail/manifest.json", generated)
+            self.assertIn("assets/tail/yay0/00148460.bin", generated)
 
     def test_shape_valid_wrong_digest_fails_original_byte_seam(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); image, graph, original, layout = self.fixture(root)
-            inventory = self.write_config(root); inventory.images["overlay_136dc0"].rom_sha256 = "0" * 64
-            (root/"config/images.json").write_text("{}")
+            root = Path(temporary); inventory, reference = self.linked_fixture(root)
+            inventory.images["overlay_1339f0"].rom_sha256 = hashlib.sha256(reference[0x1339F0:0x136DC0]).hexdigest()
+            inventory.images["overlay_136dc0"].rom_sha256 = "0" * 64
+            (root/"config").mkdir(); (root/"config/images.json").write_text("{}")
             # Only target identity/parser setup are mocked; the actual interval digest check runs.
             with patch("certification.attest"), patch("certification.load_inventory", return_value=inventory), self.assertRaisesRegex(ValueError, "Original image digest"):
-                image_evidence(root, original)
+                image_evidence(root, reference)
 
-    def test_orphan_allocated_metadata_outside_B_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary); image, graph, original, layout = self.fixture(root)
-            extra = copy.deepcopy(layout["sections"][1]); extra.update(name=".orphan_metadata", vram_start=0x80010000, size=4)
-            layout["sections"].append(extra)
-            with self.assertRaisesRegex(ValueError, "no declared section owner"):
-                binary_storage_record(root, image, f".{self.parent}", graph, layout, original)
 
+
+class RetainedTrialTests(unittest.TestCase):
     def test_failed_replay_lifecycle_retains_raw_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, {}, clear=True):
             root = Path(temporary)
@@ -1006,6 +991,140 @@ class Stage1StorageTests(unittest.TestCase):
                 retained = Path(trial); (retained/"shiren2.elf").write_bytes(b"linked elf")
             self.assertEqual((retained/"shiren2.elf").read_bytes(), b"linked elf")
             self.assertTrue(json.loads((retained/"lifecycle.json").read_text())["raw_artifacts_retained"])
+
+
+class EditableSourceRecipeTests(unittest.TestCase):
+    """ROM import and a substituted packer cannot masquerade as frozen-source use."""
+
+    def setUp(self) -> None:
+        import certification
+        self.certification = certification
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.source = Path(temporary.name) / "source"
+        (self.source / "tools").mkdir(parents=True)
+        for name in ("assets.py", "rommap.py", "rspaudio.py", "rom.py", "workspace.py", "toolchain_library.py",
+                     "images.py", "evidence.py", "packet.py", "progress.py", "certification.py", "generated_symbols.py"):
+            shutil.copy2(Path(certification.__file__).parent / name, self.source / "tools" / name)
+        (self.source / "config").mkdir()
+        for relative in (certification.rommap.CATALOGUE_PATH, certification.rommap.HANDWRITTEN_PATH):
+            shutil.copy2(Path(certification.__file__).parent.parent / relative, self.source / relative)
+        self.certification.validate_asset_recipe(self.source, self.certification.split_commands())
+
+    def test_snapshot_cannot_be_its_own_trusted_verifier(self) -> None:
+        with patch.object(self.certification, "__file__", str(self.source / "tools/certification.py")):
+            with self.assertRaisesRegex(ValueError, "outside the snapshot"):
+                self.certification.validate_asset_recipe(self.source, self.certification.split_commands())
+
+    def test_current_catalogue_advance_does_not_reject_frozen_recipe(self) -> None:
+        trusted = self.source.parent / "trusted"
+        shutil.copytree(self.source / "tools", trusted / "tools")
+        (trusted / "config").mkdir()
+        (trusted / self.certification.rommap.CATALOGUE_PATH).write_text('{"different": "current denominator"}')
+        with patch.object(self.certification, "__file__", str(trusted / "tools/certification.py")):
+            self.certification.validate_asset_recipe(self.source, self.certification.split_commands())
+
+    def test_unrelated_trusted_helpers_do_not_invalidate_historical_snapshot(self) -> None:
+        trusted = self.source.parent / "trusted"
+        shutil.copytree(self.source / "tools", trusted / "tools")
+        for name in ("packet.py", "progress.py", "certification.py", "workspace.py"):
+            path = trusted / "tools" / name
+            path.write_bytes(path.read_bytes() + b"\n# unrelated verifier-side evolution\n")
+        with patch.object(self.certification, "__file__", str(trusted / "tools/certification.py")):
+            self.certification.validate_asset_recipe(self.source, self.certification.split_commands())
+
+    def test_every_snapshot_packer_module_is_bound(self) -> None:
+        for name in ("assets.py", "rommap.py", "rspaudio.py", "images.py", "evidence.py", "rom.py", "toolchain_library.py", "generated_symbols.py"):
+            path = self.source / "tools" / name
+            before = path.read_bytes()
+            path.write_bytes(before + b"\n# substituted executed module\n")
+            try:
+                with self.subTest(name=name), self.assertRaisesRegex(ValueError, "differs from the independent verifier"):
+                    self.certification.validate_asset_recipe(self.source, self.certification.split_commands())
+            finally:
+                path.write_bytes(before)
+
+    def test_import_shadow_packages_and_bytecode_are_refused(self) -> None:
+        for relative in ("yaml.py", "rom/__init__.py", "__pycache__/rom.cpython-312.pyc",
+                         "rom.pyc", "rom.cpython-312-darwin.so"):
+            path = self.source / "tools" / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"unreviewed import payload")
+            try:
+                with self.subTest(path=relative), self.assertRaisesRegex(ValueError, "namespace|alternate loaders"):
+                    self.certification.validate_asset_recipe(self.source, self.certification.split_commands())
+            finally:
+                path.unlink()
+                if path.parent != self.source / "tools":
+                    path.parent.rmdir()
+
+    def test_real_and_preflight_child_share_the_gate_before_split(self) -> None:
+        import build
+        trusted = Path(build.__file__).resolve().parent.parent
+        for preflight_only in (False, True):
+            with self.subTest(preflight_only=preflight_only), \
+                    patch.object(build, "validate_asset_recipe", side_effect=ValueError("gate stopped execution")) as gate, \
+                    patch.object(build.subprocess, "run") as run:
+                with self.assertRaisesRegex(ValueError, "gate stopped execution"):
+                    build.execute_snapshot(self.source.parent, trusted, self.source.parent / "absent.z64",
+                                           preflight_only=preflight_only)
+                gate.assert_called_once_with(self.source, self.certification.split_commands())
+                run.assert_not_called()
+
+    def test_orchestration_archive_is_inert_and_bound(self) -> None:
+        trusted = Path(self.certification.__file__).resolve().parent
+        record = self.certification.archive_orchestration(self.source.parent, trusted / "build.py")
+        archive = self.source.parent / "trusted-orchestration"
+        self.assertEqual(record["entrypoint_sha256"], self.certification.sha256(trusted / "build.py"))
+        with patch.object(self.certification, "__file__", "/unrelated/current/tools/certification.py"):
+            self.certification.validate_orchestration(self.source.parent, record)
+        path = archive / "build.py"
+        path.write_bytes(path.read_bytes() + b"\n# archive changed\n")
+        with self.assertRaisesRegex(ValueError, "Changed trusted orchestration"):
+            self.certification.validate_orchestration(self.source.parent, record)
+
+    def test_coherent_orchestration_rewrite_cannot_authorize_snapshot_tools(self) -> None:
+        trusted = Path(self.certification.__file__).resolve().parent
+        record = self.certification.archive_orchestration(self.source.parent, trusted / "build.py")
+        archive = self.source.parent / "trusted-orchestration"
+        payload = b"raise AssertionError('archive must never execute')\n"
+        for name in ("build.py", "assets.py"):
+            (archive / name).write_bytes(payload)
+            record["source_files"][name] = self.certification.sha256(archive / name)
+        record["entrypoint"] = str(archive / "build.py")
+        record["entrypoint_sha256"] = record["source_files"]["build.py"]
+        record["child_argv"] = ["python", str(archive / "build.py")]
+        # Coherent declarations pass integrity only. They neither execute nor
+        # choose the independent verifier, even when they name the archive.
+        self.certification.validate_orchestration(self.source.parent, record)
+        (self.source / "tools/assets.py").write_bytes(payload)
+        with self.assertRaisesRegex(ValueError, "differs from the independent verifier"):
+            self.certification.validate_asset_recipe(self.source, self.certification.split_commands())
+
+    def test_extract_in_build_and_replay_is_rejected(self) -> None:
+        recipe = self.certification.split_commands()
+        recipe[1] = [recipe[1][0], "source/tools/assets.py", "extract", "--root", "source"]
+        with self.assertRaises(ValueError):
+            self.certification.validate_asset_recipe(self.source, recipe)
+
+    def test_custom_canonical_decoder_is_rejected(self) -> None:
+        recipe = self.certification.split_commands()
+        recipe[1] = [recipe[1][0], "-c",
+                     "import crunch64; crunch64.yay0.decompress(open('baserom.jp.z64','rb').read())"]
+        with self.assertRaises(ValueError):
+            self.certification.validate_asset_recipe(self.source, recipe)
+
+    def test_pack_argv_cannot_hide_a_rom_decoding_implementation(self) -> None:
+        path = self.source / "tools/assets.py"
+        path.write_text("import crunch64\ncrunch64.yay0.decompress(open('baserom.jp.z64','rb').read())\n")
+        with self.assertRaises(ValueError):
+            self.certification.validate_asset_recipe(self.source, self.certification.split_commands())
+
+    def test_extra_import_after_pack_is_rejected(self) -> None:
+        recipe = self.certification.split_commands()
+        recipe.append([recipe[1][0], "source/tools/assets.py", "extract", "--root", "source"])
+        with self.assertRaises(ValueError):
+            self.certification.validate_asset_recipe(self.source, recipe)
 
 
 class SourcePolicyTests(unittest.TestCase):
@@ -1068,6 +1187,7 @@ class LiveVerificationTests(unittest.TestCase):
         override = directory / "splat.override.yaml"
         override.write_text(yaml.safe_dump(splat_options(directory, CANONICAL_ROM)))
         receipt["artifacts"]["splat.override.yaml"] = sha256(override)
+        write_json(directory / "receipt.json", receipt)
         return directory, receipt
 
     def test_current_build_passes(self) -> None:
@@ -1341,8 +1461,8 @@ class LiveVerificationTests(unittest.TestCase):
             directory.mkdir()
             create_snapshot(self.receipt_path.parent / "source", directory / "source")
             split = directory / "source/config/shiren2.jp.yaml"
-            # Shrinking remains linkable beside fixed overlay B storage, so this
-            # fixture reaches the independent original-loader extent check.
+            # Shrinking remains linkable below the overlay slot, so this fixture
+            # reaches the independent original-loader extent check.
             original = split.read_text()
             self.assertEqual(original.count("bss_size: 0x844F0"), 1)
             split.write_text(original.replace("bss_size: 0x844F0", "bss_size: 0x844E0"))
@@ -1370,28 +1490,10 @@ class LiveVerificationTests(unittest.TestCase):
             path = directory / "shiren2.map"
             path.write_text(path.read_text() + "\nforged map trailer\n")
             receipt["artifacts"]["shiren2.map"] = sha256(path)
-            # A coherent forgery also updates the storage record's map identity;
-            # fresh linking must reject it independently of that earlier guard.
-            original = CANONICAL_ROM.read_bytes()
-            inventory, _ = image_evidence(directory / "source", original)
-            receipt["image_inventory"]["linked_images"] = linked_image_records(
-                directory, inventory, original, graph=build_graph(directory)
-            )
+            # The map is not part of the linked-image inventory; fresh linking alone rejects it.
             with self.assertRaisesRegex(ValueError, "Independent full linker replay disagrees: shiren2.map"):
                 verify_receipt(directory / "receipt.json", receipt, require_current=False)
 
-    def test_rewritten_map_requires_matching_linked_storage_evidence(self) -> None:
-        images = read_json(self.receipt_path.parent / "source/config/images.json")
-        if not any(image["image_id"] == "overlay_136dc0" and image["split_status"] == "active"
-                   for image in images["images"]):
-            self.skipTest("The selected receipt predates overlay B storage evidence")
-        with tempfile.TemporaryDirectory(dir=PROJECT / "scratch") as temporary:
-            directory, receipt = self.private_evidence_copy(Path(temporary))
-            path = directory / "shiren2.map"
-            path.write_text(path.read_text() + "\nforged map trailer\n")
-            receipt["artifacts"]["shiren2.map"] = sha256(path)
-            with self.assertRaisesRegex(ValueError, "Original image inventory disagrees"):
-                verify_receipt(directory / "receipt.json", receipt, require_current=False)
 
     def test_rewritten_dependency_list_fails_independent_compiler_check(self) -> None:
         with tempfile.TemporaryDirectory(dir=PROJECT / "scratch") as temporary:

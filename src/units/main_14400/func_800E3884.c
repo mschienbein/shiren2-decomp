@@ -11,8 +11,16 @@ typedef struct { u8 pad0[0x90]; s16 offset_90; s16 pad92; s32 (*fn_94)(void *sel
 struct Obj800E3884 {
     Pos800E3884 pos;
     u8 pad8[0x14];
-    u8 flags_1C;
-    u8 pad1D;
+    /* ODD_C: flags_1C is the unit's u16 flag halfword. func_800FAA80, func_801035F0 and
+     * func_800FD0CC read-modify-write it with lhu/sh at +0x1C (|= 0x200, &= ~0x200, &= ~1);
+     * func_800A46BC, func_800A422C and func_8011BEBC read its bit 7 with lbu +0x1D; srl 7.
+     * This function tests its bit 8 with a byte load of the high-order byte (lbu 0x1C; andi 1).
+     * The arithmetic forms tested under gcc281pm do not narrow to that byte: (x >> 8) & 1,
+     * (u8)(x >> 8) & 1, a u8 temporary and an inline u8 accessor emit lhu; srl 8, and
+     * x & 0x100 emits lhu; andi 0x100. A plain u16 field read through unsigned char,
+     * ((u8 *)&obj->flags_1C)[0] & 1, also matches. The union is the chosen explicit
+     * representation of this storage's halfword and byte use, not the only matching one. */
+    union { u16 half; u8 bytes[2]; } flags_1C;
     u8 flags_1E;
     u8 pad1F[5];
     VTable800E3884 *vtable_24;
@@ -128,13 +136,13 @@ void func_800E3884(Obj800E3884 *obj, Hit800E3884 *hit, s32 amount) {
                         flag = 1;
                     }
                     if (flag || attacker == 0 || hit->kind == 0x22 || attacker == obj) {
-                        if (obj->flags_1C & 1) {
+                        if (obj->flags_1C.bytes[0] & 1) {
                             func_800497F0(0x41, msg, name, amount);
                         } else {
                             func_800497F0(0x42, msg, amount);
                         }
                     } else {
-                        if (obj->flags_1C & 1) {
+                        if (obj->flags_1C.bytes[0] & 1) {
                             func_800497F0(0x3D, msg, name, amount);
                         } else {
                             func_800497F0(0x3E, msg, amount);

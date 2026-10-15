@@ -1,4 +1,5 @@
 #include "common.h"
+#include "item_records.h"
 
 typedef unsigned char u8;
 
@@ -7,21 +8,21 @@ typedef struct {
     s32 unk4;
 } Flags800E8790;
 
-extern u8 func_800E8B10(void *obj, u8 **out);
+extern u8 func_800E8B10(void *obj, Item **out);
 
 void func_800E8790(void *obj, Flags800E8790 *flags) {
-    u8 *items[2];
+    Item *items[2];
     s32 i;
 
     i = func_800E8B10(obj, items);
     for (;;) {
-        u8 *item;
+        Item *item;
 
         if (--i == -1) {
             break;
         }
         item = items[i];
-        switch (item[1]) {
+        switch (item->field01) {
         case 0x7D:
             flags->bits |= 0x80;
             break;

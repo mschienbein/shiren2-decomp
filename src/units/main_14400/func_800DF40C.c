@@ -4,7 +4,7 @@ typedef unsigned char u8;
 typedef struct { u8 value; } Dir;
 typedef struct { u8 pad_00[8]; Dir direction; u8 flags; } Action;
 typedef struct {
-    unsigned char kind, variant, field_02, flags, row, field_05, field_06, field_07, mode;
+    unsigned char kind, variant, field_02, flags, row, field_05; unsigned short field_06; unsigned char mode;
     signed char coordinates[2], status;
 } SelectionRecord;
 

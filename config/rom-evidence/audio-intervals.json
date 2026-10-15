@@ -1,0 +1,61 @@
+{
+  "target_sha256": "4073a9f6516ef5d15cdd8b259a952a7d07633a2815f2a738fb5d98415d30a458",
+  "status": "unresolved stored extents",
+  "task_sizes": {
+    "text": 4096,
+    "data": 2048
+  },
+  "task_sizes_are_stored_extents": false,
+  "intervals": [
+    {
+      "start": "0x010aeb0",
+      "end": "0x010bb04",
+      "size": 3156,
+      "sha256": "ea83cad18d08a52632c9291b121cfb483d3fc821734e355de542952d44b3d52a",
+      "md5": "fc86085ede4d9bc4407b6a44b893e2bf"
+    },
+    {
+      "start": "0x010bb04",
+      "end": "0x010bb10",
+      "size": 12,
+      "sha256": "15ec7bf0b50732b49f8228e07d24365338f9e3ab994b00af08e5a3bffe55fd8b",
+      "md5": "8dd6bb7329a71449b0a1b292b5999164"
+    },
+    {
+      "start": "0x010aeb0",
+      "end": "0x010bb10",
+      "size": 3168,
+      "sha256": "7e5932658e7f965a47b9dac8ec05b405e9ac18c26d39daddb852418f66613ba4",
+      "md5": "9a2c951186b958b5dae6abf3deb48884"
+    },
+    {
+      "start": "0x011d4c0",
+      "end": "0x011d770",
+      "size": 688,
+      "sha256": "514cfa7012475c8cd8c6acf1a91b8dd85861c517fdf9c7fa90e90cb3b2736f48",
+      "md5": "89d70edd19da2edca8f71799a36cbbdc"
+    },
+    {
+      "start": "0x011d770",
+      "end": "0x011d774",
+      "size": 4,
+      "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+      "md5": "f1d3ff8443297732862df21dc4e57262"
+    },
+    {
+      "start": "0x011d4c0",
+      "end": "0x011d774",
+      "size": 692,
+      "sha256": "5d5382c7a89f791c0193a5f79e45d878811dc6ba7961e1c707aaed978b4cb044",
+      "md5": "d5b9b166d52b313fee31da32af40e874"
+    },
+    {
+      "start": "0x010052c",
+      "end": "0x010053c",
+      "size": 16,
+      "sha256": "7a9f6baf56a7b55fd2f8a15f73a1758af612fbf3c8191a6d7b90fada594b72e1",
+      "md5": "282d3c7aaba26917e60447953361ce1a"
+    }
+  ],
+  "next_proof": "Identified matching source/object with section sizes, or reviewed RSP control-flow and data-reference closure plus independently evidenced neighboring section boundaries. A last nonzero word, upload capacity or neighboring first reference is insufficient."
+}

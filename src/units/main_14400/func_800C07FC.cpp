@@ -1,59 +1,52 @@
 #include "common.h"
+#include "map_rect.h"
 
 typedef unsigned char u8;
 
 /*
  * Floor room painter/corridor pass (g++ 2.8.1 TU). Each room record is copied
  * by value (its implicit copy constructor copies tag[] element-wise), then its
- * corners are assigned into a bounds rectangle that is passed to the painter.
- * The original forms the first corner's source pointer before the
- * destination, and the second corner's destination (a corner reference)
- * before its source.
+ * shared MapPos corners are assigned, coordinate by coordinate, into an actual
+ * MapRect for the painter. The original forms the first corner's source pointer
+ * before the destination, and the second corner's destination (a corner
+ * reference) before its source.
  */
 
-struct Point {
-    s32 x;
-    s32 y;
-    Point() {}
-    Point(const Point &other) : x(other.x), y(other.y) {}
-    Point &operator=(const Point &other) { x = other.x; y = other.y; return *this; }
-};
-
-struct Rect {
-    Point a;
-    Point b;
-};
-
-/* 0x14-byte room record: bounds rectangle plus four tag bytes. */
-struct Room {
-    Rect rect;
+/* 0x14-byte room record: shared bounds rectangle plus four tag bytes. */
+struct Room_800C07FC {
+    MapRect rect;
     u8 tag[4];
-    const Point &first() const { return rect.a; }
-    const Point &last() const { return rect.b; }
+    const MapPos &first() const { return rect.min; }
+    const MapPos &last() const { return rect.max; }
 };
 
 /* Partial view of the floor generator object. */
-struct Floor {
+struct Floor_800C07FC {
     u8 pad[0x3DC];
     s32 count;
     u8 pad3E0[0x24];
-    Room rooms[17];
+    Room_800C07FC rooms[17];
     s32 links[16][16];
 };
 
-extern "C" {
-void func_800B7948(void *self, s32 index, Rect *rect);
-void func_800B7E9C(void *arg0, const Rect *arg1, const Rect *arg2);
+/* Corner assignment, x then y. The original copies each corner coordinate by
+   coordinate through hoisted corner pointers (0x800C08A0..0x800C08D0: x via sp,
+   y via s7 -> s2 and s5 -> s6); the implicit MapPos assignment is instead one
+   8-byte block copy (two loads, then two stores). */
+static inline void assign(MapPos &dst, const MapPos &src)
+{
+    dst.x = src.x;
+    dst.y = src.y;
 }
 
-extern "C" void func_800C07FC(Floor *floor)
+extern "C" void func_800C07FC(Floor_800C07FC *floor)
 {
     for (s32 i = 0; i < floor->count; i++) {
-        Rect bounds;
-        Room room = floor->rooms[i];
-        bounds.a = room.first();
-        Point &corner = bounds.b;
-        corner = room.last();
+        MapRect bounds;
+        Room_800C07FC room = floor->rooms[i];
+        assign(bounds.min, room.first());
+        MapPos &corner = bounds.max;
+        assign(corner, room.last());
         func_800B7948(floor, i, &bounds);
     }
     for (s32 i = 0; i < floor->count - 1; i++) {

@@ -6,7 +6,15 @@ typedef struct VT {
     s32 (*fn)(void *, s32, s32, unsigned char, s32);
 } VT;
 typedef struct { char pad[0x24]; VT *vt; } Obj;
-typedef struct { s32 w[6]; } Buf;
+/* Damage fields written by func_80136910; natural target extent is 0x14. */
+typedef struct {
+    void *source;
+    u32 kind;
+    u32 field_8;
+    unsigned short amount;
+    unsigned short flags;
+    unsigned char field_10;
+} Buf;
 extern unsigned short D_801569DA;
 s32 func_800E1CC4(Obj *o, s32 kind);
 void func_80136910(Buf *b, void *source, u32 v, u32 c, u32 d);
