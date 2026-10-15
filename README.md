@@ -1,7 +1,7 @@
 # Shiren the Wanderer 2 (N64) — decompilation
 
-[![Code progress](https://decomp.dev/mschienbein/shiren2-decomp.svg?mode=shield&measure=code&label=Code)](https://decomp.dev/mschienbein/shiren2-decomp)
-[![Functions](https://decomp.dev/mschienbein/shiren2-decomp.svg?mode=shield&measure=functions&label=Functions)](https://decomp.dev/mschienbein/shiren2-decomp)
+[![Code progress](https://bytematch.dev/mschienbein/shiren2-decomp.svg?label=Code&measure=matched_code_percent)](https://bytematch.dev/mschienbein/shiren2-decomp)
+[![Functions](https://bytematch.dev/mschienbein/shiren2-decomp.svg?label=Functions&measure=matched_functions)](https://bytematch.dev/mschienbein/shiren2-decomp)
 [![progress](https://github.com/mschienbein/shiren2-decomp/actions/workflows/progress.yml/badge.svg)](https://github.com/mschienbein/shiren2-decomp/actions/workflows/progress.yml)
 
 A work-in-progress **matching decompilation** of *Fushigi no Dungeon: Fūrai no Shiren 2 — Oni Shūrai!
@@ -17,7 +17,7 @@ Accepted checkpoint **omp-r4a**: **6,830 functions** and **1,125,196 bytes** of 
 98.06% of the provisional mapped CPU catalogue. That is 6,660 C functions (1,050,708 bytes)
 and 170 C++ functions (74,488 bytes), the latter proven original C++ units.
 Accepted with qualifications (non-blocking review findings and deferred debt): see [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
-Live progress, history and a per-function map: [decomp.dev/mschienbein/shiren2-decomp](https://decomp.dev/mschienbein/shiren2-decomp).
+Live progress, history and a per-function map: [bytematch.dev/mschienbein/shiren2-decomp](https://bytematch.dev/mschienbein/shiren2-decomp).
 
 | Image | Matched functions | Matched code bytes | Code % |
 | --- | ---: | ---: | ---: |
@@ -82,13 +82,14 @@ with the KMC assembler. Per-unit profiles live in `config/compiler_profiles.json
 | `config/` | splat layout (`shiren2.jp.yaml`), matched functions (`matches.json`), compiler profiles, linker aliases |
 | `tools/` | build, match, adopt, verify and progress tooling |
 | `docs/progress-catalogues/` | the fixed progress denominator |
-| `ci/` | progress report for [decomp.dev](https://decomp.dev) |
+| `ci/` | progress report for [ByteMatch](https://bytematch.dev) |
 
 ## Progress tracking
 
 On every push to `main`, CI writes an [objdiff](https://github.com/encounter/objdiff)-format progress
 report from `config/matches.json` and the catalogue. It uploads the report as the `jp_report`
-artifact, which [decomp.dev](https://decomp.dev/projects) reads. CI does not need the ROM.
+artifact, which [ByteMatch](https://bytematch.dev/mschienbein/shiren2-decomp) reads; its GitHub App
+picks up each run as soon as it finishes. CI does not need the ROM.
 
 ## Legal
 

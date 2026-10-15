@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Write an objdiff-format progress report (report.json) for decomp.dev.
+"""Write an objdiff-format progress report (report.json) for ByteMatch (bytematch.dev).
 
     python3 ci/progress_report.py --version jp --output report.json
 
-decomp.dev ingests an objdiff `Report` (objdiff-core/protos/report.proto, protobuf JSON mapping:
+ByteMatch ingests an objdiff `Report` (objdiff-core/protos/report.proto, protobuf JSON mapping:
 uint64 values as strings, uint32 and percentages as numbers) uploaded as a GitHub Actions
 artifact named `<version>_report`. No ROM is needed:
 - the denominator is the fixed function catalogue in `docs/progress-catalogues/`;
