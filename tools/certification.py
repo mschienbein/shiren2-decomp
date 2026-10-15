@@ -955,7 +955,7 @@ def validate_asset_recipe(source_root: Path, recipe: list[list[str]]) -> None:
     # Complete local closure reachable from assets.main -> pack. rommap's lazy
     # progress import is confined to account(), which pack never calls.
     # Installed yaml/spimdisasm/crunch64 and stdlib remain runtime-pinned inputs.
-    for name in ("assets.py", "rommap.py", "rspaudio.py", "rom.py", "images.py", "evidence.py", "toolchain_library.py", "generated_symbols.py"):
+    for name in ("assets.py", "rommap.py", "rspaudio.py", "assetformat.py", "mipsflow.py", "gxxvtable.py", "rom.py", "images.py", "evidence.py", "toolchain_library.py", "generated_symbols.py"):
         frozen = checked_path(source_root, "tools/" + name)
         trusted = Path(__file__).resolve().parent / name
         if sha256(frozen) != sha256(trusted):

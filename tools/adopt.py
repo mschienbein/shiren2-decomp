@@ -13,7 +13,9 @@ default is the image's C++ profile), a `.c` candidate a C TU. Before anything is
 `tools/interfaces.py` audits the function interfaces of every canonical TU (C and C++)
 together with the batch candidates; a unit is
 refused if its source introduces a finding over the canonical tree plus the units
-adopted before it (`--dry-run` reports it the same way). Adoption then:
+adopted before it (`--dry-run` reports it the same way). Reviewed interface rulings name final
+canonical paths, never candidate basenames; every activation partner must be in this batch or
+already canonical, and missing/stale entries are errors before and after adoption. Adoption then:
 - copies the source to `src/units/<image>/<unit>.c` (or `.cpp`); candidate-local headers go
   beside it, headers found through `-I` go to `include/` (replacing an existing
   canonical header requires `--replace-header include/<name>`);
@@ -91,7 +93,7 @@ import yaml
 
 from evidence import COMPILED_SUFFIXES
 from images import OVERLAY_IMAGES
-from interfaces import Gate, analyse, collect
+from interfaces import Gate, collect
 from match import (SHN_COMMON, SHT_NOBITS, SUBSEGMENT, UNINITIALIZED, DataPart, Elf, accepted_build, allocate_evidence_dir,
                    bss_owner, check, default_profile, node_line_span, resolve_targets, splat_subalign, symbol_addresses, yaml_bss_subsegments,
                    yaml_data_parts, yaml_subsegments)
@@ -510,11 +512,15 @@ def _header_destinations(result_files: list[dict[str, str]], candidate: Path, in
 
 def interface_candidate(unit: Unit) -> dict[str, object]:
     """The unit's source as a `tools/interfaces.py` candidate, preprocessed with the profile adopt() uses."""
+    record: dict[str, object] = {"source": str(unit.source), "profile": unit.profile,
+                                 "includes": [str(path) for path in unit.includes]}
     try:
-        profile = unit.profile or default_profile(resolve_targets(unit.functions)[0].image_id, unit.source)
+        target = resolve_targets(unit.functions)[0]
+        record["profile"] = unit.profile or default_profile(target.image_id, unit.source)
+        record["destination"] = f"src/units/{target.image_id}/{unit.name or target.symbol}{unit.source.suffix}"
     except (ValueError, KeyError, IndexError):
-        profile = unit.profile  # adopt() reports the unresolvable unit itself
-    return {"source": str(unit.source), "profile": profile, "includes": [str(path) for path in unit.includes]}
+        pass  # adopt() reports the unresolvable unit itself
+    return record
 
 
 @dataclass(frozen=True)
@@ -812,9 +818,7 @@ def gate_findings(gate: Gate, index: int, retired: set[str]) -> list[Any]:
     if missing:
         raise ValueError(f"Absorbed {sorted(missing)} are not canonical TUs of this interface audit "
                          "(adopted earlier in this run?); absorb them in a separate run")
-    kept = [result for result in gate.admitted if result.tu not in retired]
-    previous = {finding.key for finding in analyse(kept).findings}
-    return [finding for finding in analyse([*kept, gate.candidates[index]]).findings if finding.key not in previous]
+    return gate.check(index, retired=retired)
 
 
 def gate_admit(gate: Gate, index: int, retired: set[str]) -> None:
@@ -958,7 +962,7 @@ def _load_units(path: Path) -> list[Unit]:
 
 
 def _adopt_batch(units: list[Unit], rom: bytes, log: list[str]) -> tuple[dict[str, int], list[str]]:
-    gate = Gate(collect(PROJECT, [interface_candidate(unit) for unit in units]))
+    gate = Gate(collect(PROJECT, [interface_candidate(unit) for unit in units]), source_root=PROJECT)
     totals = {"functions": 0, "instruction_bytes": 0}
     failures = []
     for index, unit in enumerate(units):
@@ -967,6 +971,7 @@ def _adopt_batch(units: list[Unit], rom: bytes, log: list[str]) -> tuple[dict[st
             totals = {key: totals[key] + counts[key] for key in totals}
         except (ValueError, OSError, KeyError) as error:
             failures.append(f"{','.join(unit.functions)}: {error}")
+    failures.extend(f"interface ruling: {finding.summary()}" for finding in gate.ruling_errors())
     return totals, failures
 
 

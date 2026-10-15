@@ -1,0 +1,42 @@
+[
+  {
+    "symbol": "func_800A2594",
+    "definition_file": "src/units/main_14400/func_800A2594.c",
+    "declaring_file": "src/units/main_14400/func_800B38F8.cpp",
+    "declared_shape": ["aggregate", ["pointer", "aggregate"], false],
+    "ruling": {
+      "path": "config/interface_rulings/ABI-IDENTICAL-DECLARATIONS.md",
+      "sha256": "8f3f1910947644a5387384d6b5494a1473283534031cb1bf29275aff6a9f2dfe"
+    }
+  },
+  {
+    "symbol": "func_800B2EDC",
+    "definition_file": "src/units/main_14400/func_800B2EDC.cpp",
+    "declaring_file": "src/units/main_14400/func_800B3024.cpp",
+    "declared_shape": ["aggregate", ["pointer"], false],
+    "ruling": {
+      "path": "config/interface_rulings/ABI-IDENTICAL-DECLARATIONS.md",
+      "sha256": "8f3f1910947644a5387384d6b5494a1473283534031cb1bf29275aff6a9f2dfe"
+    }
+  },
+  {
+    "symbol": "func_800B2EDC",
+    "definition_file": "src/units/main_14400/func_800B2EDC.cpp",
+    "declaring_file": "src/units/main_14400/func_80048B04.c",
+    "declared_shape": ["aggregate", ["pointer"], false],
+    "ruling": {
+      "path": "config/interface_rulings/ABI-IDENTICAL-DECLARATIONS.md",
+      "sha256": "8f3f1910947644a5387384d6b5494a1473283534031cb1bf29275aff6a9f2dfe"
+    }
+  },
+  {
+    "symbol": "func_80032D94",
+    "definition_file": "src/units/resident/func_80032D30.c",
+    "declaring_file": "src/units/overlay_136dc0/func_801E5BE4_137B04.c",
+    "declared_shape": ["void", ["pointer", "pointer", "int unsigned"], false],
+    "ruling": {
+      "path": "config/interface_rulings/ABI-IDENTICAL-DECLARATIONS.md",
+      "sha256": "8f3f1910947644a5387384d6b5494a1473283534031cb1bf29275aff6a9f2dfe"
+    }
+  }
+]

@@ -56,6 +56,11 @@
     {"id": "B_1c6cb0", "site": 1274388, "note": "ROM 0x137250 adds index to base, aligns at 0x137254, passes it in a1 at 0x137258 to func_8006AAF0 at 0x13726C"},
     {"id": "B_23e210", "site": 1275864, "note": "ROM 0x1377D8 materializes base in a1; 0x1377F0 calls func_8006AAF0"}
   ],
+  "sprite_palettes": [
+    {"id": "S_sprite_palette", "directory_site": 278836, "segment_site": 283820, "count_site": 279124, "size_site": 282916,
+     "record_size": 16,
+     "note": "func_80071088 walks 405 16-byte sprite descriptors from 0xE53DB0 (ROM 0x44130/0x44134; slti 0x195 at 0x44254; stride 0x4425C); flags&31 palette words via table word +4 (segment 5, 0x450AC-0x450C8); func_80072440 adds 0xE7BE70 to segment-6 words (0x454A8/0x454AC) and func_8007248C receives exactly 0x20 bytes (0x45124); TLUT load count 15 at 0x434AC-0x434F4"}
+  ],
   "iff_archive": {"id": "IFF_efat", "site": 398032, "first_form": 27622632,
     "note": "'EFAT' directory of (offset, size) pairs relative to the first FORM; FORM/ESFC/EGRP/EGRF/EOM chunks; EGRF chunks wrap Yay0 streams"}
 }

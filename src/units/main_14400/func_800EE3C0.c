@@ -7,7 +7,8 @@ extern unsigned char D_80159130[];
 extern unsigned char D_80159150[];
 /* Constructor: explicitly returns its receiver (0x800E8764, 0x800E8770); result discarded here. */
 Obj800EE3C0 *func_800E8730(Obj800EE3C0 *obj);
-void func_801F2AC0(Sub801F2AC0 *sub);
+/* The overlay constructor returns its receiver (daddu v0,a0 at ROM 0x1449E4); discarded here. */
+Sub801F2AC0 *func_801F2AC0(Sub801F2AC0 *sub);
 s32 func_800A3934(Obj800EE3C0 *obj);
 void func_800EE448(Obj800EE3C0 *obj, s32 a, unsigned char b);
 Obj800EE3C0 *func_800EE3C0(Obj800EE3C0 *obj, s32 a, unsigned char b) {

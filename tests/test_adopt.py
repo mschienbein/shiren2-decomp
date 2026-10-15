@@ -103,6 +103,7 @@ class CxxAdoptionTests(unittest.TestCase):
             with patch("adopt.PROJECT", root), patch("adopt.resolve_targets", return_value=[target]), \
                     patch("adopt.check", return_value=(matched, None)) as matcher:
                 self.assertEqual(interface_candidate(unit)["profile"], "gxx281pm-gnu291-O2-unsigned")
+                self.assertEqual(interface_candidate(unit)["destination"], "src/units/main_14400/func_80041500.cpp")
                 result = adopt(unit, rom=bytes(0x14550), log=[], gate=gate, index=0)
             source = "src/units/main_14400/func_80041500.cpp"
             self.assertEqual((root / source).read_text(), candidate.read_text())

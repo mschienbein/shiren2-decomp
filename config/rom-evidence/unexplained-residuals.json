@@ -1,0 +1,99 @@
+{
+ "schema": "shiren2-unexplained-residuals-v1",
+ "target_sha256": "4073a9f6516ef5d15cdd8b259a952a7d07633a2815f2a738fb5d98415d30a458",
+ "status": "closed_unexplained_residual",
+ "meaning": "User-ruled closure of exact original bytes retained verbatim as unexplained. No format, consumer, ownership, padding or code claim and no C/C++ credit. Any later original-backed witness supersedes a record; generation fails closed until the record is removed.",
+ "rulings": {
+  "R0-UNEXPLAINED-RESIDUAL-20261014": {
+   "path": "config/rom_rulings/R0-UNEXPLAINED-RESIDUAL-20261014.md",
+   "sha256": "f0bc5fb20bd3bac4394637c6e3e9aefd29688bab1689194d54cb55358dd15c6c",
+   "copied_from": "scratch/omp/rulings/R0-UNEXPLAINED-RESIDUAL-20261014.md"
+  },
+  "CPU-GAPS-UNEXPLAINED-BYTES-20261014": {
+   "path": "config/rom_rulings/CPU-GAPS-UNEXPLAINED-BYTES-20261014.md",
+   "sha256": "75f128f60f48c7acd3a12fdaefbf5d3a2825e3784756b580f55a3ecf6668daac",
+   "copied_from": "scratch/omp/rulings/CPU-GAPS-UNEXPLAINED-BYTES-20261014.md"
+  }
+ },
+ "ranges": [
+  {
+   "id": "residual_008c79a0_008ca860",
+   "ruling": "R0-UNEXPLAINED-RESIDUAL-20261014",
+   "start": "0x8c79a0",
+   "end": "0x8ca860",
+   "size": 11968,
+   "sha256": "e8dd508c02a4ea70191ed94927f10184fd5adf162527c0b290816514970558ea",
+   "md5": "0b48c42cd0d20082a96f12d825b7ae1a",
+   "prior_class": "asset_raw_unattributed",
+   "prior_ref": "unattributed",
+   "class": "asset_raw_unexplained",
+   "missing_witness": "An original consumer that derives this address and passes it to a PI/DMA request, or an original producer, link or packing manifest naming these bytes (for example the 22 hypothetical CI4 blocks). No constant base, 0x220 stride, 0x2EC0 size or stored address/offset table was found.",
+   "negative_investigations": [
+    {
+     "what": "raw-graphics main intake",
+     "path": "scratch/omp/wave37/raw-graphics-main-intake.json",
+     "sha256": "ce36a0fdfd06b9b880d9ebf608a44655a8e24910b101b1b8d846ca4a0241057b"
+    },
+    {
+     "what": "raw-descriptors main intake",
+     "path": "scratch/omp/wave37/raw-descriptors-main-intake.json",
+     "sha256": "5be229fa402314ee5057142493c82d0b90827cd456f8f2dc1a73aff101bd5b40"
+    },
+    {
+     "what": "hypothetical CI4 preview (32x32 CI4 + RGBA5551 render; visual fit only)",
+     "path": "scratch/omp/wave37/raw-gap-visual/observation.json",
+     "sha256": "4e13e9e01e5601133747eb1d69ecd585d4dcce386dd164d43debca9c91ff49a4"
+    },
+    {
+     "what": "22x(512+32) structural lead (candidate block ledger)",
+     "path": "scratch/omp/wave37/raw-gap-consumer/candidate-block-ledger.json",
+     "sha256": "c5f960219be40f47817751fb3050668b8802ef8485a8229101c5e14166e3af8a"
+    },
+    {
+     "what": "static base, 0x220 stride, 0x2EC0 size and stored-address searches (no consumer found)",
+     "path": "scratch/omp/wave39/opus-hardcore-matching/opus-08/denominator2/result.json",
+     "sha256": "c79833b7f806288edd623f6f66f1e5ea07bde97d7e15338f1ac531ed8cafb6c0"
+    }
+   ]
+  },
+  {
+   "id": "residual_00001040_00001060",
+   "ruling": "CPU-GAPS-UNEXPLAINED-BYTES-20261014",
+   "start": "0x1040",
+   "end": "0x1060",
+   "size": 32,
+   "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925",
+   "md5": "70bc8f4b72a86921468bf8e8441dce51",
+   "prior_class": "cpu_text_unowned",
+   "prior_ref": "catalogue",
+   "class": "cpu_text_unexplained",
+   "missing_witness": "The game's own boot-segment layout as a primary source: its mild/makerom spec and .cmd link script, or the boot input linked at 0x80025C40 (for example an entry object or toolchain version that emits 0x60 bytes). No pinned SDK/KMC object has a 32-byte all-zero .text or the 16 entry words."
+  },
+  {
+   "id": "residual_0000871c_00008780",
+   "ruling": "CPU-GAPS-UNEXPLAINED-BYTES-20261014",
+   "start": "0x871c",
+   "end": "0x8780",
+   "size": 100,
+   "sha256": "cd00e292c5970d3c5e2f0ffa5171e555bc46bfc4faddfb4a418b6840b86e79a3",
+   "md5": "6d0bb00954ceb7fbee436bb55a8397a9",
+   "prior_class": "cpu_text_unowned",
+   "prior_ref": "catalogue",
+   "class": "cpu_text_unexplained",
+   "missing_witness": "The original link map or link script (or another primary source) placing the 96 zero bytes [0x8720,0x8780) between ortho.o and perspective.o (hypothesis: parameters.o .text). The link-order / ordered-member law stays rejected as a padding witness (Main-decision-cpu-padding-tiers-001.json); the 4-byte prefix [0x871C,0x8720), reproduced as ortho TU rounding, cannot close the range alone."
+  },
+  {
+   "id": "residual_000abf4c_000abf50",
+   "ruling": "CPU-GAPS-UNEXPLAINED-BYTES-20261014",
+   "start": "0xabf4c",
+   "end": "0xabf50",
+   "size": 4,
+   "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119",
+   "md5": "f1d3ff8443297732862df21dc4e57262",
+   "prior_class": "cpu_text_unowned",
+   "prior_ref": "catalogue",
+   "class": "cpu_text_unexplained",
+   "missing_witness": "An original object or source for func_800D8E60 (trapping add/addi/sub; in no pinned SDK or KMC library) whose own section rounding ends at 0x800D8F10. Reassembling the ROM-derived disassembly would prove only rounding, with circular code identity."
+  }
+ ]
+}

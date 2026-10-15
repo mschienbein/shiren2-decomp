@@ -30,8 +30,8 @@ class AudioIdentityTests(unittest.TestCase):
         self.assertEqual(result["task"]["descriptor_text_size"], 0x1000)
         self.assertEqual(result["task"]["text_request"]["rom_end"], 0x10BE30)
         self.assertEqual(result["task"]["data_request"]["rom_end"], 0x11DCC0)
-        self.assertEqual([(r["rom_start"], r["rom_end"], r["status"]) for r in result["unresolved"]],
-                         [(0x11D770, 0x11D774, "OPEN")])
+        # The word after the SDK .data is ordinary open CPU data now, not an audio-owned record.
+        self.assertNotIn("unresolved", result)
 
     def test_zero_text_tail_is_part_of_external_identity(self) -> None:
         for site in (0x10BB04, 0x10BB08, 0x10BB0C, 0x11D76F):

@@ -27,7 +27,8 @@ extern const unsigned char D_80159300[32];
 extern const unsigned char D_80159320[160];
 extern u32 D_8013960C;
 void *func_800E0120(Obj *);
-void func_801F2AC0(Sub801F2AC0 *);
+/* The overlay constructor returns its receiver (daddu v0,a0 at ROM 0x1449E4); discarded here. */
+Sub801F2AC0 *func_801F2AC0(Sub801F2AC0 *);
 s32 func_800A3934(Obj *);
 void func_800E039C(Obj *, s32);
 

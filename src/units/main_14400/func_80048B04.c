@@ -17,6 +17,11 @@ extern ActiveArea D_80143434;
 
 /* The returned foreign unit is read only through its two position words here. */
 MapPos *func_800C5F60(void);
+/* Scoped ABI ruling: scratch/omp/rulings/ABI-IDENTICAL-DECLARATIONS.md.
+ * This by-value call supplies its hidden result pointer in a0 and receives it in v0,
+ * exactly as B2EDC's explicit-out definition does. A by-value B2EDC definition copies
+ * the result pointer at entry and differs in 7 words. Keep this view local to this TU. */
+MapRect func_800B2EDC(void *object);
 s32 func_800A251C(MapPos *x, MapPos *y);
 s32 func_80041548(s32 y, s32 x);
 /* Original-only ABI: a0 is the rectangle destination, a1 the position input,

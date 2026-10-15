@@ -1003,7 +1003,7 @@ class EditableSourceRecipeTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         self.source = Path(temporary.name) / "source"
         (self.source / "tools").mkdir(parents=True)
-        for name in ("assets.py", "rommap.py", "rspaudio.py", "rom.py", "workspace.py", "toolchain_library.py",
+        for name in ("assets.py", "rommap.py", "rspaudio.py", "assetformat.py", "mipsflow.py", "gxxvtable.py", "rom.py", "workspace.py", "toolchain_library.py",
                      "images.py", "evidence.py", "packet.py", "progress.py", "certification.py", "generated_symbols.py"):
             shutil.copy2(Path(certification.__file__).parent / name, self.source / "tools" / name)
         (self.source / "config").mkdir()
@@ -1034,7 +1034,7 @@ class EditableSourceRecipeTests(unittest.TestCase):
             self.certification.validate_asset_recipe(self.source, self.certification.split_commands())
 
     def test_every_snapshot_packer_module_is_bound(self) -> None:
-        for name in ("assets.py", "rommap.py", "rspaudio.py", "images.py", "evidence.py", "rom.py", "toolchain_library.py", "generated_symbols.py"):
+        for name in ("assets.py", "rommap.py", "rspaudio.py", "assetformat.py", "mipsflow.py", "gxxvtable.py", "images.py", "evidence.py", "rom.py", "toolchain_library.py", "generated_symbols.py"):
             path = self.source / "tools" / name
             before = path.read_bytes()
             path.write_bytes(before + b"\n# substituted executed module\n")
@@ -1070,6 +1070,66 @@ class EditableSourceRecipeTests(unittest.TestCase):
                                            preflight_only=preflight_only)
                 gate.assert_called_once_with(self.source, self.certification.split_commands())
                 run.assert_not_called()
+
+    def test_changed_or_missing_assetformat_stops_the_child_before_split(self) -> None:
+        import build
+        trusted = Path(build.__file__).resolve().parent.parent
+        path = self.source / "tools/assetformat.py"
+        before = path.read_bytes()
+        cases = (("changed", lambda: path.write_bytes(before + b"\n# substituted format witness\n"),
+                  ValueError, "differs from the independent verifier: assetformat.py"),
+                 ("missing", path.unlink, FileNotFoundError, "assetformat.py"))
+        for name, mutate, error, message in cases:
+            mutate()
+            try:
+                for preflight_only in (False, True):
+                    with self.subTest(name, preflight_only=preflight_only), patch.object(build.subprocess, "run") as run:
+                        with self.assertRaisesRegex(error, message):
+                            build.execute_snapshot(self.source.parent, trusted, self.source.parent / "absent.z64",
+                                                   preflight_only=preflight_only)
+                        run.assert_not_called()
+            finally:
+                path.write_bytes(before)
+
+    def test_changed_or_missing_mipsflow_stops_the_child_before_split(self) -> None:
+        import build
+        trusted = Path(build.__file__).resolve().parent.parent
+        path = self.source / "tools/mipsflow.py"
+        before = path.read_bytes()
+        cases = (("changed", lambda: path.write_bytes(before + b"\n# substituted flow engine\n"),
+                  ValueError, "differs from the independent verifier: mipsflow.py"),
+                 ("missing", path.unlink, FileNotFoundError, "mipsflow.py"))
+        for name, mutate, error, message in cases:
+            mutate()
+            try:
+                for preflight_only in (False, True):
+                    with self.subTest(name, preflight_only=preflight_only), patch.object(build.subprocess, "run") as run:
+                        with self.assertRaisesRegex(error, message):
+                            build.execute_snapshot(self.source.parent, trusted, self.source.parent / "absent.z64",
+                                                   preflight_only=preflight_only)
+                        run.assert_not_called()
+            finally:
+                path.write_bytes(before)
+
+    def test_changed_or_missing_gxxvtable_stops_the_child_before_split(self) -> None:
+        import build
+        trusted = Path(build.__file__).resolve().parent.parent
+        path = self.source / "tools/gxxvtable.py"
+        before = path.read_bytes()
+        cases = (("changed", lambda: path.write_bytes(before + b"\n# substituted vtable witness\n"),
+                  ValueError, "differs from the independent verifier: gxxvtable.py"),
+                 ("missing", path.unlink, FileNotFoundError, "gxxvtable.py"))
+        for name, mutate, error, message in cases:
+            mutate()
+            try:
+                for preflight_only in (False, True):
+                    with self.subTest(name, preflight_only=preflight_only), patch.object(build.subprocess, "run") as run:
+                        with self.assertRaisesRegex(error, message):
+                            build.execute_snapshot(self.source.parent, trusted, self.source.parent / "absent.z64",
+                                                   preflight_only=preflight_only)
+                        run.assert_not_called()
+            finally:
+                path.write_bytes(before)
 
     def test_orchestration_archive_is_inert_and_bound(self) -> None:
         trusted = Path(self.certification.__file__).resolve().parent

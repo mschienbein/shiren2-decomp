@@ -37,11 +37,32 @@ Findings (exit status 1):
 - object-category: declarations/definitions of an external object disagree in one of those
   conflicting categories; every site is reported;
 - parse-failure: a translation unit failed to preprocess or parse; it is never skipped.
+- interface-ruling: invalid, hash-mismatched or stale `config/interface_rulings.json` entry.
 Static functions and objects are TU-local. `--prototype` prints the authoritative shape of a
 function (its C definition, else the agreed declaration) for authors; `--registry` writes
 external function shapes and object categories/sites, with disagreements. `tools/adopt.py`
 uses `Gate` to refuse a candidate that introduces findings over the canonical tree plus the
 candidates adopted before it.
+
+`config/interface_rulings.json` is a list of exact {symbol, definition_file, declaring_file,
+declared_shape, ruling: {path, sha256}} entries. `declared_shape` is the JSON form of
+Shape.signature: [return category/integer kind, [parameter categories/integer kinds], variadic].
+Only the named external declaration may differ, and only by a hidden aggregate-result pointer
+versus an explicit first out-pointer, or an ignored pointer return declared void; the definition's
+entire signature must match that transformation. Calls are admitted only when bound to that exact
+declaration and passing its explicit parameter count. Every other finding remains an error.
+Both files must be registered translation units in `config/compiler_profiles.json` tu_profiles.
+The declaration and definition must each be seen only in their named TU, never through a header
+or an included source file. Before adoption, the gate projects only validated candidates' explicit
+destination/profile registrations; final validation uses the actual registered tu_profiles.
+Ruling paths are source-root-relative and must be manifest-allowlisted so frozen/staged trees
+contain the reviewed bytes. There is no tool-project fallback; bytes must match the pinned SHA-256.
+Aggregate categories do not prove layout: independently review sizes for every new ruled pair.
+There are no dormant entries: activate entries with all named TUs, including a definition not yet
+canonical. Missing pairs, corrected declarations and changed shapes make entries stale. Adoption
+validates the complete batch first and the admitted tree last, but is not a batch transaction:
+the integrator must adopt the entire activation batch in a private copy and promote it only if
+the complete batch passes. Never install the config or a partial activation on the live tree.
 
 C++ translation units (`.cpp`, a `language: c++` profile) take the same preprocessing step with
 their own driver and flags, so cc1plus's view of the expanded TU (`-D__cplusplus`, headers) is
@@ -111,7 +132,9 @@ from evidence import COMPILED_SUFFIXES, compiled_kind
 from rom import PROJECT
 import toolchain_library
 
-KINDS = ("parse-failure", "declaration-vs-definition", "declaration-disagreement", "unprototyped", "call-arity", "object-category")
+RULINGS_FILE = "config/interface_rulings.json"
+KINDS = ("parse-failure", "declaration-vs-definition", "declaration-disagreement", "unprototyped", "call-arity",
+         "object-category", "interface-ruling")
 OBJECT_CONFLICTS = (("pointer", "integer", "pointer-vs-integer"), ("array", "pointer", "array-vs-pointer"),
                     ("float", "integer", "float-vs-integer"), ("double", "integer", "float-vs-integer"))
 OBJECT_CONFLICTS += tuple(
@@ -295,8 +318,9 @@ class Site:
         return f"{self.file}:{self.line}"
 
     def to_json(self) -> dict[str, Any]:
+        returns, params, variadic = self.shape.signature
         return {"file": self.file, "line": self.line, "column": self.column, "role": self.role, "text": self.text,
-                "shape": self.shape.to_json()}
+                "shape": self.shape.to_json(), "signature": [returns, None if params is None else list(params), variadic]}
 
 
 @dataclass(frozen=True)
@@ -330,13 +354,18 @@ class Call:
     column: int
     arguments: int
     local: bool = False
+    declaration: Site | None = None  # the lexical C binding / clang declaration identity at this call
 
     @property
     def key(self) -> tuple[Any, ...]:
-        return ("call", self.file, self.line, self.column, self.arguments)
+        return ("call", self.file, self.line, self.column, self.arguments,
+                self.declaration.key if self.declaration is not None else None)
 
     def to_json(self) -> dict[str, Any]:
-        return {"file": self.file, "line": self.line, "column": self.column, "role": "call", "arguments": self.arguments}
+        result = {"file": self.file, "line": self.line, "column": self.column, "role": "call", "arguments": self.arguments}
+        if self.declaration is not None:
+            result["declaration"] = self.declaration.to_json()
+        return result
 
 
 @dataclass
@@ -348,6 +377,7 @@ class TUResult:
     error: str | None = None
     candidate: int | None = None  # index into the audited extra candidates
     objects: list[ObjectSite] = field(default_factory=list)
+    destination: str | None = None  # validated prospective tu_profiles registration, before adoption
 
 
 def display(path: str, source_root: Path | None = None) -> str:
@@ -517,9 +547,11 @@ class _Collector:
         coord = node.coord
         return display(coord.file) if coord and coord.file else self.tu, coord.line if coord else 0, (coord.column or 0) if coord else 0
 
-    def site(self, node: Any, name: str, role: str, text: str, shape: Shape, storage: list[str]) -> None:
+    def site(self, node: Any, name: str, role: str, text: str, shape: Shape, storage: list[str]) -> Site:
         file, line, column = self.coord(node)
-        self.raw_sites.append((Site(name, role, file, line, column, text, shape), len(self.scopes) == 1, "static" in storage))
+        site = Site(name, role, file, line, column, text, shape)
+        self.raw_sites.append((site, len(self.scopes) == 1, "static" in storage))
+        return site
 
     def declare(self, node: c_ast.Decl) -> None:
         self.register_enums(node.type)
@@ -545,8 +577,8 @@ class _Collector:
             if node.init is not None:
                 self.walk(node.init)
             return
-        self.site(node, node.name, "declaration", self.generator.visit(node), self.shape(function), node.storage)
-        self.scopes[-1][node.name] = ("function", None)
+        site = self.site(node, node.name, "declaration", self.generator.visit(node), self.shape(function), node.storage)
+        self.scopes[-1][node.name] = ("function", site)
 
     def define(self, node: c_ast.FuncDef) -> None:
         decl = node.decl
@@ -554,8 +586,8 @@ class _Collector:
         function = self.function_type(decl.type)
         # GNU89 `extern inline` bodies are never the external definition.
         role = "declaration" if "extern" in decl.storage and "inline" in decl.funcspec else "definition"
-        self.site(decl, decl.name, role, self.generator.visit(decl), self.shape(function, node), decl.storage)
-        self.scopes[-1][decl.name] = ("function", None)
+        site = self.site(decl, decl.name, role, self.generator.visit(decl), self.shape(function, node), decl.storage)
+        self.scopes[-1][decl.name] = ("function", site)
         self.scopes.append({})
         params = function.args.params if function.args is not None else []
         for param in params:
@@ -576,11 +608,11 @@ class _Collector:
                 file, line, column = self.coord(node)
                 self.raw_sites.append((Site(name, "implicit", file, line, column, f"int {name}() /* implicit */",
                                             Shape(INT, None)), True, False))
-                self.scopes[0][name] = ("function", None)
+                self.scopes[0][name] = ("function", self.raw_sites[-1][0])
                 entry = self.scopes[0][name]
             if entry is not None and entry[0] == "function":
                 file, line, column = self.coord(node)
-                self.raw_calls.append(Call(name, file, line, column, arguments))
+                self.raw_calls.append(Call(name, file, line, column, arguments, declaration=entry[1]))
         else:
             self.walk(node.name)
         if node.args is not None:
@@ -889,6 +921,7 @@ class _CxxCollector:
         self.enum_predecessors: dict[str, str] = {}
         self.c_functions: dict[str, str] = {}  # clang declaration id -> name, every C-linkage redeclaration
         self.function_local: dict[str, bool] = {}  # linkage follows declaration identity, not a namespace's short name
+        self.function_sites: dict[str, Site] = {}
         self.raw_sites: list[Site] = []
         self.raw_calls: list[Call] = []
         self.objects: list[ObjectSite] = []
@@ -1187,7 +1220,9 @@ class _CxxCollector:
                       tuple(self.classify_use(p["type"], parameter=True) for p in parms), variadic)
         file, line, column = self.location(node)
         text = f'extern "C" {returns} {name}({", ".join([*written, *(["..."] if variadic else [])])})'
-        self.raw_sites.append(Site(name, role, file, line, column, text, shape, local=local))
+        site = Site(name, role, file, line, column, text, shape, local=local)
+        self.raw_sites.append(site)
+        self.function_sites[node["id"]] = site
 
     def object(self, node: dict[str, Any], linkage_extern: bool) -> None:
         name, emitted = node.get("name"), node.get("mangledName")
@@ -1518,15 +1553,19 @@ class _CxxCollector:
         if node.get("kind") == "CallExpr":
             children = node.get("inner", [])
             callee = children[0] if children else None
+            exact_binding = True
             while callee is not None and (callee.get("kind") in ("ImplicitCastExpr", "ParenExpr", "CStyleCastExpr",
                                                                 "CXXStaticCastExpr", "CXXReinterpretCastExpr")
                                           or callee.get("kind") == "UnaryOperator" and callee.get("opcode") in ("*", "&")):
+                if callee.get("kind") in ("CStyleCastExpr", "CXXStaticCastExpr", "CXXReinterpretCastExpr"):
+                    exact_binding = False
                 callee = (callee.get("inner") or [None])[0]
             target = callee.get("referencedDecl", {}) if callee is not None and callee.get("kind") == "DeclRefExpr" else {}
             if target.get("kind") == "FunctionDecl" and target.get("id") in self.c_functions:
                 file, line, column = self.location(node)
                 self.raw_calls.append(Call(self.c_functions[target["id"]], file, line, column, len(children) - 1,
-                                           local=self.function_local[target["id"]]))
+                                           local=self.function_local[target["id"]],
+                                           declaration=self.function_sites[target["id"]] if exact_binding else None))
         for child in node.get("inner", []):
             self.calls(child)
 
@@ -1567,6 +1606,7 @@ class TranslationUnit:
     candidate: int | None = None
     error: str | None = None
     cxx: bool = False  # a C++ (.cpp) TU, analysed through the pinned clang
+    destination: str | None = None  # adopt's final source path, never inferred from a candidate basename
 
 
 def translation_units(profile: dict[str, Any], source_root: Path, extra: Iterable[dict[str, Any]]) -> list[TranslationUnit]:
@@ -1578,6 +1618,7 @@ def translation_units(profile: dict[str, Any], source_root: Path, extra: Iterabl
         key = item.get("profile") or profile["tu_profiles"].get(display(str(path), source_root))
         includes = tuple(str(Path(p).resolve()) for p in item.get("includes") or [])
         cxx = path.suffix == COMPILED_SUFFIXES["cpp"]
+        destination = item.get("destination")
         error = None
         if not path.is_file():
             error = f"missing candidate source {path}"
@@ -1589,7 +1630,11 @@ def translation_units(profile: dict[str, Any], source_root: Path, extra: Iterabl
             error = f"unknown profile {key}"
         elif profile_kind(profile, key) != compiled_kind(path.name):
             error = f"profile {key} does not compile {path.suffix} sources"
-        units.append(TranslationUnit(tu, str(path), key, includes, index, error, cxx))
+        if destination is not None:
+            if (not _relative_file(destination) or not destination.startswith("src/units/")
+                    or Path(destination).suffix != path.suffix):
+                error = f"invalid candidate destination {destination!r}"
+        units.append(TranslationUnit(tu, str(path), key, includes, index, error, cxx, destination))
     return units
 
 
@@ -1629,6 +1674,16 @@ def preprocess_and_parse(unit: TranslationUnit, profile: dict[str, Any], work: P
             except ValueError as error:
                 result = TUResult(unit.tu, unit.profile, error=f"parse: {error}")
     result.candidate = unit.candidate
+    if unit.destination is not None and result.error is None:
+        def relocated(site: Site) -> Site:
+            return replace(site, file=unit.destination) if site.file == unit.tu else site
+        result.sites = [relocated(site) for site in result.sites]
+        result.calls = [replace(call, file=unit.destination if call.file == unit.tu else call.file,
+                                declaration=relocated(call.declaration) if call.declaration is not None else None)
+                        for call in result.calls]
+        result.objects = [replace(site, file=unit.destination) if site.file == unit.tu else site for site in result.objects]
+        result.tu = unit.destination
+        result.destination = unit.destination
     return result
 
 
@@ -1647,6 +1702,84 @@ def collect(source_root: Path = PROJECT, extra: Iterable[dict[str, Any]] = (), *
         environment = compiler_environment(work, profile)
         with ThreadPoolExecutor(max_workers=jobs or os.cpu_count() or 4) as pool:
             return list(pool.map(lambda unit: preprocess_and_parse(unit, profile, work, environment, cxx), units))
+
+
+# ---------------------------------------------------------------- reviewed exceptions
+
+def _relative_file(value: Any) -> bool:
+    return (isinstance(value, str) and bool(value) and "\0" not in value and "\\" not in value
+            and not Path(value).is_absolute() and ".." not in Path(value).parts
+            and Path(value).as_posix() == value and value != ".")
+
+
+@dataclass(frozen=True)
+class InterfaceRuling:
+    symbol: str
+    definition_file: str
+    declaring_file: str
+    declared_shape: tuple[Any, ...]
+    path: str
+    sha256: str
+
+    @property
+    def key(self) -> tuple[Any, ...]:
+        return (self.symbol, self.definition_file, self.declaring_file, self.declared_shape)
+
+    @property
+    def definition_shape(self) -> tuple[Any, ...]:
+        """Pin the entire defined signature, not merely the differing return category."""
+        returns, params, variadic = self.declared_shape
+        return ("pointer", ("pointer", *params) if returns == "aggregate" else params, variadic)
+
+
+def load_rulings(source_root: Path, *, tu_profiles: dict[str, str] | None = None) -> tuple[InterfaceRuling, ...]:
+    """Load exact reviewed TU pairs; invalid entries fail closed, never partially suppress."""
+    config = source_root / RULINGS_FILE
+    if not config.exists() and not config.is_symlink():
+        return ()
+    entries = read_json(config)
+    if not isinstance(entries, list):
+        raise ValueError(f"{RULINGS_FILE}: expected a list")
+    if tu_profiles is None:
+        tu_profiles = read_json(source_root / "config/compiler_profiles.json")["tu_profiles"]
+    if not isinstance(tu_profiles, dict):
+        raise ValueError(f"{RULINGS_FILE}: invalid tu_profiles registry")
+    result: dict[tuple[Any, ...], InterfaceRuling] = {}
+    digests: dict[Path, str] = {}
+    for index, entry in enumerate(entries):
+        label = f"{RULINGS_FILE}[{index}]"
+        if (not isinstance(entry, dict)
+                or set(entry) != {"symbol", "definition_file", "declaring_file", "declared_shape", "ruling"}):
+            raise ValueError(f"{label}: invalid entry fields")
+        if not isinstance(entry["symbol"], str) or not re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]*", entry["symbol"]):
+            raise ValueError(f"{label}: invalid symbol")
+        if not all(_relative_file(entry[key]) for key in ("definition_file", "declaring_file")):
+            raise ValueError(f"{label}: files must be normalized source-root-relative paths")
+        if any(entry[key] not in tu_profiles or Path(entry[key]).suffix not in COMPILED_SUFFIXES.values()
+               for key in ("definition_file", "declaring_file")):
+            raise ValueError(f"{label}: definition_file and declaring_file must be registered translation units")
+        shape, proof = entry["declared_shape"], entry["ruling"]
+        if (not isinstance(shape, list) or len(shape) != 3 or shape[0] not in ("aggregate", "void")
+                or not isinstance(shape[1], list) or any(not isinstance(p, str) or not p for p in shape[1])
+                or shape[2] is not False):
+            raise ValueError(f"{label}: expected a nonvariadic aggregate/void Shape.signature tuple")
+        if (not isinstance(proof, dict) or set(proof) != {"path", "sha256"}
+                or not _relative_file(proof["path"]) or not isinstance(proof["sha256"], str)
+                or not re.fullmatch(r"[0-9a-f]{64}", proof["sha256"])):
+            raise ValueError(f"{label}: invalid ruling path or sha256")
+        path = source_root / proof["path"]
+        if not path.resolve().is_relative_to(source_root.resolve()):
+            raise ValueError(f"{label}: ruling path escapes its root")
+        if path not in digests:
+            digests[path] = sha256(path)
+        if digests[path] != proof["sha256"]:
+            raise ValueError(f"{label}: ruling sha256 mismatch: {proof['path']}")
+        ruling = InterfaceRuling(entry["symbol"], entry["definition_file"], entry["declaring_file"],
+                                 (shape[0], tuple(shape[1]), False), proof["path"], proof["sha256"])
+        if ruling.key in result:
+            raise ValueError(f"{label}: duplicate ruling entry")
+        result[ruling.key] = ruling
+    return tuple(result.values())
 
 
 # ---------------------------------------------------------------- analysis
@@ -1735,6 +1868,7 @@ class Report:
     results: list[TUResult]
     seconds: float = 0.0
     objects: dict[str, ObjectRecord] = field(default_factory=dict)
+    suppressed: list[Finding] = field(default_factory=list)
 
     def counts(self) -> dict[str, int]:
         counts = Counter(f.kind for f in self.findings)
@@ -1777,13 +1911,16 @@ def _finding(findings: dict[tuple[Any, ...], Finding], record: SymbolRecord | Ob
         record.findings.append(finding)
 
 
-def analyse(results: Iterable[TUResult]) -> Report:
-    """Compare function sites/direct calls and external object categories across the given TU results."""
+def analyse(results: Iterable[TUResult], *, rulings: Iterable[InterfaceRuling] = (), check_stale: bool = True) -> Report:
+    """Compare interfaces, admitting only exact reviewed pairs; stale rulings are errors."""
     results = list(results)
     records: dict[tuple[str, str], SymbolRecord] = {}
     objects: dict[str, ObjectRecord] = {}
     seen_sites: dict[tuple[Any, ...], _Seen] = {}
     findings: dict[tuple[Any, ...], Finding] = {}
+    ruling_entries = {ruling.key: ruling for ruling in rulings}
+    used_rulings: set[tuple[Any, ...]] = set()
+    suppressed: list[Finding] = []
     for result in results:
         if result.error is not None:
             _finding(findings, None, Finding("parse-failure", result.tu, result.error, tus={result.tu},
@@ -1819,29 +1956,48 @@ def analyse(results: Iterable[TUResult]) -> Report:
         definitions = record.definitions
         if definitions:
             reference = definitions[0]
+            ruled_sites: set[tuple[Any, ...]] = set()
             for seen in record.sites:
                 if seen is reference:
                     continue
                 differences = compare(reference.item.shape, seen.item.shape)
                 if differences:
-                    _finding(findings, record, Finding(
+                    finding = Finding(
                         "declaration-vs-definition", symbol,
                         f"{_site_text(seen)} vs C definition {_site_text(reference)}: {describe(differences)}",
                         site=seen.item.to_json(), reference=reference.item.to_json(), differences=differences,
-                        tus=seen.tus | reference.tus, key=("declaration-vs-definition", symbol, seen.item.key, reference.item.key)))
-            shape = reference.item.shape
-            fixed = len(shape.params) if shape.params is not None else shape.arity
+                        tus=seen.tus | reference.tus, key=("declaration-vs-definition", symbol, seen.item.key, reference.item.key))
+                    ruling_key = (symbol, reference.item.file, seen.item.file, seen.item.shape.signature)
+                    ruling = ruling_entries.get(ruling_key)
+                    if (record.scope == "external" and seen.item.role == "declaration" and ruling is not None
+                            and seen.tus == {ruling.declaring_file} and reference.tus == {ruling.definition_file}
+                            and reference.item.shape.signature == ruling.definition_shape):
+                        used_rulings.add(ruling_key)
+                        ruled_sites.add(seen.item.key)
+                        suppressed.append(finding)
+                    else:
+                        _finding(findings, record, finding)
             for seen in record.calls:
                 call = seen.item
+                ruled = call.declaration if call.declaration is not None and call.declaration.key in ruled_sites else None
+                wrong_explicit_arity = ruled is not None and call.arguments != len(ruled.shape.params)
+                target = ruled if wrong_explicit_arity else reference.item
+                shape = target.shape
+                fixed = len(shape.params) if shape.params is not None else shape.arity
                 if fixed is None or call.arguments == fixed or (shape.variadic and call.arguments >= fixed):
                     continue
                 takes = f"{fixed}{' or more' if shape.variadic else ''}"
-                _finding(findings, record, Finding(
+                finding = Finding(
                     "call-arity", symbol,
-                    f"call at {call.file}:{call.line} passes {call.arguments} argument(s); C definition {_site_text(reference)} takes {takes}",
-                    site=call.to_json(), reference=reference.item.to_json(),
+                    f"call at {call.file}:{call.line} passes {call.arguments} argument(s); "
+                    f"{'ruled declaration' if wrong_explicit_arity else 'C definition'} {target.location()} `{target.text}` takes {takes}",
+                    site=call.to_json(), reference=target.to_json(),
                     differences=[{"aspect": "arguments", "subkind": "arity", "expected": takes, "found": call.arguments}],
-                    tus=seen.tus | reference.tus, key=("call-arity", symbol, call.key, reference.item.key)))
+                    tus=seen.tus | reference.tus, key=("call-arity", symbol, call.key, target.key))
+                if ruled is not None and not wrong_explicit_arity:
+                    suppressed.append(finding)
+                else:
+                    _finding(findings, record, finding)
             continue
         # Assembly callee: every pair of conflicting declaration shapes, the most widely seen shape first.
         groups = sorted(record.groups().items(), key=lambda g: (-sum(len(s.tus) for s in g[1]), repr(g[0])))
@@ -1876,18 +2032,39 @@ def analyse(results: Iterable[TUResult]) -> Report:
                 locations=[{**s.item.to_json(), "tus": sorted(s.tus)} for s in sites],
                 tus=set().union(*(s.tus for s in sites)),
                 key=("object-category", record.symbol, expected, found)))
+    if check_stale:
+        for key in ruling_entries.keys() - used_rulings:
+            ruling = ruling_entries[key]
+            detail = (f"stale {RULINGS_FILE} entry: no exact declaration-vs-definition finding for "
+                      f"{ruling.declaring_file} vs {ruling.definition_file}, shape {ruling.declared_shape!r}")
+            _finding(findings, None, Finding("interface-ruling", ruling.symbol, detail,
+                                             key=("interface-ruling", *key)))
     ordered = sorted(findings.values(), key=lambda f: (KINDS.index(f.kind), f.symbol, f.detail))
-    return Report(ordered, records, results, objects=objects)
+    return Report(ordered, records, results, objects=objects, suppressed=suppressed)
 
 
 def describe(differences: list[dict[str, Any]]) -> str:
     return "; ".join(f"{d['aspect']} {d['expected']} vs {d['found']}" for d in differences)
 
 
+def _audit_results(results: Iterable[TUResult], source_root: Path | None, *, check_stale: bool = True,
+                   tu_profiles: dict[str, str] | None = None) -> Report:
+    if source_root is None:
+        return analyse(results)
+    try:
+        rulings = load_rulings(source_root, tu_profiles=tu_profiles)
+    except (OSError, ValueError) as error:
+        report = analyse(results)
+        report.findings.append(Finding("interface-ruling", RULINGS_FILE, str(error),
+                                        key=("interface-ruling", RULINGS_FILE, str(error))))
+        return report
+    return analyse(results, rulings=rulings, check_stale=check_stale)
+
+
 def audit(source_root: Path = PROJECT, extra: Iterable[dict[str, Any]] = (), *, jobs: int | None = None) -> Report:
     """Audit every TU of `tool_profile(...)["tu_profiles"]` under `source_root` plus `extra` candidates."""
     started = time.monotonic()
-    report = analyse(collect(source_root, extra, jobs=jobs))
+    report = _audit_results(collect(source_root, extra, jobs=jobs), Path(source_root))
     report.seconds = time.monotonic() - started
     return report
 
@@ -1900,17 +2077,44 @@ class Gate:
     disagreement introduces nothing); `admit(i)` adds candidate i once it is adopted.
     """
 
-    def __init__(self, results: list[TUResult]) -> None:
+    def __init__(self, results: list[TUResult], *, source_root: Path | None = None) -> None:
+        self.source_root = source_root
         self.candidates = {r.candidate: r for r in results if r.candidate is not None}
         self.admitted = [r for r in results if r.candidate is None]
-        self.previous = {f.key for f in analyse(self.admitted).findings}
+        self.tu_profiles = None
+        if source_root is not None:
+            declaration = read_json(source_root / "config/compiler_profiles.json")
+            self.tu_profiles = dict(declaration["tu_profiles"])
+            for result in self.candidates.values():
+                destination = result.destination
+                if (result.error is None and destination == result.tu and _relative_file(destination)
+                        and destination.startswith("src/units/") and result.profile in declaration["profiles"]
+                        and Path(destination).suffix == COMPILED_SUFFIXES[profile_kind(declaration, result.profile)]):
+                    self.tu_profiles[destination] = result.profile
+        # All activation partners must occur in this batch. Sequential prefixes may lack them.
+        self.configuration_errors = [
+            f for f in _audit_results(results, source_root, tu_profiles=self.tu_profiles).findings if f.kind == "interface-ruling"]
+        self.previous = {f.key for f in _audit_results(
+            self.admitted, source_root, check_stale=False, tu_profiles=self.tu_profiles).findings}
 
-    def check(self, index: int) -> list[Finding]:
-        return [f for f in analyse([*self.admitted, self.candidates[index]]).findings if f.key not in self.previous]
+    def check(self, index: int, *, retired: frozenset[str] | set[str] = frozenset()) -> list[Finding]:
+        kept = [result for result in self.admitted if result.tu not in retired]
+        previous = ({f.key for f in _audit_results(
+            kept, self.source_root, check_stale=False, tu_profiles=self.tu_profiles).findings} if retired else self.previous)
+        current = _audit_results([*kept, self.candidates[index]], self.source_root, check_stale=False,
+                                 tu_profiles=self.tu_profiles)
+        errors = {f.key: f for f in self.configuration_errors}
+        errors.update((f.key, f) for f in current.findings if f.kind == "interface-ruling" or f.key not in previous)
+        return list(errors.values())
 
     def admit(self, index: int) -> None:
         self.admitted.append(self.candidates[index])
-        self.previous = {f.key for f in analyse(self.admitted).findings}
+        self.previous = {f.key for f in _audit_results(
+            self.admitted, self.source_root, check_stale=False, tu_profiles=self.tu_profiles).findings}
+
+    def ruling_errors(self) -> list[Finding]:
+        """Require a live finding for every entry after the entire batch is admitted."""
+        return [f for f in _audit_results(self.admitted, self.source_root).findings if f.kind == "interface-ruling"]
 
 
 # ---------------------------------------------------------------- CLI
@@ -1945,7 +2149,7 @@ def prototype_lines(report: Report, symbol: str) -> tuple[list[str], bool]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--source-root", type=Path, default=PROJECT)
-    parser.add_argument("--extra", type=Path, help="JSON list of {source, profile[, includes]} candidates")
+    parser.add_argument("--extra", type=Path, help="JSON list of {source, profile[, includes, destination]} candidates")
     parser.add_argument("--json", action="store_true", help="print the findings as JSON")
     parser.add_argument("--prototype", nargs="+", metavar="SYMBOL", help="print authoritative prototype shapes")
     parser.add_argument("--registry", type=Path, metavar="OUT.json", help="write every referenced symbol's shape")
@@ -1961,16 +2165,23 @@ def main(argv: list[str] | None = None) -> int:
             lines, known = prototype_lines(report, symbol)
             print("\n".join(lines))
             ok &= known
+        for finding in report.findings:
+            if finding.kind == "interface-ruling":
+                print(finding.summary())
+                ok = False
         return 0 if ok else 1
     summary = {"tus": len(report.results), "findings": len(report.findings), "counts": report.counts(),
                "seconds": round(report.seconds, 2)}
     if args.json:
-        print(json.dumps({**summary, "findings": [f.to_json() for f in report.findings]}, indent=2))
+        print(json.dumps({**summary, "findings": [f.to_json() for f in report.findings],
+                          "suppressed": [f.to_json() for f in report.suppressed]}, indent=2))
     else:
         for finding in report.findings:
             print(finding.summary())
         counts = ", ".join(f"{count} {kind}" for kind, count in summary["counts"].items()) or "none"
         print(f"{summary['findings']} finding(s) ({counts}) over {summary['tus']} TU(s) in {summary['seconds']} s")
+        if report.suppressed:
+            print(f"{len(report.suppressed)} finding(s) admitted by exact interface rulings")
     return 1 if report.findings else 0
 
 

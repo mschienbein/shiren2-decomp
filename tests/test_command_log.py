@@ -112,7 +112,7 @@ class ReplayCommandEvidenceTests(unittest.TestCase):
         tools = self.directory / "source/tools"
         tools.mkdir()
         # Keep the real recipe gate alongside the existing command-evidence mocks.
-        for name in ("assets.py", "rommap.py", "rspaudio.py", "rom.py", "images.py", "evidence.py", "toolchain_library.py", "generated_symbols.py"):
+        for name in ("assets.py", "rommap.py", "rspaudio.py", "assetformat.py", "mipsflow.py", "gxxvtable.py", "rom.py", "images.py", "evidence.py", "toolchain_library.py", "generated_symbols.py"):
             shutil.copy2(TOOLS / name, tools / name)
         (self.directory / "input-manifest.json").write_text("{}")
         (self.directory / "shiren2.ld").write_text("frozen linker script\n")
@@ -206,7 +206,7 @@ class AbruptTerminationTests(unittest.TestCase):
         (directory / "source/config").mkdir(parents=True)
         tools = directory / "source/tools"
         tools.mkdir()
-        for name in ("assets.py", "rommap.py", "rspaudio.py", "rom.py", "images.py", "evidence.py", "toolchain_library.py", "generated_symbols.py"):
+        for name in ("assets.py", "rommap.py", "rspaudio.py", "assetformat.py", "mipsflow.py", "gxxvtable.py", "rom.py", "images.py", "evidence.py", "toolchain_library.py", "generated_symbols.py"):
             shutil.copy2(TOOLS / name, tools / name)
         (directory / "generated").mkdir()
         (directory / "obj").mkdir()

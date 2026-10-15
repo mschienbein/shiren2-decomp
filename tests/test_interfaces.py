@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 
-from interfaces import PROJECT, CXX_INTEGERS, Gate, analyse, clang_ast_command, collect, display, main, normalise, parse_cxx_tu, parse_tu  # noqa: E402
+from interfaces import PROJECT, CXX_INTEGERS, Gate, analyse, clang_ast_command, collect, display, load_rulings, main, normalise, parse_cxx_tu, parse_tu  # noqa: E402
 from interfaces import _CxxCollector, _internal_mangling  # noqa: E402
 
 CLANG, CLANG_UNAVAILABLE = clang_ast_command(PROJECT, PROJECT)
@@ -423,7 +423,7 @@ class CanonicalGateTests(unittest.TestCase):
         cls.temporary.cleanup()
 
     def test_canonical_tree_has_no_interface_findings(self) -> None:
-        report = analyse(r for r in self.results if r.candidate is None)
+        report = analyse((r for r in self.results if r.candidate is None), rulings=load_rulings(PROJECT))
         self.assertGreater(len(report.results), 0)
         self.assertEqual([], [f.summary() for f in report.findings])
 

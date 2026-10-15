@@ -6,6 +6,11 @@
 struct Record_800B3024 { MapRect area; unsigned char pad10[4]; };
 
 extern "C" {
+/* Scoped ABI ruling: scratch/omp/rulings/ABI-IDENTICAL-DECLARATIONS.md.
+ * This by-value call supplies its hidden result pointer in a0 and receives it in v0,
+ * exactly as B2EDC's explicit-out definition does. A by-value B2EDC definition copies
+ * the result pointer at entry and differs in 7 words. Keep this view local to this TU. */
+MapRect func_800B2EDC(void *object);
 extern MapRect D_801429C0;
 extern unsigned char D_80143392;
 u32 func_800B1C6C(void *pos);

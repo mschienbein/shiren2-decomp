@@ -38,15 +38,6 @@
       "evidence": "Controller query starter; real queue/PIF layouts, conditional write-completion wait and asynchronous read-DMA status returned after command/access state updates; exact natural128-byte KMC text"
     },
     {
-      "image_id": "main_14400",
-      "symbol": "func_800A6E50",
-      "source": "src/units/main_14400/func_800A6E50.c",
-      "rom_start": 499344,
-      "vram_start": 2148167248,
-      "size": 64,
-      "evidence": "Two-pointer boolean wrapper; original byte-field bits and actual downstream two-argument contract preserved; partial views are not complete allocation sizes; exact natural64-byte text under modern and KMC probes"
-    },
-    {
       "image_id": "resident",
       "symbol": "func_80025E80",
       "source": "src/units/resident/func_80025E80.c",
@@ -405,15 +396,6 @@
       "vram_start": 2148280556,
       "size": 16,
       "evidence": "Ordered pinned two unsigned byte loads at+A/+9 and comparison; natural16-byte modern text,65536 reduced input pairs and original callers; historical containing type/API/order portability qualified"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A5A70",
-      "source": "src/units/main_14400/func_800A5A70.c",
-      "rom_start": 494256,
-      "vram_start": 2148162160,
-      "size": 24,
-      "evidence": "Read byte+9,preserve upper nibble,insert full input word low4; natural24-byte modern text and original byte RMW/caller evidence; allocation/API/concurrency qualified"
     },
     {
       "image_id": "resident",
@@ -984,24 +966,6 @@
     },
     {
       "image_id": "main_14400",
-      "symbol": "func_800A7DCC",
-      "source": "src/units/main_14400/func_800A7DCC.c",
-      "rom_start": 503308,
-      "vram_start": 2148171212,
-      "size": 8,
-      "evidence": "omp wave1 author main1: tools/match.py exact gcc272-modern237-O2-unsigned text; Exact match."
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A80C0",
-      "source": "src/units/main_14400/func_800A80C0.c",
-      "rom_start": 504064,
-      "vram_start": 2148171968,
-      "size": 8,
-      "evidence": "omp wave1 author main1: tools/match.py exact gcc272-modern237-O2-unsigned text; Exact match."
-    },
-    {
-      "image_id": "main_14400",
       "symbol": "func_800A835C",
       "source": "src/units/main_14400/func_800A835C.c",
       "rom_start": 504732,
@@ -1168,24 +1132,6 @@
       "source": "src/units/main_14400/func_8009FAF8.c",
       "rom_start": 469816,
       "vram_start": 2148137720,
-      "size": 8,
-      "evidence": "omp wave1 author main2: tools/match.py exact gcc272-modern237-O2-unsigned text; exact match."
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7DD4",
-      "source": "src/units/main_14400/func_800A7DD4.c",
-      "rom_start": 503316,
-      "vram_start": 2148171220,
-      "size": 8,
-      "evidence": "omp wave1 author main2: tools/match.py exact gcc272-modern237-O2-unsigned text; exact match."
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A80C8",
-      "source": "src/units/main_14400/func_800A80C8.c",
-      "rom_start": 504072,
-      "vram_start": 2148171976,
       "size": 8,
       "evidence": "omp wave1 author main2: tools/match.py exact gcc272-modern237-O2-unsigned text; exact match."
     },
@@ -1371,24 +1317,6 @@
     },
     {
       "image_id": "main_14400",
-      "symbol": "func_800A7DDC",
-      "source": "src/units/main_14400/func_800A7DDC.c",
-      "rom_start": 503324,
-      "vram_start": 2148171228,
-      "size": 8,
-      "evidence": "omp wave1 author main3: tools/match.py exact gcc272-modern237-O2-unsigned text; Returns &obj->field_C."
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A80D0",
-      "source": "src/units/main_14400/func_800A80D0.c",
-      "rom_start": 504080,
-      "vram_start": 2148171984,
-      "size": 8,
-      "evidence": "omp wave1 author main3: tools/match.py exact gcc272-modern237-O2-unsigned text; Clears word at +0x20."
-    },
-    {
-      "image_id": "main_14400",
       "symbol": "func_80087A98",
       "source": "src/units/main_14400/func_80087A98.c",
       "rom_start": 371416,
@@ -1546,24 +1474,6 @@
       "source": "src/units/main_14400/func_8009FD44.c",
       "rom_start": 470404,
       "vram_start": 2148138308,
-      "size": 8,
-      "evidence": "omp wave1 author main4: tools/match.py exact gcc272-modern237-O2-unsigned text; Matched."
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7DE4",
-      "source": "src/units/main_14400/func_800A7DE4.c",
-      "rom_start": 503332,
-      "vram_start": 2148171236,
-      "size": 8,
-      "evidence": "omp wave1 author main4: tools/match.py exact gcc272-modern237-O2-unsigned text; Matched."
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A80D8",
-      "source": "src/units/main_14400/func_800A80D8.c",
-      "rom_start": 504088,
-      "vram_start": 2148171992,
       "size": 8,
       "evidence": "omp wave1 author main4: tools/match.py exact gcc272-modern237-O2-unsigned text; Matched."
     },
@@ -1744,15 +1654,6 @@
       "source": "src/units/main_14400/func_800A1854.c",
       "rom_start": 477332,
       "vram_start": 2148145236,
-      "size": 8,
-      "evidence": "omp wave1 author main5: tools/match.py exact gcc272-modern237-O2-unsigned text; Exact match."
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A8100",
-      "source": "src/units/main_14400/func_800A8100.c",
-      "rom_start": 504128,
-      "vram_start": 2148172032,
       "size": 8,
       "evidence": "omp wave1 author main5: tools/match.py exact gcc272-modern237-O2-unsigned text; Exact match."
     },
@@ -4260,15 +4161,6 @@
     },
     {
       "image_id": "main_14400",
-      "symbol": "func_800A7DEC",
-      "source": "src/units/main_14400/func_800A7DEC.c",
-      "rom_start": 503340,
-      "vram_start": 2148171244,
-      "size": 8,
-      "evidence": "omp wave1b author recheck: tools/match.py exact text (gcc281pm-gnu291-O2-unsigned); Unchanged wave-1 source matches under gcc 2.8.1 + as 2.9.1 -mcpu=r3000."
-    },
-    {
-      "image_id": "main_14400",
       "symbol": "func_80069EF0",
       "source": "src/units/main_14400/func_80069EF0.c",
       "rom_start": 249648,
@@ -4481,15 +4373,6 @@
       "rom_start": 463736,
       "vram_start": 2148131640,
       "size": 40,
-      "evidence": "omp wave1b author recheck: tools/match.py exact text (gcc281pm-gnu291-O2-unsigned); Unchanged wave-1 source matches under gcc 2.8.1 + as 2.9.1 -mcpu=r3000."
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7DF4",
-      "source": "src/units/main_14400/func_800A7DF4.c",
-      "rom_start": 503348,
-      "vram_start": 2148171252,
-      "size": 8,
       "evidence": "omp wave1b author recheck: tools/match.py exact text (gcc281pm-gnu291-O2-unsigned); Unchanged wave-1 source matches under gcc 2.8.1 + as 2.9.1 -mcpu=r3000."
     },
     {
@@ -6762,15 +6645,6 @@
     },
     {
       "image_id": "main_14400",
-      "symbol": "func_800A5758",
-      "source": "src/units/main_14400/func_800A5758.c",
-      "rom_start": 493464,
-      "vram_start": 2148161368,
-      "size": 52,
-      "evidence": "omp wave2 author m08: tools/match.py exact text (gcc281pm-gnu291-O2-unsigned); Direct C; matched first try."
-    },
-    {
-      "image_id": "main_14400",
       "symbol": "func_800DA5AC",
       "source": "src/units/main_14400/func_800DA5AC.c",
       "rom_start": 710124,
@@ -7041,15 +6915,6 @@
     },
     {
       "image_id": "main_14400",
-      "symbol": "func_800A665C",
-      "source": "src/units/main_14400/func_800A665C.c",
-      "rom_start": 497308,
-      "vram_start": 2148165212,
-      "size": 52,
-      "evidence": "omp wave2 author m09: tools/match.py exact text (gcc281pm-gnu291-O2-unsigned); exact match"
-    },
-    {
-      "image_id": "main_14400",
       "symbol": "func_800E0768",
       "source": "src/units/main_14400/func_800E0768.c",
       "rom_start": 735144,
@@ -7307,15 +7172,6 @@
       "rom_start": 525420,
       "vram_start": 2148193324,
       "size": 60,
-      "evidence": "omp wave2 author m10: tools/match.py exact text (gcc281pm-gnu291-O2-unsigned); exact match with gcc 2.8.1 recipe"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6B70",
-      "source": "src/units/main_14400/func_800A6B70.c",
-      "rom_start": 498608,
-      "vram_start": 2148166512,
-      "size": 52,
       "evidence": "omp wave2 author m10: tools/match.py exact text (gcc281pm-gnu291-O2-unsigned); exact match with gcc 2.8.1 recipe"
     },
     {
@@ -7586,15 +7442,6 @@
       "rom_start": 669156,
       "vram_start": 2148337060,
       "size": 60,
-      "evidence": "omp wave2 author m11: tools/match.py exact text (gcc281pm-gnu291-O2-unsigned); byte-identical under gcc 2.8.1 recipe"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6F58",
-      "source": "src/units/main_14400/func_800A6F58.c",
-      "rom_start": 499608,
-      "vram_start": 2148167512,
-      "size": 64,
       "evidence": "omp wave2 author m11: tools/match.py exact text (gcc281pm-gnu291-O2-unsigned); byte-identical under gcc 2.8.1 recipe"
     },
     {
@@ -16230,474 +16077,6 @@
     },
     {
       "image_id": "main_14400",
-      "symbol": "func_800A41EC",
-      "source": "src/units/main_14400/func_800A41EC.c",
-      "rom_start": 487980,
-      "vram_start": 2148155884,
-      "size": 64,
-      "evidence": "omp tools/match.py exact natural 64-byte gcc281pm-gnu291-O2-unsigned text (source sha256 a26dce094f5f70d7); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A422C",
-      "source": "src/units/main_14400/func_800A422C.c",
-      "rom_start": 488044,
-      "vram_start": 2148155948,
-      "size": 160,
-      "evidence": "omp tools/match.py exact natural 160-byte gcc281pm-gnu291-O2-unsigned text (source sha256 18180a17d52fe90a); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A42CC",
-      "source": "src/units/main_14400/func_800A42CC.c",
-      "rom_start": 488204,
-      "vram_start": 2148156108,
-      "size": 72,
-      "evidence": "omp tools/match.py exact natural 72-byte gcc281pm-gnu291-O2-unsigned text (source sha256 85a0e5c3a5227189); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A44E8",
-      "source": "src/units/main_14400/func_800A44E8.c",
-      "rom_start": 488744,
-      "vram_start": 2148156648,
-      "size": 12,
-      "evidence": "omp tools/match.py exact natural 12-byte gcc281pm-gnu291-O2-unsigned text (source sha256 b6d5eb567641a818); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4520",
-      "source": "src/units/main_14400/func_800A4520.c",
-      "rom_start": 488800,
-      "vram_start": 2148156704,
-      "size": 60,
-      "evidence": "omp tools/match.py exact natural 60-byte gcc281pm-gnu291-O2-unsigned text (source sha256 b8e06252c3f80e07); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A455C",
-      "source": "src/units/main_14400/func_800A455C.c",
-      "rom_start": 488860,
-      "vram_start": 2148156764,
-      "size": 352,
-      "evidence": "omp tools/match.py exact natural 352-byte gcc281pm-gnu291-O2-unsigned text (source sha256 8477a12638d516f4); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A46BC",
-      "source": "src/units/main_14400/func_800A46BC.c",
-      "rom_start": 489212,
-      "vram_start": 2148157116,
-      "size": 152,
-      "evidence": "omp tools/match.py exact natural 152-byte gcc281pm-gnu291-O2-unsigned text (source sha256 3f02932013ec6441); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A492C",
-      "source": "src/units/main_14400/func_800A492C.c",
-      "rom_start": 489836,
-      "vram_start": 2148157740,
-      "size": 40,
-      "evidence": "omp tools/match.py exact natural 40-byte gcc281pm-gnu291-O2-unsigned text (source sha256 0da57923ced08826); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4B24",
-      "source": "src/units/main_14400/func_800A4B24.c",
-      "rom_start": 490340,
-      "vram_start": 2148158244,
-      "size": 416,
-      "evidence": "omp tools/match.py exact natural 416-byte gcc281pm-gnu291-O2-unsigned text (source sha256 80dfd44b27ba2b8f); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4EFC",
-      "source": "src/units/main_14400/func_800A4EFC.c",
-      "rom_start": 491324,
-      "vram_start": 2148159228,
-      "size": 92,
-      "evidence": "omp tools/match.py exact natural 92-byte gcc281pm-gnu291-O2-unsigned text (source sha256 4bc7279eb035de7a); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4F58",
-      "source": "src/units/main_14400/func_800A4F58.c",
-      "rom_start": 491416,
-      "vram_start": 2148159320,
-      "size": 100,
-      "evidence": "omp tools/match.py exact natural 100-byte gcc281pm-gnu291-O2-unsigned text (source sha256 aa20294ad0e72a0d); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4FBC",
-      "source": "src/units/main_14400/func_800A4FBC.c",
-      "rom_start": 491516,
-      "vram_start": 2148159420,
-      "size": 92,
-      "evidence": "omp tools/match.py exact natural 92-byte gcc281pm-gnu291-O2-unsigned text (source sha256 d591c6aeff6a5904); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A50E8",
-      "source": "src/units/main_14400/func_800A50E8.c",
-      "rom_start": 491816,
-      "vram_start": 2148159720,
-      "size": 128,
-      "evidence": "omp tools/match.py exact natural 128-byte gcc281pm-gnu291-O2-unsigned text (source sha256 c65ede03f574fb17); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A533C",
-      "source": "src/units/main_14400/func_800A533C.c",
-      "rom_start": 492412,
-      "vram_start": 2148160316,
-      "size": 76,
-      "evidence": "omp tools/match.py exact natural 76-byte gcc281pm-gnu291-O2-unsigned text (source sha256 9c436f5025d90869); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A56D8",
-      "source": "src/units/main_14400/func_800A56D8.c",
-      "rom_start": 493336,
-      "vram_start": 2148161240,
-      "size": 128,
-      "evidence": "omp tools/match.py exact natural 128-byte gcc281pm-gnu291-O2-unsigned text (source sha256 853682027adf6609); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A58FC",
-      "source": "src/units/main_14400/func_800A58FC.c",
-      "rom_start": 493884,
-      "vram_start": 2148161788,
-      "size": 48,
-      "evidence": "omp tools/match.py exact natural 48-byte gcc281pm-gnu291-O2-unsigned text (source sha256 74a592b5453fed44); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A592C",
-      "source": "src/units/main_14400/func_800A592C.c",
-      "rom_start": 493932,
-      "vram_start": 2148161836,
-      "size": 120,
-      "evidence": "omp tools/match.py exact natural 120-byte gcc281pm-gnu291-O2-unsigned text (source sha256 c89a66e8cce3f9f6); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A59A4",
-      "source": "src/units/main_14400/func_800A59A4.c",
-      "rom_start": 494052,
-      "vram_start": 2148161956,
-      "size": 96,
-      "evidence": "omp tools/match.py exact natural 96-byte gcc281pm-gnu291-O2-unsigned text (source sha256 b7402904f95980fd); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A5A04",
-      "source": "src/units/main_14400/func_800A5A04.c",
-      "rom_start": 494148,
-      "vram_start": 2148162052,
-      "size": 108,
-      "evidence": "omp tools/match.py exact natural 108-byte gcc281pm-gnu291-O2-unsigned text (source sha256 37664a6b0a7c56b2); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A5A88",
-      "source": "src/units/main_14400/func_800A5A88.c",
-      "rom_start": 494280,
-      "vram_start": 2148162184,
-      "size": 24,
-      "evidence": "omp tools/match.py exact natural 24-byte gcc281pm-gnu291-O2-unsigned text (source sha256 8ed6169c7814f31a); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A5B98",
-      "source": "src/units/main_14400/func_800A5B98.c",
-      "rom_start": 494552,
-      "vram_start": 2148162456,
-      "size": 404,
-      "evidence": "omp tools/match.py exact natural 404-byte gcc281pm-gnu291-O2-unsigned text (source sha256 8b9d17919072acc8); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A5D2C",
-      "source": "src/units/main_14400/func_800A5D2C.c",
-      "rom_start": 494956,
-      "vram_start": 2148162860,
-      "size": 152,
-      "evidence": "omp tools/match.py exact natural 152-byte gcc281pm-gnu291-O2-unsigned text (source sha256 475f9565ac539a10); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6184",
-      "source": "src/units/main_14400/func_800A6184.c",
-      "rom_start": 496068,
-      "vram_start": 2148163972,
-      "size": 148,
-      "evidence": "omp tools/match.py exact natural 148-byte gcc281pm-gnu291-O2-unsigned text (source sha256 6223de5a3037b834); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6348",
-      "source": "src/units/main_14400/func_800A6348.c",
-      "rom_start": 496520,
-      "vram_start": 2148164424,
-      "size": 180,
-      "evidence": "omp tools/match.py exact natural 180-byte gcc281pm-gnu291-O2-unsigned text (source sha256 fa934545efda4530); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A63FC",
-      "source": "src/units/main_14400/func_800A63FC.c",
-      "rom_start": 496700,
-      "vram_start": 2148164604,
-      "size": 36,
-      "evidence": "omp tools/match.py exact natural 36-byte gcc281pm-gnu291-O2-unsigned text (source sha256 2b9e492d3a92cea2); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6420",
-      "source": "src/units/main_14400/func_800A6420.c",
-      "rom_start": 496736,
-      "vram_start": 2148164640,
-      "size": 236,
-      "evidence": "omp tools/match.py exact natural 236-byte gcc281pm-gnu291-O2-unsigned text (source sha256 4036d9443bfe9ebb); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A65E4",
-      "source": "src/units/main_14400/func_800A65E4.c",
-      "rom_start": 497188,
-      "vram_start": 2148165092,
-      "size": 60,
-      "evidence": "omp tools/match.py exact natural 60-byte gcc281pm-gnu291-O2-unsigned text (source sha256 76ae3071429a64de); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6620",
-      "source": "src/units/main_14400/func_800A6620.c",
-      "rom_start": 497248,
-      "vram_start": 2148165152,
-      "size": 60,
-      "evidence": "omp tools/match.py exact natural 60-byte gcc281pm-gnu291-O2-unsigned text (source sha256 28a236899579b297); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A674C",
-      "source": "src/units/main_14400/func_800A674C.c",
-      "rom_start": 497548,
-      "vram_start": 2148165452,
-      "size": 144,
-      "evidence": "omp tools/match.py exact natural 144-byte gcc281pm-gnu291-O2-unsigned text (source sha256 2746c6c6f8f81242); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A67DC",
-      "source": "src/units/main_14400/func_800A67DC.c",
-      "rom_start": 497692,
-      "vram_start": 2148165596,
-      "size": 336,
-      "evidence": "omp tools/match.py exact natural 336-byte gcc281pm-gnu291-O2-unsigned text (source sha256 7225a7be50f69d15); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6D40",
-      "source": "src/units/main_14400/func_800A6D40.c",
-      "rom_start": 499072,
-      "vram_start": 2148166976,
-      "size": 136,
-      "evidence": "omp tools/match.py exact natural 136-byte gcc281pm-gnu291-O2-unsigned text (source sha256 6f97028dac8cfdac); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6DE4",
-      "source": "src/units/main_14400/func_800A6DE4.c",
-      "rom_start": 499236,
-      "vram_start": 2148167140,
-      "size": 108,
-      "evidence": "omp tools/match.py exact natural 108-byte gcc281pm-gnu291-O2-unsigned text (source sha256 83f2f8fcba8a043d); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6E90",
-      "source": "src/units/main_14400/func_800A6E90.c",
-      "rom_start": 499408,
-      "vram_start": 2148167312,
-      "size": 80,
-      "evidence": "omp tools/match.py exact natural 80-byte gcc281pm-gnu291-O2-unsigned text (source sha256 f3f88a027f19525f); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6F98",
-      "source": "src/units/main_14400/func_800A6F98.c",
-      "rom_start": 499672,
-      "vram_start": 2148167576,
-      "size": 56,
-      "evidence": "omp tools/match.py exact natural 56-byte gcc281pm-gnu291-O2-unsigned text (source sha256 6e752e692f176140); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6FD0",
-      "source": "src/units/main_14400/func_800A6FD0.c",
-      "rom_start": 499728,
-      "vram_start": 2148167632,
-      "size": 84,
-      "evidence": "omp tools/match.py exact natural 84-byte gcc281pm-gnu291-O2-unsigned text (source sha256 0d07097c6d243539); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7044",
-      "source": "src/units/main_14400/func_800A7044.c",
-      "rom_start": 499844,
-      "vram_start": 2148167748,
-      "size": 448,
-      "evidence": "omp tools/match.py exact natural 448-byte gcc281pm-gnu291-O2-unsigned text (source sha256 6a1475d76858b84d); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7A1C",
-      "source": "src/units/main_14400/func_800A7A1C.c",
-      "rom_start": 502364,
-      "vram_start": 2148170268,
-      "size": 128,
-      "evidence": "omp tools/match.py exact natural 128-byte gcc281pm-gnu291-O2-unsigned text (source sha256 3b34660fbf97ade2); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7B18",
-      "source": "src/units/main_14400/func_800A7B18.c",
-      "rom_start": 502616,
-      "vram_start": 2148170520,
-      "size": 80,
-      "evidence": "omp tools/match.py exact natural 80-byte gcc281pm-gnu291-O2-unsigned text (source sha256 c1aa38508e014448); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7BE4",
-      "source": "src/units/main_14400/func_800A7BE4.c",
-      "rom_start": 502820,
-      "vram_start": 2148170724,
-      "size": 56,
-      "evidence": "omp tools/match.py exact natural 56-byte gcc281pm-gnu291-O2-unsigned text (source sha256 230ac1514c5c4d4c); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7C54",
-      "source": "src/units/main_14400/func_800A7C54.c",
-      "rom_start": 502932,
-      "vram_start": 2148170836,
-      "size": 88,
-      "evidence": "omp tools/match.py exact natural 88-byte gcc281pm-gnu291-O2-unsigned text (source sha256 c36c6c24a172ed61); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7CAC",
-      "source": "src/units/main_14400/func_800A7CAC.c",
-      "rom_start": 503020,
-      "vram_start": 2148170924,
-      "size": 88,
-      "evidence": "omp tools/match.py exact natural 88-byte gcc281pm-gnu291-O2-unsigned text (source sha256 612ad4b6fa9a2b4b); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7D14",
-      "source": "src/units/main_14400/func_800A7D14.c",
-      "rom_start": 503124,
-      "vram_start": 2148171028,
-      "size": 12,
-      "evidence": "omp tools/match.py exact natural 12-byte gcc281pm-gnu291-O2-unsigned text (source sha256 2ed9686dc6e35d99); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7EC4",
-      "source": "src/units/main_14400/func_800A7EC4.c",
-      "rom_start": 503556,
-      "vram_start": 2148171460,
-      "size": 72,
-      "evidence": "omp tools/match.py exact natural 72-byte gcc281pm-gnu291-O2-unsigned text (source sha256 4e062def0495e402); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7F0C",
-      "source": "src/units/main_14400/func_800A7F0C.c",
-      "rom_start": 503628,
-      "vram_start": 2148171532,
-      "size": 72,
-      "evidence": "omp tools/match.py exact natural 72-byte gcc281pm-gnu291-O2-unsigned text (source sha256 167f541ed39cfcd7); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7F54",
-      "source": "src/units/main_14400/func_800A7F54.c",
-      "rom_start": 503700,
-      "vram_start": 2148171604,
-      "size": 48,
-      "evidence": "omp tools/match.py exact natural 48-byte gcc281pm-gnu291-O2-unsigned text (source sha256 42baef28fea2ff97); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7FCC",
-      "source": "src/units/main_14400/func_800A7FCC.c",
-      "rom_start": 503820,
-      "vram_start": 2148171724,
-      "size": 64,
-      "evidence": "omp tools/match.py exact natural 64-byte gcc281pm-gnu291-O2-unsigned text (source sha256 67a572c5ee47ff6a); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A800C",
-      "source": "src/units/main_14400/func_800A800C.c",
-      "rom_start": 503884,
-      "vram_start": 2148171788,
-      "size": 64,
-      "evidence": "omp tools/match.py exact natural 64-byte gcc281pm-gnu291-O2-unsigned text (source sha256 4e033f0b9978cce8); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A804C",
-      "source": "src/units/main_14400/func_800A804C.c",
-      "rom_start": 503948,
-      "vram_start": 2148171852,
-      "size": 12,
-      "evidence": "omp tools/match.py exact natural 12-byte gcc281pm-gnu291-O2-unsigned text (source sha256 0dcaefb4abc889ee); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A806C",
-      "source": "src/units/main_14400/func_800A806C.c",
-      "rom_start": 503980,
-      "vram_start": 2148171884,
-      "size": 12,
-      "evidence": "omp tools/match.py exact natural 12-byte gcc281pm-gnu291-O2-unsigned text (source sha256 572aef184cef2902); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A808C",
-      "source": "src/units/main_14400/func_800A808C.c",
-      "rom_start": 504012,
-      "vram_start": 2148171916,
-      "size": 20,
-      "evidence": "omp tools/match.py exact natural 20-byte gcc281pm-gnu291-O2-unsigned text (source sha256 116d5034cd427359); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A80E0",
-      "source": "src/units/main_14400/func_800A80E0.c",
-      "rom_start": 504096,
-      "vram_start": 2148172000,
-      "size": 12,
-      "evidence": "omp tools/match.py exact natural 12-byte gcc281pm-gnu291-O2-unsigned text (source sha256 7e4d5927489fdd76); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A8108",
-      "source": "src/units/main_14400/func_800A8108.c",
-      "rom_start": 504136,
-      "vram_start": 2148172040,
-      "size": 12,
-      "evidence": "omp tools/match.py exact natural 12-byte gcc281pm-gnu291-O2-unsigned text (source sha256 bea666599bfb57a7); full-ROM acceptance required"
-    },
-    {
-      "image_id": "main_14400",
       "symbol": "func_800A8120",
       "source": "src/units/main_14400/func_800A8120.c",
       "rom_start": 504160,
@@ -22922,7 +22301,7 @@
       "rom_start": 791552,
       "vram_start": 2148459456,
       "size": 136,
-      "evidence": "omp tools/match.py exact natural 136-byte gcc281pm-gnu291-O2-unsigned text (source sha256 e4a1308de7f30780); full-ROM acceptance required"
+      "evidence": "omp tools/match.py exact natural 136-byte gcc281pm-gnu291-O2-unsigned text (source sha256 e4a1308de7f30780); full-ROM acceptance required; staging-b9 r4-full caller update (pointer-returning func_801F2AC0 declaration, exact patch caller-patch.diff, source sha256 94246d7095fffa19); final-context rematch required"
     },
     {
       "image_id": "main_14400",
@@ -23057,7 +22436,7 @@
       "rom_start": 797040,
       "vram_start": 2148464944,
       "size": 204,
-      "evidence": "omp tools/match.py exact natural 204-byte gcc281pm-gnu291-O2-unsigned text (source sha256 8794de21e22a9bfa); full-ROM acceptance required"
+      "evidence": "omp tools/match.py exact natural 204-byte gcc281pm-gnu291-O2-unsigned text (source sha256 8794de21e22a9bfa); full-ROM acceptance required; staging-b9 r4-full caller update (pointer-returning func_801F2AC0 declaration, exact patch caller-patch.diff, source sha256 5db4a77a153f3c26); final-context rematch required"
     },
     {
       "image_id": "main_14400",
@@ -34785,528 +34164,6 @@
       "vram_start": 2148154128,
       "size": 16,
       "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a91/results/func_800A3B10/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4124",
-      "source": "src/units/main_14400/func_800A4124.c",
-      "rom_start": 487780,
-      "vram_start": 2148155684,
-      "size": 28,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a59/results/func_800A4124/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4140",
-      "source": "src/units/main_14400/func_800A4140.c",
-      "rom_start": 487808,
-      "vram_start": 2148155712,
-      "size": 44,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a58/results/func_800A4140/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A416C",
-      "source": "src/units/main_14400/func_800A416C.c",
-      "rom_start": 487852,
-      "vram_start": 2148155756,
-      "size": 44,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a59/results/func_800A416C/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4198",
-      "source": "src/units/main_14400/func_800A4198.c",
-      "rom_start": 487896,
-      "vram_start": 2148155800,
-      "size": 28,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a60/results/func_800A4198/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A41B4",
-      "source": "src/units/main_14400/func_800A41B4.c",
-      "rom_start": 487924,
-      "vram_start": 2148155828,
-      "size": 28,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a61/results/func_800A41B4/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A41D0",
-      "source": "src/units/main_14400/func_800A41D0.c",
-      "rom_start": 487952,
-      "vram_start": 2148155856,
-      "size": 28,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a62/results/func_800A41D0/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4314",
-      "source": "src/units/main_14400/func_800A4314.c",
-      "rom_start": 488276,
-      "vram_start": 2148156180,
-      "size": 76,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a98/results/func_800A4314/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4404",
-      "source": "src/units/main_14400/func_800A4404.c",
-      "rom_start": 488516,
-      "vram_start": 2148156420,
-      "size": 228,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s14/match/func_800A4404-r2/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A44F4",
-      "source": "src/units/main_14400/func_800A44F4.c",
-      "rom_start": 488756,
-      "vram_start": 2148156660,
-      "size": 44,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a94/results/func_800A44F4/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4954",
-      "source": "src/units/main_14400/func_800A4954.c",
-      "rom_start": 489876,
-      "vram_start": 2148157780,
-      "size": 464,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a74/results/func_800A4954/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4E30",
-      "source": "src/units/main_14400/func_800A4E30.c",
-      "rom_start": 491120,
-      "vram_start": 2148159024,
-      "size": 144,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s14/match/func_800A4E30-r2/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4EC0",
-      "source": "src/units/main_14400/func_800A4EC0.c",
-      "rom_start": 491264,
-      "vram_start": 2148159168,
-      "size": 60,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a64/results/func_800A4EC0/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A5018",
-      "source": "src/units/main_14400/func_800A5018.c",
-      "rom_start": 491608,
-      "vram_start": 2148159512,
-      "size": 148,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s14/match/func_800A5018-r2/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A50AC",
-      "source": "src/units/main_14400/func_800A50AC.c",
-      "rom_start": 491756,
-      "vram_start": 2148159660,
-      "size": 60,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-integrate/B5Contracts/match/func_800A50AC/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A5168",
-      "source": "src/units/main_14400/func_800A5168.c",
-      "rom_start": 491944,
-      "vram_start": 2148159848,
-      "size": 308,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s14/match/func_800A5168-r2/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A529C",
-      "source": "src/units/main_14400/func_800A529C.c",
-      "rom_start": 492252,
-      "vram_start": 2148160156,
-      "size": 160,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a83/results/func_800A529C/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A5440",
-      "source": "src/units/main_14400/func_800A5440.c",
-      "rom_start": 492672,
-      "vram_start": 2148160576,
-      "size": 664,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s14/match/func_800A5440-r2/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A578C",
-      "source": "src/units/main_14400/func_800A578C.c",
-      "rom_start": 493516,
-      "vram_start": 2148161420,
-      "size": 300,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s14/match/func_800A578C-r5/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A58B8",
-      "source": "src/units/main_14400/func_800A58B8.c",
-      "rom_start": 493816,
-      "vram_start": 2148161720,
-      "size": 68,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a72/results/func_800A58B8/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A5AE8",
-      "source": "src/units/main_14400/func_800A5AE8.c",
-      "rom_start": 494376,
-      "vram_start": 2148162280,
-      "size": 176,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/match/func_800A5AE8/20261006T173402/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A5DC4",
-      "source": "src/units/main_14400/func_800A5DC4.c",
-      "rom_start": 495108,
-      "vram_start": 2148163012,
-      "size": 96,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s14/match/func_800A5DC4-r5/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A5FCC",
-      "source": "src/units/main_14400/func_800A5FCC.c",
-      "rom_start": 495628,
-      "vram_start": 2148163532,
-      "size": 268,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a89/results/func_800A5FCC/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6218",
-      "source": "src/units/main_14400/func_800A6218.c",
-      "rom_start": 496216,
-      "vram_start": 2148164120,
-      "size": 304,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s14/match/func_800A6218-r3/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A650C",
-      "source": "src/units/main_14400/func_800A650C.c",
-      "rom_start": 496972,
-      "vram_start": 2148164876,
-      "size": 44,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a101/results/func_800A650C/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A65B8",
-      "source": "src/units/main_14400/func_800A65B8.c",
-      "rom_start": 497144,
-      "vram_start": 2148165048,
-      "size": 44,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a102/results/func_800A65B8/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A692C",
-      "source": "src/units/main_14400/func_800A692C.c",
-      "rom_start": 498028,
-      "vram_start": 2148165932,
-      "size": 32,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s14/match/func_800A692C-r2/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6CC0",
-      "source": "src/units/main_14400/func_800A6CC0.c",
-      "rom_start": 498944,
-      "vram_start": 2148166848,
-      "size": 48,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s14/match/func_800A6CC0-r2/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6CF0",
-      "source": "src/units/main_14400/func_800A6CF0.c",
-      "rom_start": 498992,
-      "vram_start": 2148166896,
-      "size": 40,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a95/results/func_800A6CF0/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6D18",
-      "source": "src/units/main_14400/func_800A6D18.c",
-      "rom_start": 499032,
-      "vram_start": 2148166936,
-      "size": 40,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a96/results/func_800A6D18/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6DC8",
-      "source": "src/units/main_14400/func_800A6DC8.c",
-      "rom_start": 499208,
-      "vram_start": 2148167112,
-      "size": 28,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a99/results/func_800A6DC8/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7024",
-      "source": "src/units/main_14400/func_800A7024.c",
-      "rom_start": 499812,
-      "vram_start": 2148167716,
-      "size": 32,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s14/match/func_800A7024-r2/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7824",
-      "source": "src/units/main_14400/func_800A7824.c",
-      "rom_start": 501860,
-      "vram_start": 2148169764,
-      "size": 504,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s14/match/func_800A7824-r2/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7A9C",
-      "source": "src/units/main_14400/func_800A7A9C.c",
-      "rom_start": 502492,
-      "vram_start": 2148170396,
-      "size": 64,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s14/match/func_800A7A9C-r2/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7ADC",
-      "source": "src/units/main_14400/func_800A7ADC.c",
-      "rom_start": 502556,
-      "vram_start": 2148170460,
-      "size": 60,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a73/results/func_800A7ADC/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7B68",
-      "source": "src/units/main_14400/func_800A7B68.c",
-      "rom_start": 502696,
-      "vram_start": 2148170600,
-      "size": 60,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a74/results/func_800A7B68/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7BA4",
-      "source": "src/units/main_14400/func_800A7BA4.c",
-      "rom_start": 502756,
-      "vram_start": 2148170660,
-      "size": 64,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a68/results/func_800A7BA4/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7C1C",
-      "source": "src/units/main_14400/func_800A7C1C.c",
-      "rom_start": 502876,
-      "vram_start": 2148170780,
-      "size": 56,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/match/func_800A7C1C/20261006T171604/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7D04",
-      "source": "src/units/main_14400/func_800A7D04.c",
-      "rom_start": 503108,
-      "vram_start": 2148171012,
-      "size": 16,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a92/results/func_800A7D04/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7D20",
-      "source": "src/units/main_14400/func_800A7D20.c",
-      "rom_start": 503136,
-      "vram_start": 2148171040,
-      "size": 16,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a93/results/func_800A7D20/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7D30",
-      "source": "src/units/main_14400/func_800A7D30.c",
-      "rom_start": 503152,
-      "vram_start": 2148171056,
-      "size": 16,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a94/results/func_800A7D30/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7D40",
-      "source": "src/units/main_14400/func_800A7D40.c",
-      "rom_start": 503168,
-      "vram_start": 2148171072,
-      "size": 16,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a95/results/func_800A7D40/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7D50",
-      "source": "src/units/main_14400/func_800A7D50.c",
-      "rom_start": 503184,
-      "vram_start": 2148171088,
-      "size": 16,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a96/results/func_800A7D50/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7D60",
-      "source": "src/units/main_14400/func_800A7D60.c",
-      "rom_start": 503200,
-      "vram_start": 2148171104,
-      "size": 16,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a97/results/func_800A7D60/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7D70",
-      "source": "src/units/main_14400/func_800A7D70.c",
-      "rom_start": 503216,
-      "vram_start": 2148171120,
-      "size": 16,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a98/results/func_800A7D70/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7D80",
-      "source": "src/units/main_14400/func_800A7D80.c",
-      "rom_start": 503232,
-      "vram_start": 2148171136,
-      "size": 28,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a100/results/func_800A7D80/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7D9C",
-      "source": "src/units/main_14400/func_800A7D9C.c",
-      "rom_start": 503260,
-      "vram_start": 2148171164,
-      "size": 16,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a99/results/func_800A7D9C/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7DAC",
-      "source": "src/units/main_14400/func_800A7DAC.c",
-      "rom_start": 503276,
-      "vram_start": 2148171180,
-      "size": 16,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a100/results/func_800A7DAC/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7DBC",
-      "source": "src/units/main_14400/func_800A7DBC.c",
-      "rom_start": 503292,
-      "vram_start": 2148171196,
-      "size": 16,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a101/results/func_800A7DBC/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7DFC",
-      "source": "src/units/main_14400/func_800A7DFC.c",
-      "rom_start": 503356,
-      "vram_start": 2148171260,
-      "size": 16,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a102/results/func_800A7DFC/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7E0C",
-      "source": "src/units/main_14400/func_800A7E0C.c",
-      "rom_start": 503372,
-      "vram_start": 2148171276,
-      "size": 92,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s15/match/func_800A7E0C-r2/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7E68",
-      "source": "src/units/main_14400/func_800A7E68.c",
-      "rom_start": 503464,
-      "vram_start": 2148171368,
-      "size": 92,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-apply/s15/match/func_800A7E68-r2/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7F84",
-      "source": "src/units/main_14400/func_800A7F84.c",
-      "rom_start": 503748,
-      "vram_start": 2148171652,
-      "size": 72,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a99/results/func_800A7F84/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A8058",
-      "source": "src/units/main_14400/func_800A8058.c",
-      "rom_start": 503960,
-      "vram_start": 2148171864,
-      "size": 20,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a55/results/func_800A8058/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A8078",
-      "source": "src/units/main_14400/func_800A8078.c",
-      "rom_start": 503992,
-      "vram_start": 2148171896,
-      "size": 20,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a56/results/func_800A8078/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A80A0",
-      "source": "src/units/main_14400/func_800A80A0.c",
-      "rom_start": 504032,
-      "vram_start": 2148171936,
-      "size": 16,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a103/results/func_800A80A0/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A80B0",
-      "source": "src/units/main_14400/func_800A80B0.c",
-      "rom_start": 504048,
-      "vram_start": 2148171952,
-      "size": 16,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a104/results/func_800A80B0/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A80EC",
-      "source": "src/units/main_14400/func_800A80EC.c",
-      "rom_start": 504108,
-      "vram_start": 2148172012,
-      "size": 20,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/wave3/a58/results/func_800A80EC/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A8114",
-      "source": "src/units/main_14400/func_800A8114.c",
-      "rom_start": 504148,
-      "vram_start": 2148172052,
-      "size": 12,
-      "evidence": "omp B5 (wave3 + apply + residual + fix rounds); exact receipt scratch/omp/b5-integrate/B5Slots/match/func_800A8114/result.json"
     },
     {
       "image_id": "main_14400",
@@ -53094,51 +51951,6 @@
     },
     {
       "image_id": "main_14400",
-      "symbol": "func_800A4010",
-      "source": "src/units/main_14400/func_800A4010.c",
-      "rom_start": 487504,
-      "vram_start": 2148155408,
-      "size": 276,
-      "evidence": "omp B7 (wave 5 + B7 review rounds 1-3); exact receipt scratch/omp/wave5/b05/results/func_800A4010/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4360",
-      "source": "src/units/main_14400/func_800A4360.c",
-      "rom_start": 488352,
-      "vram_start": 2148156256,
-      "size": 164,
-      "evidence": "omp B7 (wave 5 + B7 review rounds 1-3); exact receipt scratch/omp/wave5/b05/results/func_800A4360/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A4754",
-      "source": "src/units/main_14400/func_800A4754.c",
-      "rom_start": 489364,
-      "vram_start": 2148157268,
-      "size": 472,
-      "evidence": "omp B7 (wave 5 + B7 review rounds 1-3); exact receipt scratch/omp/wave5/b05/results/func_800A4754/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A5388",
-      "source": "src/units/main_14400/func_800A5388.c",
-      "rom_start": 492488,
-      "vram_start": 2148160392,
-      "size": 184,
-      "evidence": "omp B7 (wave 5 + B7 review rounds 1-3); exact receipt scratch/omp/wave5/b05/results/func_800A5388/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A5AA0",
-      "source": "src/units/main_14400/func_800A5AA0.c",
-      "rom_start": 494304,
-      "vram_start": 2148162208,
-      "size": 72,
-      "evidence": "omp B7 (wave 5 + B7 review rounds 1-3); exact receipt scratch/omp/wave5/b05/results/func_800A5AA0/result.json"
-    },
-    {
-      "image_id": "main_14400",
       "symbol": "func_800A8AA0",
       "source": "src/units/main_14400/func_800A8AA0.c",
       "rom_start": 506592,
@@ -54561,60 +53373,6 @@
     },
     {
       "image_id": "main_14400",
-      "symbol": "func_800A4CC4",
-      "source": "src/units/main_14400/func_800A4CC4.c",
-      "rom_start": 490756,
-      "vram_start": 2148158660,
-      "size": 364,
-      "evidence": "omp B9 (wave 7 + B9 review rounds 1-3); exact receipt scratch/omp/wave7/d03/results/func_800A4CC4/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A5E24",
-      "source": "src/units/main_14400/func_800A5E24.c",
-      "rom_start": 495204,
-      "vram_start": 2148163108,
-      "size": 424,
-      "evidence": "omp B9 (wave 7 + B9 review rounds 1-3); exact receipt scratch/omp/wave7/d03/results/func_800A5E24/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A60D8",
-      "source": "src/units/main_14400/func_800A60D8.c",
-      "rom_start": 495896,
-      "vram_start": 2148163800,
-      "size": 172,
-      "evidence": "omp B9 (wave 7 + B9 review rounds 1-3); exact receipt scratch/omp/wave7/d03/results/func_800A60D8/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6538",
-      "source": "src/units/main_14400/func_800A6538.c",
-      "rom_start": 497016,
-      "vram_start": 2148164920,
-      "size": 128,
-      "evidence": "omp B9 (wave 7 + B9 review rounds 1-3); exact receipt scratch/omp/wave7/d03/results/func_800A6538/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A694C",
-      "source": "src/units/main_14400/func_800A694C.cpp",
-      "rom_start": 498060,
-      "vram_start": 2148165964,
-      "size": 548,
-      "evidence": "omp B9 (wave 7 + B9 review rounds 1-3); exact receipt scratch/omp/wave7/d04/results/func_800A694C/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6BA4",
-      "source": "src/units/main_14400/func_800A6BA4.c",
-      "rom_start": 498660,
-      "vram_start": 2148166564,
-      "size": 284,
-      "evidence": "omp B9 (wave 7 + B9 review rounds 1-3); exact receipt scratch/omp/wave7/d04/results/func_800A6BA4/result.json"
-    },
-    {
-      "image_id": "main_14400",
       "symbol": "func_800A9720",
       "source": "src/units/main_14400/func_800A9720.c",
       "rom_start": 509792,
@@ -55512,15 +54270,6 @@
       "vram_start": 2148052996,
       "size": 1196,
       "evidence": "omp B10 (wave 8 + joint-c90c0 + B10 review); exact receipt scratch/omp/wave8/e11/results/func_8008B004/result.json"
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A6690",
-      "source": "src/units/main_14400/func_800A6690.c",
-      "rom_start": 497360,
-      "vram_start": 2148165264,
-      "size": 188,
-      "evidence": "omp B10 (wave 8 + joint-c90c0 + B10 review); exact receipt scratch/omp/wave8/e11/results/func_800A6690/result.json"
     },
     {
       "image_id": "main_14400",
@@ -57573,15 +56322,6 @@
       "vram_start": 2148468540,
       "size": 716,
       "evidence": "SOURCE_REVIEW_PASS_FINAL_INTEGRATION_PENDING: exact ebb4a1f4e85e6aed22fa99c9c09873a05d891d2dfe80c92b383a2631adf14cb5, review scratch/omp/wave17-review/astra-o12/review.json (2e68082cee072572385c7cbb389cb43940adcab55e32746581b7ab4fb531846f), receipt 1f3616259c62d8407dcc9a16df66f302067c4acbdd0c843882411d177b6a6e56. Full dependency lineage in secondary-lineage.json; final integrated gates and whole-workspace review required."
-    },
-    {
-      "image_id": "main_14400",
-      "symbol": "func_800A7204",
-      "source": "src/units/main_14400/func_800A7204.cpp",
-      "rom_start": 500292,
-      "vram_start": 2148168196,
-      "size": 1568,
-      "evidence": "BODY_REVIEWED_DEPENDENCIES_APPLIED_CURRENT_COMBINED_REVIEW_REQUIRED: exact 2c05c4e90f06f37ab293651fcc56a07d6911b645d74d70fa123673666a918aac, review scratch/omp/wave16-review/astra-o4/review.json (41647daaeb695746abe8c93d137ee9677206fe7d02de1262717bab8069013a86), receipt 12ffcdcc41eed5bdea6b12b6ea0b51bac1e4ace9074c4bc39876eb22cf18bdcf. Full dependency lineage in secondary-lineage.json; final integrated gates and whole-workspace review required."
     },
     {
       "image_id": "main_14400",
@@ -61040,15 +59780,6 @@
       "evidence": "omp b8 layer 6 ledger #2 caller cutover (s32 func_801E77A4_1362F4; ovla-menu review F1 sha256 4aa06b198dd808fe); B8 staging rematch scratch/omp/wave31/b8-staging/staging2/tree/scratch/omp/adopt/func_80058E8C-20261010T132925-74aw7i1d/candidate/result.json (sha256 6e7f667cd027059e): match exact natural 76-byte gcc281pm-gnu291-O2-unsigned text (source sha256 4882f078c3724327); full-ROM acceptance required"
     },
     {
-      "image_id": "overlay_136dc0",
-      "symbol": "func_801EDFBC_13FEDC",
-      "source": "src/units/overlay_136dc0/func_801EDFBC_13FEDC.c",
-      "rom_start": 1310428,
-      "vram_start": 2149507004,
-      "size": 2044,
-      "evidence": "omp b8 layer 6 Opus F6 stale header cleanup (interpreter-helper-review-opus sha256 6626abc25673816d); B8 staging rematch scratch/omp/wave31/b8-staging/staging2/tree/scratch/omp/adopt/func_801EDFBC_13FEDC-20261010T133048-8uzmn_uq/candidate/result.json (sha256 6212b210618b7bb4): match-with-data exact natural 2044-byte gcc281pm-gnu291-O2-unsigned text (source sha256 95ce59f0583bd422); full-ROM acceptance required"
-    },
-    {
       "image_id": "main_14400",
       "symbol": "func_80068168",
       "source": "src/units/main_14400/func_80068168.c",
@@ -61499,6 +60230,1482 @@
       "vram_start": 2148111480,
       "size": 2520,
       "evidence": "omp wave34 99478-opus r2 (author receipt scratch/omp/wave34/99478-opus/r2/runs/func_80099478/result.json sha256 c92b0b0f4733af89; Astra scratch/omp/wave34/99478-review-astra/r2/review.json sha256 c0bf658c38f953cb PASS_WITH_QUALIFICATIONS, qualifications R2-Q1 and IQ1-IQ4); B8 staging rematch scratch/omp/wave31/b8-staging/staging6/tree/scratch/omp/adopt/func_80099478-20261010T180925-zkh8srtb/candidate/result.json (sha256 024d885147c76de3): match-with-data exact natural 2520-byte gxx281pm-gnu291-O2-unsigned text (source sha256 761e6aca6c50d970); full-ROM acceptance required"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800AB5B8",
+      "source": "src/units/main_14400/func_800AB5B8.cpp",
+      "rom_start": 517624,
+      "vram_start": 2148185528,
+      "size": 256,
+      "evidence": "wave39 candidate opus-04/func_800AB5B8.cpp sha256 9c57e8cc2a6d5f45; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-001-func_800AB5B8.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_80126F74",
+      "source": "src/units/main_14400/func_80126F74.c",
+      "rom_start": 1023924,
+      "vram_start": 2148691828,
+      "size": 572,
+      "evidence": "wave39 candidate opus-05/func_80126F74.c sha256 a9091d78ddaf3036; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-005-func_80126F74.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_80127888",
+      "source": "src/units/main_14400/func_80127888.c",
+      "rom_start": 1026248,
+      "vram_start": 2148694152,
+      "size": 644,
+      "evidence": "wave39 candidate opus-05/func_80127888.c sha256 94511dee51997899; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-006-func_80127888.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800EA08C",
+      "source": "src/units/main_14400/func_800EA08C.c",
+      "rom_start": 774348,
+      "vram_start": 2148442252,
+      "size": 456,
+      "evidence": "wave39 candidate opus-03/rodata/final_func_800EA08C.c sha256 f532cb6101400151; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-009-func_800EA08C.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800897AC",
+      "source": "src/units/main_14400/func_800897AC.c",
+      "rom_start": 378860,
+      "vram_start": 2148046764,
+      "size": 1056,
+      "evidence": "wave39 candidate main-revisions/func_800897AC.v2.c sha256 2c298722ad3765f2; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-revision-013a-func_800897AC.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800DBD64",
+      "source": "src/units/main_14400/func_800DBD64.c",
+      "rom_start": 716196,
+      "vram_start": 2148384100,
+      "size": 344,
+      "evidence": "wave39 candidate opus-07/func_800DBD64.c sha256 a3cf812c93c59b5e; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-016-func_800DBD64.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800BFEA0",
+      "source": "src/units/main_14400/func_800BFEA0.cpp",
+      "rom_start": 601824,
+      "vram_start": 2148269728,
+      "size": 532,
+      "evidence": "wave39 candidate opus-07/func_800BFEA0.cpp sha256 417ece9ed86952c7; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-revision-014a-func_800BFEA0.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_8008A198",
+      "source": "src/units/main_14400/func_8008A198.c",
+      "rom_start": 381400,
+      "vram_start": 2148049304,
+      "size": 732,
+      "evidence": "wave39 candidate opus-09/main-r2/func_8008A198.final.c sha256 919a3075ae465680; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-revision-019a-func_8008A198.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_8009C61C",
+      "source": "src/units/main_14400/func_8009C61C.c",
+      "rom_start": 456284,
+      "vram_start": 2148124188,
+      "size": 736,
+      "evidence": "wave39 candidate opus-03/9c61c-ruling/final_func_8009C61C.c sha256 79b27b5ec9f65e97; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-revision-004a-func_8009C61C.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800B310C",
+      "source": "src/units/main_14400/func_800B310C.cpp",
+      "rom_start": 549196,
+      "vram_start": 2148217100,
+      "size": 220,
+      "evidence": "wave39 candidate opus-06/a2594-r2/f2/func_800B310C.cpp sha256 92ac9f7fc07d630d; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-revision-ruling-a-func_800B310C.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "overlay_1339f0",
+      "symbol": "func_801E6420_134F70",
+      "source": "src/units/overlay_1339f0/func_801E6420_134F70.c",
+      "rom_start": 1265520,
+      "vram_start": 2149475360,
+      "size": 416,
+      "evidence": "wave39 candidate opus-03/staging-inputs/134f70/func_801E6420_134F70.c sha256 266c645837e93ccd; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-008-func_801E6420_134F70.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "overlay_136dc0",
+      "symbol": "func_801EA728_13C648",
+      "source": "src/units/overlay_136dc0/func_801EA728_13C648.c",
+      "rom_start": 1295944,
+      "vram_start": 2149492520,
+      "size": 232,
+      "evidence": "wave39 candidate opus-09/ea728/final.c sha256 1b58b154f2cfa1f2; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-010-func_801EA728_13C648.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "overlay_136dc0",
+      "symbol": "func_801EA990_13C8B0",
+      "source": "src/units/overlay_136dc0/func_801EA990_13C8B0.c",
+      "rom_start": 1296560,
+      "vram_start": 2149493136,
+      "size": 280,
+      "evidence": "wave39 candidate opus-09/ea990/final.c sha256 9a78bac0aa7e8d55; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-011-func_801EA990_13C8B0.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "overlay_136dc0",
+      "symbol": "func_801F2AC0_1449E0",
+      "source": "src/units/overlay_136dc0/func_801F2AC0_1449E0.c",
+      "rom_start": 1329632,
+      "vram_start": 2149526208,
+      "size": 96,
+      "evidence": "wave39 candidate opus-09/f2ac0/final.c sha256 cb0a350a0b16d6ee; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-012-func_801F2AC0_1449E0.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "overlay_136dc0",
+      "symbol": "func_801EDFBC_13FEDC",
+      "source": "src/units/overlay_136dc0/func_801EDFBC_13FEDC.c",
+      "rom_start": 1310428,
+      "vram_start": 2149507004,
+      "size": 2044,
+      "evidence": "caller update: func_801EC87C_13E79C third parameter u8; wave39 opus-01 copy sha256 6c4250e8806aacac (was 95ce59f0583bd422); Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-018-func_801EC87C_13E79C.json caller_change; staging-b9 r4-full adopt rematch; prior evidence (source 95ce59f0583bd422): omp b8 layer 6 Opus F6 stale header cleanup (interpreter-helper-review-opus sha256 6626abc25673816d); B8 staging rematch scratch/omp/wave31/b8-staging/staging2/tree/scratch/omp/adopt/func_801EDFBC_13FEDC-20261010T133048-8uzmn_uq/candidate/result.json (sha256 6212b210618b7bb4): match-with-data exact natural 2044-byte gcc281pm-gnu291-O2-unsigned text (source sha256 95ce59f0583bd422); full-ROM acceptance required"
+    },
+    {
+      "image_id": "overlay_136dc0",
+      "symbol": "func_801EC87C_13E79C",
+      "source": "src/units/overlay_136dc0/func_801EC87C_13E79C.c",
+      "rom_start": 1304476,
+      "vram_start": 2149501052,
+      "size": 864,
+      "evidence": "wave39 candidate opus-01/ec87c/final/func_801EC87C_13E79C.c sha256 c380f36a8e09d587; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-018-func_801EC87C_13E79C.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "overlay_136dc0",
+      "symbol": "func_801E6000_137F20",
+      "source": "src/units/overlay_136dc0/func_801E6000_137F20.c",
+      "rom_start": 1277728,
+      "vram_start": 2149474304,
+      "size": 176,
+      "evidence": "wave39 candidate opus-05/overlay-r2/func_801E6000_137F20.c sha256 1097b921e2225ffc; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-revision-021a-func_801E6000_137F20.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_80071088",
+      "source": "src/units/main_14400/func_80071088.c",
+      "rom_start": 278728,
+      "vram_start": 2147946632,
+      "size": 880,
+      "evidence": "wave39 candidate opus-10/71088/cand/final_71088.c sha256 ff6cebdeff3c9773; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-023-func_80071088.json; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A2A5C",
+      "source": "src/units/main_14400/func_800A2A5C.c",
+      "rom_start": 481948,
+      "vram_start": 2148149852,
+      "size": 820,
+      "evidence": "wave39 candidate opus-04/a2a5c-ruling/r2/func_800A2A5C.c sha256 c387aebb926ff264; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-024-func_800A2A5C.json; user ruling scratch/omp/rulings/A2A5C-SCOPED-EXCEPTION.md (scoped exception, tracked debt); Sol review passed per Main; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A3D9C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 486876,
+      "vram_start": 2148154780,
+      "size": 628,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4010",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 487504,
+      "vram_start": 2148155408,
+      "size": 276,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4124",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 487780,
+      "vram_start": 2148155684,
+      "size": 28,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4140",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 487808,
+      "vram_start": 2148155712,
+      "size": 44,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A416C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 487852,
+      "vram_start": 2148155756,
+      "size": 44,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4198",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 487896,
+      "vram_start": 2148155800,
+      "size": 28,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A41B4",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 487924,
+      "vram_start": 2148155828,
+      "size": 28,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A41D0",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 487952,
+      "vram_start": 2148155856,
+      "size": 28,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A41EC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 487980,
+      "vram_start": 2148155884,
+      "size": 64,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A422C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 488044,
+      "vram_start": 2148155948,
+      "size": 160,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A42CC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 488204,
+      "vram_start": 2148156108,
+      "size": 72,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4314",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 488276,
+      "vram_start": 2148156180,
+      "size": 76,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4360",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 488352,
+      "vram_start": 2148156256,
+      "size": 164,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4404",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 488516,
+      "vram_start": 2148156420,
+      "size": 228,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A44E8",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 488744,
+      "vram_start": 2148156648,
+      "size": 12,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A44F4",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 488756,
+      "vram_start": 2148156660,
+      "size": 44,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4520",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 488800,
+      "vram_start": 2148156704,
+      "size": 60,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A455C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 488860,
+      "vram_start": 2148156764,
+      "size": 352,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A46BC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 489212,
+      "vram_start": 2148157116,
+      "size": 152,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4754",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 489364,
+      "vram_start": 2148157268,
+      "size": 472,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A492C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 489836,
+      "vram_start": 2148157740,
+      "size": 40,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4954",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 489876,
+      "vram_start": 2148157780,
+      "size": 464,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4B24",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 490340,
+      "vram_start": 2148158244,
+      "size": 416,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4CC4",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 490756,
+      "vram_start": 2148158660,
+      "size": 364,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4E30",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 491120,
+      "vram_start": 2148159024,
+      "size": 144,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4EC0",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 491264,
+      "vram_start": 2148159168,
+      "size": 60,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4EFC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 491324,
+      "vram_start": 2148159228,
+      "size": 92,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4F58",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 491416,
+      "vram_start": 2148159320,
+      "size": 100,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A4FBC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 491516,
+      "vram_start": 2148159420,
+      "size": 92,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5018",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 491608,
+      "vram_start": 2148159512,
+      "size": 148,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A50AC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 491756,
+      "vram_start": 2148159660,
+      "size": 60,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A50E8",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 491816,
+      "vram_start": 2148159720,
+      "size": 128,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5168",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 491944,
+      "vram_start": 2148159848,
+      "size": 308,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A529C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 492252,
+      "vram_start": 2148160156,
+      "size": 160,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A533C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 492412,
+      "vram_start": 2148160316,
+      "size": 76,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5388",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 492488,
+      "vram_start": 2148160392,
+      "size": 184,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5440",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 492672,
+      "vram_start": 2148160576,
+      "size": 664,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A56D8",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 493336,
+      "vram_start": 2148161240,
+      "size": 128,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5758",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 493464,
+      "vram_start": 2148161368,
+      "size": 52,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A578C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 493516,
+      "vram_start": 2148161420,
+      "size": 300,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A58B8",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 493816,
+      "vram_start": 2148161720,
+      "size": 68,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A58FC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 493884,
+      "vram_start": 2148161788,
+      "size": 48,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A592C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 493932,
+      "vram_start": 2148161836,
+      "size": 120,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A59A4",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 494052,
+      "vram_start": 2148161956,
+      "size": 96,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5A04",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 494148,
+      "vram_start": 2148162052,
+      "size": 108,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5A70",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 494256,
+      "vram_start": 2148162160,
+      "size": 24,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5A88",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 494280,
+      "vram_start": 2148162184,
+      "size": 24,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5AA0",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 494304,
+      "vram_start": 2148162208,
+      "size": 72,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5AE8",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 494376,
+      "vram_start": 2148162280,
+      "size": 176,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5B98",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 494552,
+      "vram_start": 2148162456,
+      "size": 404,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5D2C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 494956,
+      "vram_start": 2148162860,
+      "size": 152,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5DC4",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 495108,
+      "vram_start": 2148163012,
+      "size": 96,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5E24",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 495204,
+      "vram_start": 2148163108,
+      "size": 424,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A5FCC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 495628,
+      "vram_start": 2148163532,
+      "size": 268,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A60D8",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 495896,
+      "vram_start": 2148163800,
+      "size": 172,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6184",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 496068,
+      "vram_start": 2148163972,
+      "size": 148,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6218",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 496216,
+      "vram_start": 2148164120,
+      "size": 304,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6348",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 496520,
+      "vram_start": 2148164424,
+      "size": 180,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A63FC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 496700,
+      "vram_start": 2148164604,
+      "size": 36,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6420",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 496736,
+      "vram_start": 2148164640,
+      "size": 236,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A650C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 496972,
+      "vram_start": 2148164876,
+      "size": 44,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6538",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 497016,
+      "vram_start": 2148164920,
+      "size": 128,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A65B8",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 497144,
+      "vram_start": 2148165048,
+      "size": 44,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A65E4",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 497188,
+      "vram_start": 2148165092,
+      "size": 60,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6620",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 497248,
+      "vram_start": 2148165152,
+      "size": 60,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A665C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 497308,
+      "vram_start": 2148165212,
+      "size": 52,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6690",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 497360,
+      "vram_start": 2148165264,
+      "size": 188,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A674C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 497548,
+      "vram_start": 2148165452,
+      "size": 144,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A67DC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 497692,
+      "vram_start": 2148165596,
+      "size": 336,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A692C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 498028,
+      "vram_start": 2148165932,
+      "size": 32,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A694C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 498060,
+      "vram_start": 2148165964,
+      "size": 548,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6B70",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 498608,
+      "vram_start": 2148166512,
+      "size": 52,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6BA4",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 498660,
+      "vram_start": 2148166564,
+      "size": 284,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6CC0",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 498944,
+      "vram_start": 2148166848,
+      "size": 48,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6CF0",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 498992,
+      "vram_start": 2148166896,
+      "size": 40,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6D18",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 499032,
+      "vram_start": 2148166936,
+      "size": 40,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6D40",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 499072,
+      "vram_start": 2148166976,
+      "size": 136,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6DC8",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 499208,
+      "vram_start": 2148167112,
+      "size": 28,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6DE4",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 499236,
+      "vram_start": 2148167140,
+      "size": 108,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6E50",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 499344,
+      "vram_start": 2148167248,
+      "size": 64,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6E90",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 499408,
+      "vram_start": 2148167312,
+      "size": 80,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6EE0",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 499488,
+      "vram_start": 2148167392,
+      "size": 120,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6F58",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 499608,
+      "vram_start": 2148167512,
+      "size": 64,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6F98",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 499672,
+      "vram_start": 2148167576,
+      "size": 56,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A6FD0",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 499728,
+      "vram_start": 2148167632,
+      "size": 84,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7024",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 499812,
+      "vram_start": 2148167716,
+      "size": 32,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7044",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 499844,
+      "vram_start": 2148167748,
+      "size": 448,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7204",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 500292,
+      "vram_start": 2148168196,
+      "size": 1568,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7824",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 501860,
+      "vram_start": 2148169764,
+      "size": 504,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7A1C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 502364,
+      "vram_start": 2148170268,
+      "size": 128,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7A9C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 502492,
+      "vram_start": 2148170396,
+      "size": 64,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7ADC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 502556,
+      "vram_start": 2148170460,
+      "size": 60,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7B18",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 502616,
+      "vram_start": 2148170520,
+      "size": 80,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7B68",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 502696,
+      "vram_start": 2148170600,
+      "size": 60,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7BA4",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 502756,
+      "vram_start": 2148170660,
+      "size": 64,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7BE4",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 502820,
+      "vram_start": 2148170724,
+      "size": 56,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7C1C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 502876,
+      "vram_start": 2148170780,
+      "size": 56,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7C54",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 502932,
+      "vram_start": 2148170836,
+      "size": 88,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7CAC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503020,
+      "vram_start": 2148170924,
+      "size": 88,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7D04",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503108,
+      "vram_start": 2148171012,
+      "size": 16,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7D14",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503124,
+      "vram_start": 2148171028,
+      "size": 12,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7D20",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503136,
+      "vram_start": 2148171040,
+      "size": 16,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7D30",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503152,
+      "vram_start": 2148171056,
+      "size": 16,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7D40",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503168,
+      "vram_start": 2148171072,
+      "size": 16,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7D50",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503184,
+      "vram_start": 2148171088,
+      "size": 16,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7D60",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503200,
+      "vram_start": 2148171104,
+      "size": 16,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7D70",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503216,
+      "vram_start": 2148171120,
+      "size": 16,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7D80",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503232,
+      "vram_start": 2148171136,
+      "size": 28,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7D9C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503260,
+      "vram_start": 2148171164,
+      "size": 16,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7DAC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503276,
+      "vram_start": 2148171180,
+      "size": 16,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7DBC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503292,
+      "vram_start": 2148171196,
+      "size": 16,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7DCC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503308,
+      "vram_start": 2148171212,
+      "size": 8,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7DD4",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503316,
+      "vram_start": 2148171220,
+      "size": 8,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7DDC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503324,
+      "vram_start": 2148171228,
+      "size": 8,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7DE4",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503332,
+      "vram_start": 2148171236,
+      "size": 8,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7DEC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503340,
+      "vram_start": 2148171244,
+      "size": 8,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7DF4",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503348,
+      "vram_start": 2148171252,
+      "size": 8,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7DFC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503356,
+      "vram_start": 2148171260,
+      "size": 16,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7E0C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503372,
+      "vram_start": 2148171276,
+      "size": 92,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7E68",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503464,
+      "vram_start": 2148171368,
+      "size": 92,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7EC4",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503556,
+      "vram_start": 2148171460,
+      "size": 72,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7F0C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503628,
+      "vram_start": 2148171532,
+      "size": 72,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7F54",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503700,
+      "vram_start": 2148171604,
+      "size": 48,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7F84",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503748,
+      "vram_start": 2148171652,
+      "size": 72,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A7FCC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503820,
+      "vram_start": 2148171724,
+      "size": 64,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A800C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503884,
+      "vram_start": 2148171788,
+      "size": 64,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A804C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503948,
+      "vram_start": 2148171852,
+      "size": 12,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A8058",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503960,
+      "vram_start": 2148171864,
+      "size": 20,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A806C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503980,
+      "vram_start": 2148171884,
+      "size": 12,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A8078",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 503992,
+      "vram_start": 2148171896,
+      "size": 20,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A808C",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 504012,
+      "vram_start": 2148171916,
+      "size": 20,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A80A0",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 504032,
+      "vram_start": 2148171936,
+      "size": 16,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A80B0",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 504048,
+      "vram_start": 2148171952,
+      "size": 16,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A80C0",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 504064,
+      "vram_start": 2148171968,
+      "size": 8,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A80C8",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 504072,
+      "vram_start": 2148171976,
+      "size": 8,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A80D0",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 504080,
+      "vram_start": 2148171984,
+      "size": 8,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A80D8",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 504088,
+      "vram_start": 2148171992,
+      "size": 8,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A80E0",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 504096,
+      "vram_start": 2148172000,
+      "size": 12,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A80EC",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 504108,
+      "vram_start": 2148172012,
+      "size": 20,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A8100",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 504128,
+      "vram_start": 2148172032,
+      "size": 8,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A8108",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 504136,
+      "vram_start": 2148172040,
+      "size": 12,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800A8114",
+      "source": "src/units/main_14400/func_800A3D9C.cpp",
+      "rom_start": 504148,
+      "vram_start": 2148172052,
+      "size": 12,
+      "evidence": "wave39 candidate opus-02/joint-followup/joint_r3p.cpp sha256 484a04997e10b422; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-match-022-creature-joint-r3p.json; Creature joint r3p, 142 functions, absorbs 140 r4 units per opus-02/joint-followup/integration-plan-r2.json; open qualifications in record 022 (MapRect tag duplicate, H3 W1-W3); staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800B2EDC",
+      "source": "src/units/main_14400/func_800B2EDC.cpp",
+      "rom_start": 548636,
+      "vram_start": 2148216540,
+      "size": 328,
+      "evidence": "wave39 candidate opus-06/a2594-r2/f2/func_800B2EDC.cpp sha256 71e121d25a252026; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-revision-ruling-a-func_800B2EDC.json; interface allowlist r2 (scratch/omp/wave39/interface-allowlist/r2/interface-rulings.patch ff1e7e6f; localize-b2edc-r4.patch f7485bd3); ruling scratch/omp/rulings/ABI-IDENTICAL-DECLARATIONS.md; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "main_14400",
+      "symbol": "func_800B38F8",
+      "source": "src/units/main_14400/func_800B38F8.cpp",
+      "rom_start": 551224,
+      "vram_start": 2148219128,
+      "size": 1272,
+      "evidence": "wave39 candidate opus-01/b38-abi/func_800B38F8.cpp sha256 4326c2d2072cca86; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-revision-007b-func_800B38F8-ABI.json; interface allowlist r2 (scratch/omp/wave39/interface-allowlist/r2/interface-rulings.patch ff1e7e6f; localize-b2edc-r4.patch f7485bd3); ruling scratch/omp/rulings/ABI-IDENTICAL-DECLARATIONS.md; staging-b9 r4-full adopt rematch"
+    },
+    {
+      "image_id": "overlay_136dc0",
+      "symbol": "func_801E5BE4_137B04",
+      "source": "src/units/overlay_136dc0/func_801E5BE4_137B04.c",
+      "rom_start": 1276676,
+      "vram_start": 2149473252,
+      "size": 220,
+      "evidence": "wave39 candidate opus-05/overlay-r3/func_801E5BE4_137B04.c sha256 a5fc798cf3939919; Main record scratch/omp/wave39/opus-hardcore-matching/Main-reproduced-revision-020a-func_801E5BE4_137B04-ABI.json; interface allowlist r2 (scratch/omp/wave39/interface-allowlist/r2/interface-rulings.patch ff1e7e6f; localize-b2edc-r4.patch f7485bd3); ruling scratch/omp/rulings/ABI-IDENTICAL-DECLARATIONS.md; staging-b9 r4-full adopt rematch"
     }
   ]
 }

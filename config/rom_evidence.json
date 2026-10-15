@@ -220,6 +220,17 @@
         "note": "ROM 0x1377D8 materializes base in a1; 0x1377F0 calls func_8006AAF0"
       }
     ],
+    "sprite_palettes": [
+      {
+        "id": "S_sprite_palette",
+        "directory_site": 278836,
+        "segment_site": 283820,
+        "count_site": 279124,
+        "size_site": 282916,
+        "record_size": 16,
+        "note": "func_80071088 walks 405 16-byte sprite descriptors from 0xE53DB0 (ROM 0x44130/0x44134; slti 0x195 at 0x44254; stride 0x4425C); flags&31 palette words via table word +4 (segment 5, 0x450AC-0x450C8); func_80072440 adds 0xE7BE70 to segment-6 words (0x454A8/0x454AC) and func_8007248C receives exactly 0x20 bytes (0x45124); TLUT load count 15 at 0x434AC-0x434F4"
+      }
+    ],
     "iff_archive": {
       "id": "IFF_efat",
       "site": 398032,
@@ -234,10 +245,15 @@
     "audio-intervals.json": "9cfa2f71c43dde1710946de9ec49a7546d9fd4490e6dab82bc59653b7f42d87d",
     "efat-evidence.json": "0e9b0443c314f2ce8591a10ee1f9b88df0ed91817936fbda59a92fb67c3a92da",
     "lineage.json": "5ff6bb96ecb3e33c0da5bd571222b38af941f241d0b6e360d87849a568a7c45b",
+    "gxx-vtables.json": "6fb7638c4f8aa70f9018e22b78a53cf2373f34723b15e0320ceb9f3d03b86d8f",
     "yay0-streams.json": "c9b3cc5332c30a1de8b8d6c1c9e5047ab33d23580e0bf9dcca5ccd22a343a02b",
     "yay0-scan.json": "1606095c9b59923c159599a7544c519118cfc8ca083331c47ff23b2ad77d0ba5",
     "sprite-palettes.json": "6b710c316b94941fdabdc8f6ee91d6565252dac492eddaa8272d97c28d9a16af",
-    "yay0-roundtrip-all.json": "c0138d59450917fe3e00b1461d3343681dcef4fc6925c3dbdb04db9f07211b28"
+    "yay0-roundtrip-all.json": "c0138d59450917fe3e00b1461d3343681dcef4fc6925c3dbdb04db9f07211b28",
+    "cpu-padding.json": "9e53a916e7af6cc52c57a165ac30660926ec35d299b497c36752056b57619563",
+    "unexplained-residuals.json": "573c5155760bd737c4db06d6d5d366e9dbd7e2205006888b3b15d2583fa8b9ad",
+    "asset-formats.json": "964ec5bd30d247c8a84ce9c06a3c166efc94b90d37ce020cd2214593f4997d98",
+    "cpu-data-padding.json": "2c90feb18d1fa4a14fc26d0ea36f87a5c28aa32d085dfa3e62d63dcd5174816a"
   },
   "consumers": [
     {
@@ -385,6 +401,18 @@
       "sha256": "92b497226bcbd6da453294e3ea7b02fd3008549589cbbeacd3162fffc4cbad6a"
     },
     {
+      "symbol": "func_80070398",
+      "rom_start": 275416,
+      "size": 504,
+      "sha256": "d016816ebb7cc58b3930562d3347e0f9077afa86c358d16778a98d194a1a3f92"
+    },
+    {
+      "symbol": "func_80071088",
+      "rom_start": 278728,
+      "size": 880,
+      "sha256": "44c4230a5d2f5498804cf6aa9ce5a57c6d857dd0121f229a53125e5b195722c5"
+    },
+    {
       "symbol": "func_80071CCC",
       "rom_start": 281868,
       "size": 1908,
@@ -475,5 +503,5 @@
       "sha256": "c668b6434ee7bb22c1ee0e0bb867c008a4853469a0ec05e9a9ab4dade4088e78"
     }
   ],
-  "policy": "h21-r2-property-replay-v1; research is not accepted source; unsupported format remains located; handwritten disabled"
+  "policy": "h21-r2-property-replay-v1; research is not accepted source; unsupported format remains located unless an asset-formats.json witness replays; handwritten disabled"
 }

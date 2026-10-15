@@ -50,7 +50,7 @@ extern void func_801EAAA8_13C9C8(void);
 extern OvlScriptRecord *func_801EB53C_13D45C(OvlScriptRecord *);
 extern OvlScriptRecord *func_801EB5D4_13D4F4(u16);
 extern void func_801EB6A0_13D5C0(u8);
-extern s32 func_801EC87C_13E79C(s32, s32, s32);
+extern s32 func_801EC87C_13E79C(s32, s32, u8);
 extern s32 func_801EDBFC_13FB1C(void);
 extern void func_801EDEF8_13FE18(void *, Vec2i *);
 extern void func_801F3318_145238(s32);

@@ -142,7 +142,7 @@ class ReplayFailureEvidenceTests(unittest.TestCase):
         tools = source / "tools"
         tools.mkdir()
         # Real closure and manifest: the recipe guard is not mocked.
-        for name in ("assets.py", "rommap.py", "rspaudio.py", "rom.py", "images.py", "evidence.py", "toolchain_library.py", "generated_symbols.py"):
+        for name in ("assets.py", "rommap.py", "rspaudio.py", "assetformat.py", "mipsflow.py", "gxxvtable.py", "rom.py", "images.py", "evidence.py", "toolchain_library.py", "generated_symbols.py"):
             shutil.copy2(TOOLS / name, tools / name)
         (directory / "input-manifest.json").write_text(json.dumps(input_manifest(source)))
         return {"tu_profiles": {}, "compiler": {"gcc": {"path": sys.executable}}, "compiler_environment": {}}

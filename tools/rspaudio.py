@@ -134,9 +134,6 @@ def verify(original: bytes, source_root: Path = PROJECT) -> dict:
                      "data_request": {"rom_start": data_start, "rom_end": data_start + descriptor_data,
                                       "sp_start": 0x04000000, "size": descriptor_data},
                      "transfer_limits": "normal fresh-bootstrap programmed requests, not observed DMA completion or stored extents"},
-            "unresolved": [{"rom_start": 0x11D770, "rom_end": 0x11D774, "status": "OPEN",
-                            "sha256": _sha(original[0x11D770:0x11D774]),
-                            "reason": "Outside SDK .data; zero alone does not identify owner or padding"}],
             "matched_c_bytes": 0, "matched_cpp_bytes": 0, "editable_source_bytes": 0,
             "accepted": False, "whole_denominator_closed": False}
 

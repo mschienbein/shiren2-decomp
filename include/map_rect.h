@@ -32,7 +32,6 @@ s32 func_800A34D0(const MapRect *bounds);
 MapPos func_800A694C(void *center, MapRect *bounds, unsigned char filter, s32 check);
 MapPos func_800A6B70(void *source, unsigned char filter, s32 check);
 MapRect *func_800B1F58(MapRect *output);
-MapRect func_800B2EDC(void *object);
 MapRect func_800B3024(void *object);
 MapRect func_800B3080(void *position);
 void func_800B4A70(MapRect *bounds);

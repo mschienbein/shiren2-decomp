@@ -13,17 +13,17 @@ the original.
 
 ## Status
 
-Accepted checkpoint **omp-r4a**: **6,830 functions** and **1,125,196 bytes** of matching source,
-98.06% of the provisional mapped CPU catalogue. That is 6,660 C functions (1,050,708 bytes)
-and 170 C++ functions (74,488 bytes), the latter proven original C++ units.
+Accepted checkpoint **omp-r6b**: **6,853 functions** and **1,137,076 bytes** of matching source,
+99.10% of the provisional mapped CPU catalogue. That is 6,538 C functions (1,044,812 bytes)
+and 315 C++ functions (92,264 bytes), the latter proven original C++ units.
 Accepted with qualifications (non-blocking review findings and deferred debt): see [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
 Live progress, history and a per-function map: [bytematch.dev/mschienbein/shiren2-decomp](https://bytematch.dev/mschienbein/shiren2-decomp).
 
 | Image | Matched functions | Matched code bytes | Code % |
 | --- | ---: | ---: | ---: |
-| Main game | 6,237 / 6,254 | 991,708 / 1,001,476 | 99.02% |
-| Overlay 1339F0 | 62 / 63 | 10,168 / 10,584 | 96.07% |
-| Overlay 136DC0 | 305 / 311 | 64,276 / 66,144 | 97.18% |
+| Main game | 6,253 / 6,254 | 1,001,304 / 1,001,476 | 99.98% |
+| Overlay 1339F0 | 63 / 63 | 10,584 / 10,584 | 100.00% |
+| Overlay 136DC0 | 311 / 311 | 66,144 / 66,144 | 100.00% |
 | Resident (boot + libultra) | 226 / 268 | 59,044 / 69,224 | 85.29% |
 
 The denominator is a fixed catalogue of 6,896 original CPU functions in the resident,
