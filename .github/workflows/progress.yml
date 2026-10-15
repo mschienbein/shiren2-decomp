@@ -28,9 +28,9 @@ jobs:
       - name: Generate objdiff progress report
         run: python3 ci/progress_report.py --version jp --output report.json --summary "$GITHUB_STEP_SUMMARY"
 
-      # ByteMatch reads the <version>_report artifact from successful default-branch push runs.
+      # ByteMatch reads the <version>_report artifact: default-branch push runs feed its history,
+      # pull request runs feed its PR comments.
       - name: Upload progress report
-        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: jp_report
